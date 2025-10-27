@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Spill</title>
+    <!-- Laster inn Tailwind CSS for enkel styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Setter Inter som standard fontfamilie som forespurt */
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Forhindrer scrolling */
+        }
+        /* Sørger for at canvaset ser bra ut og skalerer */
+        canvas {
+            background: #0d1117; /* Mørk bakgrunn for spillet */
+            border: 2px solid #30363d;
+            border-radius: 12px; /* Avrundede hjørner */
+            max-width: 100%; /* Sørger for responsivitet på små skjermer */
+            height: auto; /* Beholder sideforholdet */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-200 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <h1 class="text-5xl font-extrabold mb-5 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+        Klassisk Pong
+    </h1>
+
+    <!-- Selve spill-canvaset -->
+    <canvas id="pongCanvas"></canvas>
+
+    <p class="mt-6 text-lg text-gray-400">
+        Spiller 1 (Venstre): <span class="font-bold text-white">W</span> / <span class="font-bold text-white">S</span>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        Spiller 2 (Høyre): <span class="font-bold text-white">Piltast Opp</span> / <span class="font-bold text-white">Piltast Ned</span>
+    </p>
+
+    <script>
+        // --- Oppsett av Canvas ---
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Setter en fast intern oppløsning for spillet
+        canvas.width = 800;
+        canvas.height = 600;
+
+        // --- Spillobjekter ---
+        const paddleWidth = 15;
+        const paddleHeight = 100;
+        const ballRadius = 10;
+        const paddleSpeed = 8;
+
+        // Spiller 1 (Venstre)
+        let paddle1 = {
+            x: 10,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            color: '#3b82f6' // Blå
+        };
+
+        // Spiller 2 (Høyre)
+        let paddle2 = {
+            x: canvas.width - paddleWidth - 10,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            color: '#a855f7' // Lilla
+        };
+
+        // Ball
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: ballRadius,
+            speedX: 5,
+            speedY: 5,
+            color: '#ffffff'
+        };
+
+        // Poeng
+        let player1Score = 0;
+        let player2Score = 0;
+
+        // --- Input-håndtering ---
+        let keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // --- Hjelpefunksjoner for tegning ---
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        function drawCircle(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2, false);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawText(text, x, y, color, size = "48px") {
+            ctx.fillStyle = color;
+            ctx.font = `${size} 'Inter', sans-serif`;
+            ctx.textAlign = "center";
+            ctx.fillText(text, x, y);
+        }
+
+        function drawNet() {
+            ctx.strokeStyle = '#30363d'; // Mørk grå
+            ctx.lineWidth = 4;
+            ctx.setLineDash([10, 10]); // Stiplede linjer
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]); // Tilbakestill
+        }
+
+        // --- Spill-logikk ---
+
+        // Tilbakestiller ballen til midten etter poeng
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            
+            // Send ballen mot den som *ikke* scoret
+            let direction = (ball.speedX > 0) ? -1 : 1;
+            ball.speedX = 5 * direction;
+            ball.speedY = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2); // Tilfeldig Y-vinkel
+        }
+
+        // Oppdaterer spillets tilstand (bevegelse, kollisjon)
+        function update() {
+            // Beveg Spiller 1 (W/S)
+            if (keys['w'] && paddle1.y > 0) {
+                paddle1.y -= paddleSpeed;
+            }
+            if (keys['s'] && paddle1.y < canvas.height - paddle1.height) {
+                paddle1.y += paddleSpeed;
+            }
+
+            // Beveg Spiller 2 (Piltaster)
+            if (keys['ArrowUp'] && paddle2.y > 0) {
+                paddle2.y -= paddleSpeed;
+            }
+            if (keys['ArrowDown'] && paddle2.y < canvas.height - paddle2.height) {
+                paddle2.y += paddleSpeed;
+            }
+
+            // Beveg ballen
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+
+            // Kollisjon med topp- og bunnvegg
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.speedY = -ball.speedY;
+            }
+
+            // Kollisjon med paddler
+            let player = (ball.x < canvas.width / 2) ? paddle1 : paddle2;
+            
+            if (isColliding(ball, player)) {
+                // Ballen treffer en paddle
+                ball.speedX = -ball.speedX;
+
+                // Øk farten litt for hver treff
+                ball.speedX *= 1.05;
+                
+                // Endre vinkelen basert på hvor på paddelen ballen treffer
+                let collidePoint = (ball.y - (player.y + player.height / 2));
+                // Normaliser treffpunktet (fra -1 til 1)
+                collidePoint = collidePoint / (player.height / 2);
+                
+                // Beregn ny vinkel (maks 45 grader)
+                let angleRad = (Math.PI / 4) * collidePoint;
+                
+                // Bevar totalfarten, men endre X og Y komponenter
+                let totalSpeed = Math.sqrt(ball.speedX * ball.speedX + ball.speedY * ball.speedY);
+                let direction = (ball.speedX > 0) ? 1 : -1;
+                
+                // Vi setter Y-farten direkte for en enklere, men "spinn"-aktig effekt
+                ball.speedY = totalSpeed * Math.sin(angleRad);
+                // Sørg for at X-farten fortsatt er riktig
+                ball.speedX = direction * totalSpeed * Math.cos(angleRad);
+
+            }
+
+            // Poengsjekk (ball treffer venstre/høyre vegg)
+            if (ball.x - ball.radius < 0) {
+                // Spiller 2 scorer
+                player2Score++;
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                // Spiller 1 scorer
+                player1Score++;
+                resetBall();
+            }
+        }
+
+        // Kollisjonssjekk (AABB - Circle)
+        function isColliding(circle, rect) {
+            // Finner det nærmeste punktet på rektangelet til sirkelens sentrum
+            let testX = circle.x;
+            let testY = circle.y;
+
+            if (circle.x < rect.x) testX = rect.x; // venstre kant
+            else if (circle.x > rect.x + rect.width) testX = rect.x + rect.width; // høyre kant
+            
+            if (circle.y < rect.y) testY = rect.y; // toppkant
+            else if (circle.y > rect.y + rect.height) testY = rect.y + rect.height; // bunnkant
+
+            // Beregn avstanden fra sirkelens sentrum til dette nærmeste punktet
+            let distX = circle.x - testX;
+            let distY = circle.y - testY;
+            let distance = Math.sqrt((distX * distX) + (distY * distY));
+
+            // Hvis avstanden er mindre enn sirkelens radius, er det en kollisjon
+            return distance <= circle.radius;
+        }
+
+
+        // Tegner spillet på nytt hver frame
+        function draw() {
+            // Tøm skjermen (mørk bakgrunn)
+            drawRect(0, 0, canvas.width, canvas.height, '#0d1117');
+
+            // Tegn midtnettet
+            drawNet();
+
+            // Tegn poeng
+            drawText(player1Score, canvas.width / 4, 60, '#3b82f6');
+            drawText(player2Score, 3 * canvas.width / 4, 60, '#a855f7');
+
+            // Tegn paddler
+            drawRect(paddle1.x, paddle1.y, paddle1.width, paddle1.height, paddle1.color);
+            drawRect(paddle2.x, paddle2.y, paddle2.width, paddle2.height, paddle2.color);
+
+            // Tegn ballen
+            drawCircle(ball.x, ball.y, ball.radius, ball.color);
+        }
+
+        // --- Hovedspill-løkke ---
+        function gameLoop() {
+            update(); // Oppdater logikk
+            draw();   // Tegn på nytt
+            requestAnimationFrame(gameLoop); // Be om neste frame
+        }
+
+        // Start spillet
+        resetBall();
+        gameLoop();
+
+    </script>
+</body>
+</html>

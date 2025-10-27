@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="nb">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="css/style.css">
+        <title>Super Mario CSS animasjon</title>
+    </head>
+    <body>
+        <main>
+            <div id="supermario"></div>
+            <div id="gompa"></div>
+
+            <div class="platform" style="left: 242px; bottom: 163px; width: 35px; height: 35px;"></div> 
+            
+            <div class="platform" style="left: 458px; bottom: 305px; width: 35px; height: 35px;"></div> 
+
+            <div class="platform" style="left: 385px; bottom: 163px; width: 182px; height: 35px;"></div> 
+            
+            <div id="pipe" class="platform" style="left: 674px; bottom: 53px; width: 70px; height: 70px;"></div>
+
+            <div class="platform" style="left: 1047px; bottom: 163px; width: 35px; height: 35px;"></div>
+        </main>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+    // --- HENT ELEMENTER ---
+    const mario = document.getElementById('supermario');
+    const goomba = document.getElementById('gompa');
+    const platforms = document.querySelectorAll('.platform');
+    
+    // --- SPILL-INNSTILLINGER ---
+    const gameWidth = 1200;
+    const gravity = -0.5;
+
+    // --- MARIO-VARIABLER ---
+    const marioWidth = 50;
+    const marioHeight = 50;
+    let marioX = 0;
+    let marioY = 53;
+    let velocityY = 0;
+    let jumpCount = 0;
+
+    // --- GOOMBA-VARIABLER (NY) ---
+    const goombaWidth = 50;
+    const goombaHeight = 50;
+    let goombaX = 1100; // Startposisjon
+    let goombaY = 53;
+    let goombaSpeed = -2; // Hastighet (negativ = går mot venstre)
+    let isGoombaActive = true; // For å sjekke om den er "levende"
+
+    const keys = {
+        right: false,
+        left: false
+    };
+
+    // --- EVENT LISTENERS (Ingen endringer) ---
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowRight') keys.right = true;
+        else if (event.key === 'ArrowLeft') keys.left = true;
+        else if (event.key === ' ' && jumpCount < 2) {
+            jump();
+        }
+        // --- NY SEKSJON STARTER HER ---
+        else if (event.key === 'ArrowDown') {
+            // Henter røret og dets posisjon
+            const pipe = document.getElementById('pipe');
+            const pipeLeft = parseInt(pipe.style.left);
+            const pipeRight = pipeLeft + parseInt(pipe.style.width);
+            const pipeTop = parseInt(pipe.style.bottom) + parseInt(pipe.style.height);
+
+            // Sjekker om Mario står oppå røret
+            const onPipe = 
+                marioY === pipeTop && 
+                marioX + marioWidth > pipeLeft && 
+                marioX < pipeRight;
+
+            if (onPipe) {
+                // Sender spilleren til neste level!
+                window.location.href = 'level2.html'; 
+            }
+        }
+        
+    });
+
+    document.addEventListener('keyup', function(event) {
+        if (event.key === 'ArrowRight') keys.right = false;
+        else if (event.key === 'ArrowLeft') keys.left = false;
+    });
+
+    function jump() {
+        velocityY = 12;
+        jumpCount++;
+    }
+
+    // --- HOVEDSPILL-LØKKEN ---
+    function gameLoop() {
+        // 1. MARIO: HORISONTAL BEVEGELSE
+        if (keys.right && marioX < gameWidth - marioWidth) {
+            marioX += 5;
+        }
+        if (keys.left && marioX > 0) {
+            marioX -= 5;
+        }
+
+        // 2. MARIO: VERTIKAL BEVEGELSE (FYSIKK)
+        velocityY += gravity;
+        marioY += velocityY;
+
+        // 3. MARIO: KOLLISJON MED PLATTFORMER
+        let onPlatform = false;
+        if (marioY <= 53) { // Hovedbakken
+            marioY = 53;
+            velocityY = 0;
+            jumpCount = 0;
+            onPlatform = true;
+        }
+
+        platforms.forEach(platform => {
+            const platformTop = parseInt(platform.style.bottom) + parseInt(platform.style.height);
+            const platformBottom = parseInt(platform.style.bottom); // NY: Henter bunnen av plattformen
+            const platformLeft = parseInt(platform.style.left);
+            const platformRight = platformLeft + parseInt(platform.style.width);
+
+            // Sjekk for LANDING på toppen (denne er som før)
+            if (velocityY <= 0 && marioX + marioWidth > platformLeft && marioX < platformRight && marioY <= platformTop && marioY + marioHeight >= platformTop) {
+                marioY = platformTop;
+                velocityY = 0;
+                jumpCount = 0;
+                onPlatform = true;
+            }
+
+            // --- NY SEKSJON STARTER HER ---
+            // Sjekk for SLÅ HODET i bunnen
+            if (
+                velocityY > 0 && // Sjekker kun når Mario er på vei OPP
+                marioX + marioWidth > platformLeft &&
+                marioX < platformRight &&
+                marioY + marioHeight >= platformBottom && // Marios hode treffer undersiden
+                marioY < platformBottom // Marios føtter er under undersiden
+            ) {
+                velocityY = 0; // Stopper all oppdrift umiddelbart
+            }
+            // --- NY SEKSJON SLUTTER HER ---
+        });
+
+        // 4. GOOMBA: BEVEGELSE (NY)
+        if (isGoombaActive) {
+            goombaX += goombaSpeed;
+            // Snu retning ved kantene
+            if (goombaX <= 0 || goombaX >= gameWidth - goombaWidth) {
+                goombaSpeed *= -1; // Snur farten
+            }
+        }
+        
+        // 5. KOLLISJON MELLOM MARIO OG GOOMBA (NY)
+        if (isGoombaActive &&
+            marioX < goombaX + goombaWidth &&
+            marioX + marioWidth > goombaX &&
+            marioY < goombaY + goombaHeight &&
+            marioY + marioHeight > goombaY
+        ) {
+            // Sjekker om Mario tramper på Goomba
+            // (Mario faller OG er over midten av Goomba)
+            if (velocityY < 0 && marioY > goombaY + goombaHeight / 2) {
+                // TRAMP!
+                isGoombaActive = false;
+                goomba.style.display = 'none'; // Gjemmer Goomba
+                velocityY = 8; // Gir Mario en liten sprett
+            } else {
+                // KOLLISJON!
+                marioX = 0; // Tilbakestill Mario
+                marioY = 53;
+                velocityY = 0;
+            }
+        }
+
+        // 6. OPPDATER STIL PÅ SKJERMEN
+        mario.style.left = marioX + 'px';
+        mario.style.bottom = marioY + 'px';
+        goomba.style.left = goombaX + 'px';
+        goomba.style.bottom = goombaY + 'px';
+
+        if (keys.right) {
+            mario.style.transform = 'scaleX(1)'; // Ser mot høyre (normal)
+            mario.style.backgroundImage = "url('sprites/lopende.png')";
+        } else if (keys.left) {
+            mario.style.transform = 'scaleX(-1)'; // Speilvender Mario
+            mario.style.backgroundImage = "url('sprites/lopende.png')";
+        } else {
+            // Står stille, bytter kun bilde
+            mario.style.backgroundImage = "url('sprites/staa.png')";
+        }
+    }
+
+    setInterval(gameLoop, 16);
+});
+        </script>
+    </body>
+</html>

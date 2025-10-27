@@ -1,0 +1,98 @@
+body {
+    /* Hva: Setter grunnleggende stil for hele siden. */
+    /* Hvordan: Fjerner standard marger og legger til litt padding rundt innholdet. */
+    /* Hvorfor: Sikrer at innholdet ikke klistrer seg til kantene av vinduet, noe som gir et bedre utseende. */
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+main {
+    /* Hva: Setter bakgrunnsbildet til hovedseksjonen. */
+    /* Hvordan: Bruker et bilde fra 'sprites' katalogen, skalerer det slik at det passer innenfor containeren uten å bli strukket. */
+    /* Hvorfor: Gir siden en bakgrunn som passer til Super Mario temaet. */
+    background-image: url('../sprites/bakgrunnLevel2.png');
+    background-size: contain;
+    height: 500px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+}
+
+
+
+#supermario {
+    /* Hva: Definerer stil og animasjoner for Super Mario figuren. */
+    /* Hvordan: Setter størrelse, posisjon og bakgrunnsbilde, samt flere animasjoner for å kontrollere hans bevegelse. */
+    /* Hvorfor: Gir Mario sin visuelle stil og definerer hvordan han beveger seg og reagerer på ulike hendelser i spillet. */
+    background-image: url('../sprites/staa.png');
+    background-size: cover;
+    height: 50px;
+    width: 50px;
+    position: absolute;
+    bottom: 53px;
+    z-index: 999;
+    
+
+  
+}
+
+#gompa {
+    /* Hva: Definerer stil og animasjoner for Gompa fienden. */
+    /* Hvordan: Angir størrelse, posisjon, og knytter den til animasjonene for bevegelse og bevegelse av bildesekvenser. */
+    /* Hvorfor: Gir Gompa en visuell stil og bevegelsesanimasjon for å gjøre den mer interaktiv i spillet. */
+    background-image: url('../sprites/sopp.png');
+    background-size: contain;
+    height: 50px;
+    width: 50px;
+    position: absolute;
+    bottom: 53px;
+    right: 0;
+    z-index: 999;
+    
+
+}
+
+.platform {
+    position: absolute;
+    /* Fjern linjen under når du er ferdig med å justere posisjonen */
+    
+}
+
+
+@keyframes marioRunning{
+    from {
+        background-image: url('../sprites/staa.png');
+    }
+    to {
+        background-image: url('../sprites/lopende.png');
+    }
+}
+
+@keyframes movingMario{
+    0%{
+        left:0;
+        bottom:53px;
+    }
+    20%{
+        left:407px;
+        bottom:53px;
+    }
+    40%{
+        left:407px;
+        bottom:118px;
+    }
+    50%{
+        left:407px;
+        bottom:53px;
+    }
+    60%{
+        left: 600px;
+        bottom:53px;
+    }
+}
+

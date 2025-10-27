@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF--8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spill-oversikt</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #0d0d0d;
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 4px solid #ff4500;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #ff4500;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .game-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .game-item {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+        .game-item:hover {
+            transform: translateY(-5px);
+        }
+        .game-item img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .game-info {
+            padding: 1.5rem;
+        }
+        .game-info h2 {
+            font-size: 1.8rem;
+            color: #ff4500;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        .game-info p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Spill-oversikt</h1>
+    </header>
+
+    <div class="container">
+        <ul class="game-list">
+            <li class="game-item">
+                <img src="img/image.png" alt="Pong">
+                <div class="game-info">
+                    <h2>Pong</h2>
+                    <a href="geminiPong.html">Spill her</a>
+                    <p>Et action-rollespill utviklet av FromSoftware. Utforsk en enorm verden full av farer, mysterier og episke kamper.</p>
+                </div>
+            </li>
+            <li class="game-item">
+                <img src="https://via.placeholder.com/400x225.png/1e90ff/ffffff?text=Baldur's+Gate+3" alt="Mario">
+                <div class="game-info">
+                    <h2>Mario</h2>
+                    <a href="supermario/index.html">Spill her</a>
+                    <p>Et rollespill fra Larian Studios basert på Dungeons & Dragons. Samle følgesvenner og kjemp mot en mørk trussel i en rik og levende verden.</p>
+                </div>
+            </li>
+            <li class="game-item">
+                <img src="https://via.placeholder.com/400x225.png/32cd32/ffffff?text=Helldivers+2" alt="Helldivers 2">
+                <div class="game-info">
+                    <h2>Helldivers 2</h2>
+                    <p>Et samarbeidsbasert tredjepersons skytespill der du kjemper for å spre demokrati i en fiendtlig galakse. Samarbeid er nøkkelen til seier.</p>
+                </div>
+            </li>
+            <li class="game-item">
+                <img src="https://via.placeholder.com/400x225.png/ff1493/ffffff?text=Cyberpunk+2077" alt="Cyberpunk 2077">
+                <div class="game-info">
+                    <h2>Cyberpunk 2077</h2>
+                    <p>Et action-rollespill i en åpen verden satt i den futuristiske metropolen Night City. Tilpass karakteren din og utforsk en verden besatt av makt, glamour og kroppsmodifikasjoner.</p>
+                </div>
+            </li>
+            <li class="game-item">
+                <img src="https://via.placeholder.com/400x225.png/ffd700/000000?text=The+Witcher+3" alt="The Witcher 3: Wild Hunt">
+                <div class="game-info">
+                    <h2>The Witcher 3: Wild Hunt</h2>
+                    <p>Et prisvinnende action-rollespill der du spiller som Geralt of Rivia, en monsterjeger på jakt etter sitt adopterte barn i en krigsherjet verden.</p>
+                </div>
+            </li>
+            <li class="game-item">
+                <img src="https://via.placeholder.com/400x225.png/8a2be2/ffffff?text=Red+Dead+2" alt="Red Dead Redemption 2">
+                <div class="game-info">
+                    <h2>Red Dead Redemption 2</h2>
+                    <p>Et episk western-eventyr fra Rockstar Games. Opplev livet som fredløs i Amerikas nådeløse villmark på slutten av 1800-tallet.</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>
