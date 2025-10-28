@@ -1,6 +1,12 @@
-// 1. Sett opp Canvas
+// 1. Sett opp Canvas og HTML-elementer
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d'); // 'ctx' er vårt tegneverktøy
+const ctx = canvas.getContext('2d');
+
+// --- Nye HTML-elementer ---
+const startMenu = document.getElementById('start-menu');
+const startButton = document.getElementById('startButton');
+const playerNameInput = document.getElementById('playerNameInput');
+const highscoreList = document.getElementById('highscore-list');
 
 const BREDDE = canvas.width;
 const HOYDE = canvas.height;
@@ -17,108 +23,139 @@ const FARG_TEKST = '#000000';
 let poeng = 0;
 let gameOver = false;
 const bakkeNiva = HOYDE - 50;
-let scrollHastighet = 0; // <-- NY: Hvor fort verden scroller
+let scrollHastighet = 0;
+
+// --- NY: Spill-tilstand ---
+// Vi starter i menyen
+let gameState = 'MENU'; // Kan være 'MENU', 'PLAYING', 'GAME_OVER'
+let currentPlayerName = 'Anonym';
 
 // --- Spiller (Kula) ---
 let spiller = {
-    x: BREDDE / 4, // Spillerens faste x-posisjon
+    x: BREDDE / 4,
     y: bakkeNiva - 20,
     radius: 20,
     dy: 0,
     hoppStyrke: -17,
     gravitasjon: 0.8,
     erILuften: false,
-    hastighet: 5 // <-- NY: Hvor fort spilleren "løper" (hvor fort verden scroller)
+    hastighet: 5
 };
 
 // --- Jageren (Fienden) ---
 let jager = {
-    x: -40, // Starter utenfor skjermen
+    x: -40,
     bredde: 40,
-    hastighet: 1.2 // <-- NY: Dette er "ta deg igjen"-hastigheten
+    hastighet: 0.8
 };
 
-// --- Hindring ---
-let hindring = {
-    x: BREDDE - 200, // Starter nærmere
-    y: bakkeNiva - 40,
-    bredde: 50,
-    hoyde: 40
-    // Hastighet er fjernet, styres nå av 'scrollHastighet'
-};
-
-// --- Sopp ---
-let sopp = {
-    x: BREDDE - 50, // Starter nærmere
-    y: bakkeNiva - 80,
-    radius: 10,
-    samlet: false
-    // Hastighet er fjernet, styres nå av 'scrollHastighet'
-};
+// --- Objekter ---
+let hindring = { x: BREDDE - 200, y: bakkeNiva - 40, bredde: 50, hoyde: 40 };
+let sopp = { x: BREDDE - 50, y: bakkeNiva - 80, radius: 10, samlet: false };
 
 // --- Input-kontroll ---
-let keys = { // <-- NY: Objekt for å holde styr på tastetrykk
-    ArrowRight: false,
-    Space: false
-};
+let keys = { ArrowRight: false, Space: false };
 
 // 2. Håndter Input (Tastetrykk)
 document.addEventListener('keydown', function(e) {
-    if (e.code === 'Space' && !spiller.erILuften && !gameOver) {
+    if (gameState !== 'PLAYING') {
+        // Hvis spillet er over, la 'R' ta oss tilbake til menyen
+        if (e.code === 'KeyR' && gameState === 'GAME_OVER') {
+            gaaTilMeny();
+        }
+        return; // Ikke gjør noe mer hvis vi ikke spiller
+    }
+    
+    // Kun kjør dette hvis spillet er i gang
+    if (e.code === 'Space' && !spiller.erILuften) {
         spiller.dy = spiller.hoppStyrke;
         spiller.erILuften = true;
     }
-    if (e.code === 'ArrowRight') { // <-- NY: Hør etter Pil Høyre
+    if (e.code === 'ArrowRight') {
         keys.ArrowRight = true;
-    }
-    if (e.code === 'KeyR' && gameOver) {
-        startPåNytt();
     }
 });
 
-document.addEventListener('keyup', function(e) { // <-- NY: Hør etter når knappen slippes
+document.addEventListener('keyup', function(e) {
     if (e.code === 'ArrowRight') {
         keys.ArrowRight = false;
     }
 });
 
+// --- NY: Event-listener for Start-knappen ---
+startButton.addEventListener('click', function() {
+    startSpill();
+});
 
 // 3. Spillets Hoved-funksjoner
 
-function oppdaterLogikk() {
-    if (gameOver) return;
+function startSpill() {
+    // Hent navnet, eller bruk 'Anonym'
+    currentPlayerName = playerNameInput.value || 'Anonym';
+    
+    // Skjul menyen
+    startMenu.style.display = 'none';
+    
+    // Sett variabler
+    gameState = 'PLAYING';
+    gameOver = false;
+    poeng = 0;
+    
+    // Tilbakestill posisjoner
+    resetSpillerOgObjekter();
+    
+    // Start spill-løkken!
+    gameLoop();
+}
 
-    // --- NY: Sett scroll-hastighet ---
-    // Hvis spilleren holder "Pil Høyre", sett scroll-hastigheten
+function gaaTilMeny() {
+    gameState = 'MENU';
+    // Vis menyen igjen
+    startMenu.style.display = 'flex';
+    resetSpillerOgObjekter();
+    // Tegn en ren skjerm
+    tegnSpill(); 
+}
+
+function resetSpillerOgObjekter() {
+    spiller.y = bakkeNiva - 20;
+    spiller.dy = 0;
+    spiller.erILuften = false;
+    
+    jager.x = -40;
+    
+    hindring.x = BREDDE - 200;
+    hindring.y = bakkeNiva - 40;
+    
+    sopp.x = BREDDE - 50;
+    sopp.y = bakkeNiva - 80;
+    sopp.samlet = false;
+    
+    keys.ArrowRight = false;
+}
+
+function oppdaterLogikk() {
+    // Denne funksjonen kjøres kun hvis gameState == 'PLAYING'
     if (keys.ArrowRight) {
         scrollHastighet = spiller.hastighet;
     } else {
         scrollHastighet = 0; // Stå stille
     }
 
-    // --- Spillerlogikk (Hopp og Gravitasjon) ---
+    // Spillerlogikk
     spiller.y += spiller.dy;
     spiller.dy += spiller.gravitasjon;
-
     if (spiller.y + spiller.radius > bakkeNiva) {
         spiller.y = bakkeNiva - spiller.radius;
         spiller.dy = 0;
         spiller.erILuften = false;
     }
 
-    // --- Jager-logikk (DEN VIKTIGE ENDRINGEN) ---
-    // 1. Jageren scroller med verden (flytter seg til venstre)
+    // Jager-logikk
     jager.x -= scrollHastighet; 
-    // 2. Jageren beveger seg ALLTID sakte mot høyre for å ta deg igjen
     jager.x += jager.hastighet; 
 
-    /*
-     * Resultat:
-     * - Hvis du løper (scrollHastighet = 5): jager.x endres med (-5 + 0.8) = -4.2. Jageren flytter seg BORT.
-     * - Hvis du står stille (scrollHastighet = 0): jager.x endres med (0 + 0.8) = +0.8. Jageren tar deg IGJEN!
-     */
-
-    // --- Objekt-logikk (flytt dem basert på scroll) ---
+    // Objekt-logikk
     hindring.x -= scrollHastighet;
     if (hindring.x + hindring.bredde < 0) {
         hindring.x = BREDDE + Math.random() * 200;
@@ -142,20 +179,14 @@ function oppdaterLogikk() {
 
     // A: Spiller mot Jager
     if (spiller.x + spiller.radius > jager.x && spiller.x - spiller.radius < jager.x + jager.bredde) {
-        gameOver = true;
+        settGameOver();
     }
 
     // B: Spiller mot Hindring
     if (spiller.x + spiller.radius > hindring.x &&
         spiller.x - spiller.radius < hindring.x + hindring.bredde &&
         spiller.y + spiller.radius > hindring.y) {
-        
-        // --- NY Kollisjon: Stopp spilleren ---
-        // I stedet for game over, la oss bare stoppe spilleren fra å gå gjennom
-        // Dette er litt juks, men effektivt. 
-        // Vi dytter spilleren til venstre for hinderet.
-        // En bedre løsning ville vært å stoppe scrollingen, men la oss holde det enkelt.
-        gameOver = true; // Vi beholder game over for nå.
+        settGameOver();
     }
     
     // C: Spiller mot Sopp
@@ -169,6 +200,15 @@ function oppdaterLogikk() {
             sopp.samlet = true;
         }
     }
+}
+
+function settGameOver() {
+    gameOver = true;
+    gameState = 'GAME_OVER';
+    // --- NY: Lagre highscore ---
+    lagreHighscore(currentPlayerName, poeng);
+    // --- NY: Oppdater listen som vises ---
+    visHighscores();
 }
 
 function tegnSpill() {
@@ -209,8 +249,8 @@ function tegnSpill() {
     ctx.font = '30px Arial';
     ctx.fillText(`Poeng: ${poeng}`, 20, 40);
 
-    // Tegn Game Over-skjerm
-    if (gameOver) {
+    // Tegn Game Over-skjerm (hvis det er game over)
+    if (gameState === 'GAME_OVER') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, BREDDE, HOYDE);
 
@@ -220,40 +260,89 @@ function tegnSpill() {
         ctx.fillText('GAME OVER', BREDDE / 2, HOYDE / 2 - 30);
         
         ctx.font = '30px Arial';
-        ctx.fillText(`Poeng: ${poeng}`, BREDDE / 2, HOYDE / 2 + 20);
+        ctx.fillText(`Din poengsum: ${poeng}`, BREDDE / 2, HOYDE / 2 + 20);
 
         ctx.font = '25px Arial';
-        ctx.fillText("Trykk 'R' for å starte på nytt", BREDDE / 2, HOYDE / 2 + 70);
+        ctx.fillText("Trykk 'R' for å gå til menyen", BREDDE / 2, HOYDE / 2 + 70);
         ctx.textAlign = 'left';
     }
 }
 
-function startPåNytt() {
-    poeng = 0;
-    gameOver = false;
-    keys.ArrowRight = false; // Sørg for at vi ikke løper
-    
-    spiller.y = bakkeNiva - 20;
-    spiller.dy = 0;
-    
-    jager.x = -40; // Tilbakestill jager
-    
-    hindring.x = BREDDE - 200;
-    sopp.x = BREDDE - 50;
-    sopp.samlet = false;
-
-    gameLoop();
-}
 
 // 4. Hoved Spill-løkke (Game Loop)
 function gameLoop() {
-    oppdaterLogikk();
-    tegnSpill();
-
-    if (!gameOver) {
+    
+    if (gameState === 'PLAYING') {
+        oppdaterLogikk();
+        tegnSpill();
+        // Fortsett løkken
         requestAnimationFrame(gameLoop);
+    } 
+    else if (gameState === 'GAME_OVER') {
+        tegnSpill(); // Tegn game over-skjermen
+        // Ikke kall requestAnimationFrame, så løkken stopper.
+    }
+    else if (gameState === 'MENU') {
+        tegnSpill(); // Tegn en ren start-skjerm
+        // Ikke kall requestAnimationFrame.
     }
 }
 
-// 5. Start spillet!
-gameLoop();
+// 5. --- NY: Highscore-funksjoner ---
+
+// Henter scores fra nettleserens minne
+function hentHighscores() {
+    const scores = localStorage.getItem('soppSprettenHighscores');
+    // Hvis det ikke er noen scores, returner en tom liste
+    if (!scores) {
+        return [];
+    }
+    // Gjør om tekst-strengen tilbake til et JavaScript-objekt
+    return JSON.parse(scores);
+}
+
+// Lagrer en ny score
+function lagreHighscore(navn, poengsum) {
+    if (poengsum === 0) return; // Ikke lagre 0 poeng
+
+    let scores = hentHighscores();
+    
+    const nyScore = { navn: navn, poeng: poengsum };
+    scores.push(nyScore);
+    
+    // Sorter listen fra høyest til lavest poengsum
+    scores.sort((a, b) => b.poeng - a.poeng);
+    
+    // Behold kun de 5 beste
+    scores = scores.slice(0, 5);
+    
+    // Lagre den oppdaterte listen tilbake i nettleserens minne
+    // Må gjøres om til en tekst-streng
+    localStorage.setItem('soppSprettenHighscores', JSON.stringify(scores));
+}
+
+// Viser listen på nettsiden
+function visHighscores() {
+    let scores = hentHighscores();
+    
+    // Tøm listen før vi fyller den på nytt
+    highscoreList.innerHTML = '';
+    
+    if (scores.length === 0) {
+        highscoreList.innerHTML = '<li>Ingen scores enda...</li>';
+        return;
+    }
+    
+    // Lag et nytt <li>-element for hver score
+    scores.forEach(score => {
+        const li = document.createElement('li');
+        li.textContent = `${score.navn}: ${score.poeng}`;
+        highscoreList.appendChild(li);
+    });
+}
+
+
+// 6. Start spillet! (Eller, vis menyen)
+// Når siden laster, vis highscore-listen og tegn en ren canvas
+visHighscores();
+tegnSpill();
