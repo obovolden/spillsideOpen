@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman</title>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+        }
+
+        /* --- Generelle beholdere --- */
+        .container {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        /* Skjuler spill-seksjonen i starten */
+        #spill-seksjon {
+            display: none;
+        }
+        
+        h1, h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+
+        /* --- 1. Oppsett-seksjon --- */
+        #ord-input-seksjon input[type="password"] {
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border: 2px solid #ced4da;
+            border-radius: 5px;
+            margin-right: 0.5rem;
+            width: 70%;
+        }
+        
+        .knapp {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .knapp:hover {
+            background-color: #0056b3;
+        }
+
+        /* --- 2. Spill-seksjon --- */
+        
+        /* Selve hangman-tegningen */
+        #hangman-seksjon pre {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            color: #495057;
+            line-height: 1.2;
+            text-align: left;
+            margin: 1rem auto;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            width: 150px; /* Fast bredde for tegningen */
+        }
+        
+        /* Seksjonen med ord-strekene */
+        #ord-visning-seksjon {
+            margin: 2rem 0;
+        }
+        
+        #ord-streker {
+            font-size: 2rem;
+            letter-spacing: 0.5rem; /* Mellomrom mellom bokstaver/streker */
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            /* Bryter lange ord over på ny linje */
+            word-wrap: break-word;
+            line-height: 3rem;
+        }
+
+        /* Seksjonen med alfabetet */
+        #alfabet-seksjon {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1.5rem;
+        }
+        
+        .alfabet-knapp {
+            font-size: 1.1rem;
+            font-weight: bold;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        
+        .alfabet-knapp:hover {
+            background-color: #e2e6ea;
+            transform: scale(1.05);
+        }
+        
+        /* Stil for brukte (deaktiverte) knapper */
+        .alfabet-knapp:disabled {
+            cursor: not-allowed;
+            opacity: 0.9; /* Bare en liten fade */
+            transform: none; /* Fjerner hover-effekt */
+        }
+        
+        /* NY: Stil for riktig gjettet bokstav */
+        .alfabet-knapp:disabled.riktig {
+            background-color: #28a745;
+            color: white;
+            border-color: #218838;
+        }
+        
+        /* NY: Stil for feil gjettet bokstav */
+        .alfabet-knapp:disabled.feil {
+            background-color: #dc3545;
+            color: white;
+            border-color: #c82333;
+        }
+
+        /* Seksjon for meldinger (Vunnet/Tapt) */
+        #status-seksjon {
+            margin-top: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            min-height: 2rem;
+        }
+        
+        .vinn { color: #28a745; }
+        .tap { color: #dc3545; }
+        
+        #nyttSpillKnapp {
+            display: none; /* Vises kun når spillet er over */
+            margin-top: 1rem;
+            background-color: #28a745;
+        }
+        #nyttSpillKnapp:hover {
+            background-color: #218838;
+        }
+
+    </style>
+</head>
+<body>
+
+    <section id="ord-input-seksjon" class="container">
+        <header>
+            <h1>Hangman: Oppsett</h1>
+            <p>Spiller 1: Skriv inn det hemmelige ordet eller setningen.</p>
+        </header>
+        <input type="password" id="hemmeligOrdInput" placeholder="Skriv her...">
+        <button id="startSpillKnapp" class="knapp">Start Spillet</button>
+    </section>
+
+    <main id="spill-seksjon" class="container">
+        
+        <section id="hangman-seksjon">
+            <h2>Hangman</h2>
+            <pre id="hangman-tegning"></pre>
+        </section>
+        
+        <section id="ord-visning-seksjon">
+            <p id="ord-streker"></p>
+        </section>
+        
+        <section id="status-seksjon">
+            <p id="spill-melding"></p>
+        </section>
+
+        <section id="alfabet-seksjon">
+            </section>
+        
+        <button id="nyttSpillKnapp" class="knapp">Spill på nytt</button>
+        
+    </main>
+
+    <script>
+        // --- 1. HENT HTML-ELEMENTER ---
+        const ordInputSeksjon = document.getElementById('ord-input-seksjon');
+        const spillSeksjon = document.getElementById('spill-seksjon');
+        
+        const hemmeligOrdInput = document.getElementById('hemmeligOrdInput');
+        const startSpillKnapp = document.getElementById('startSpillKnapp');
+        
+        const hangmanTegning = document.getElementById('hangman-tegning');
+        const ordStreker = document.getElementById('ord-streker');
+        const alfabetSeksjon = document.getElementById('alfabet-seksjon');
+        const spillMelding = document.getElementById('spill-melding');
+        const nyttSpillKnapp = document.getElementById('nyttSpillKnapp');
+
+        // --- 2. SPILL-VARIABLER ---
+        let hemmeligOrd = '';
+        let gjettedeBokstaver = [];
+        let feilGjett = 0;
+        const maksFeil = 6;
+        
+        // Det norske alfabetet (29 bokstaver)
+        const alfabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ'.split('');
+
+        // ASCII-kunst for hangman (7 stadier, 0-6 feil)
+        const hangmanTegninger = [
+`
+ +---+
+ |   |
+     |
+     |
+     |
+     |
+=========`, // 0 feil
+`
+ +---+
+ |   |
+ O   |
+     |
+     |
+     |
+=========`, // 1 feil
+`
+ +---+
+ |   |
+ O   |
+ |   |
+     |
+     |
+=========`, // 2 feil
+`
+ +---+
+ |   |
+ O   |
+/|   |
+     |
+     |
+=========`, // 3 feil
+`
+ +---+
+ |   |
+ O   |
+/|\\  |
+     |
+     |
+=========`, // 4 feil
+`
+ +---+
+ |   |
+ O   |
+/|\\  |
+/    |
+     |
+=========`, // 5 feil
+`
+ +---+
+ |   |
+ O   |
+/|\\  |
+/ \\  |
+     |
+=========`, // 6 feil (Tapt)
+        ];
+
+        // --- 3. KJERNEFUNKSJONER ---
+
+        /**
+         * Starter spillet: Skjuler oppsett, viser spill, og kaller hjelpefunksjoner.
+         */
+        function startSelveSpillet() {
+            hemmeligOrd = hemmeligOrdInput.value.toUpperCase();
+            
+            if (hemmeligOrd.length === 0) {
+                alert('Du må skrive inn et ord!');
+                return;
+            }
+
+            // Bytt "skjerm"
+            ordInputSeksjon.style.display = 'none';
+            spillSeksjon.style.display = 'block';
+
+            // Nullstill variabler
+            gjettedeBokstaver = [];
+            feilGjett = 0;
+            
+            // Sett opp spillbrettet
+            genererAlfabetKnapper();
+            oppdaterOrdVisning();
+            oppdaterHangman();
+            spillMelding.textContent = '';
+            spillMelding.className = '';
+            nyttSpillKnapp.style.display = 'none';
+        }
+
+        /**
+         * Lager og viser alle alfabet-knappene.
+         */
+        function genererAlfabetKnapper() {
+            alfabetSeksjon.innerHTML = ''; // Tømmer gamle knapper
+            
+            alfabet.forEach(bokstav => {
+                const knapp = document.createElement('button');
+                knapp.textContent = bokstav;
+                knapp.classList.add('alfabet-knapp');
+                knapp.dataset.bokstav = bokstav; // Lagrer bokstaven på knappen
+                
+                knapp.addEventListener('click', () => gjettBokstav(bokstav));
+                
+                alfabetSeksjon.appendChild(knapp);
+            });
+        }
+        
+        /**
+         * Kjøres når en alfabet-knapp trykkes.
+         */
+        function gjettBokstav(bokstav) {
+            // Deaktiver knappen som ble trykket
+            const knapp = document.querySelector(`.alfabet-knapp[data-bokstav="${bokstav}"]`);
+            if (knapp) knapp.disabled = true;
+
+            if (hemmeligOrd.includes(bokstav)) {
+                // Riktig gjett
+                gjettedeBokstaver.push(bokstav);
+                if (knapp) knapp.classList.add('riktig'); // <-- NY LINJE
+            } else {
+                // Feil gjett
+                feilGjett++;
+                if (knapp) knapp.classList.add('feil'); // <-- NY LINJE
+            }
+            
+            // Oppdater alt og sjekk status
+            oppdaterOrdVisning();
+            oppdaterHangman();
+            sjekkSpillStatus();
+        }
+
+        /**
+         * Oppdaterer strekene (_ _ A _ B)
+         * Denne håndterer også mellomrom mellom ord.
+         */
+        function oppdaterOrdVisning() {
+            let visning = '';
+            
+            for (const bokstav of hemmeligOrd) {
+                if (bokstav === ' ') {
+                    visning += ' &nbsp; '; // Bruker &nbsp; for å tvinge frem mellomrom
+                } else if (gjettedeBokstaver.includes(bokstav)) {
+                    visning += `${bokstav} `;
+                } else {
+                    visning += '_ ';
+                }
+            }
+            ordStreker.innerHTML = visning.trim(); // Bruker .innerHTML pga. &nbsp;
+        }
+        
+        /**
+         * Oppdaterer hangman-tegningen basert på antall feil.
+         */
+        function oppdaterHangman() {
+            hangmanTegning.textContent = hangmanTegninger[feilGjett];
+        }
+
+        /**
+         * Sjekker om spillet er vunnet eller tapt.
+         */
+        function sjekkSpillStatus() {
+            // Sjekk for tap
+            if (feilGjett >= maksFeil) {
+                spillMelding.textContent = `Du tapte! Ordet var: ${hemmeligOrd}`;
+                spillMelding.className = 'tap';
+                avsluttSpill(true); // true = tapt
+                return;
+            }
+
+            // Sjekk for vinn
+            // Går gjennom hemmeligOrd og ser om alle bokstaver (unntatt mellomrom)
+            // er inkludert i gjettedeBokstaver.
+            let harVunnet = true;
+            for (const bokstav of hemmeligOrd) {
+                if (bokstav !== ' ' && !gjettedeBokstaver.includes(bokstav)) {
+                    harVunnet = false;
+                    break; // Fant en bokstav som ikke er gjettet
+                }
+            }
+            
+            if (harVunnet) {
+                spillMelding.textContent = 'Gratulerer, du vant!';
+                spillMelding.className = 'vinn';
+                avsluttSpill(false); // false = vunnet
+            }
+        }
+        
+        /**
+         * Deaktiverer knapper og viser "Spill på nytt"-knappen.
+         */
+        function avsluttSpill(tapt) {
+            // Deaktiver alle alfabet-knapper
+            document.querySelectorAll('.alfabet-knapp').forEach(knapp => {
+                knapp.disabled = true;
+            });
+            
+            // Vis "Spill på nytt"
+            nyttSpillKnapp.style.display = 'inline-block';
+            
+            // Hvis tapt, avslør hele ordet i strek-visningen
+            if (tapt) {
+                ordStreker.innerHTML = hemmeligOrd.split('').join(' ');
+            }
+        }
+        
+        /**
+         * Nullstiller spillet og går tilbake til oppsett-skjermen.
+         */
+        function initNyttSpill() {
+            // Bytt tilbake til oppsett-skjermen
+            spillSeksjon.style.display = 'none';
+            ordInputSeksjon.style.display = 'block';
+            
+            // Tøm passord-feltet
+            hemmeligOrdInput.value = '';
+        }
+
+        // --- 4. KOBLE HENDELSER (EVENT LISTENERS) ---
+        
+        // Start spillet når knappen trykkes
+        startSpillKnapp.addEventListener('click', startSelveSpillet);
+        
+        // La "Enter" i input-feltet også starte spillet
+        hemmeligOrdInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                startSelveSpillet();
+            }
+        });
+
+        // Start et helt nytt spill (gå tilbake til oppsett)
+        nyttSpillKnapp.addEventListener('click', initNyttSpill);
+
+        // --- 5. NY FUNKSJON FOR TASTATUR ---
+        
+        /**
+         * Håndterer tastetrykk fra det fysiske tastaturet.
+         */
+        function handleTastetrykk(event) {
+            // 1. Sjekk om vi er på spill-skjermen, ikke oppsett-skjermen.
+            //    Vi vil ikke registrere tastetrykk når spiller 1 skriver ordet.
+            if (spillSeksjon.style.display !== 'block') {
+                return; // Avslutt funksjonen tidlig
+            }
+
+            // 2. Gjør om tasten til stor bokstav
+            const tast = event.key.toUpperCase();
+
+            // 3. Sjekk om tasten er en gyldig bokstav i alfabetet vårt
+            if (alfabet.includes(tast)) {
+                
+                // 4. Finn den tilsvarende knappen på skjermen
+                const knapp = document.querySelector(`.alfabet-knapp[data-bokstav="${tast}"]`);
+
+                // 5. Sjekk om knappen eksisterer OG at den ikke allerede er trykket
+                if (knapp && !knapp.disabled) {
+                    // 6. Simuler et klikk på knappen
+                    knapp.click();
+                }
+            }
+        }
+
+        // --- 6. KOBLE TIL TASTATURET ---
+        
+        // Legg til lytteren på hele dokumentet for å fange opp alle tastetrykk
+        document.addEventListener('keydown', handleTastetrykk);
+
+    </script>
+
+</body>
+</html>

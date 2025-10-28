@@ -1,0 +1,21 @@
+/* Setter Inter som standard fontfamilie som forespurt */
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Forhindrer scrolling */
+        }
+        /* Sørger for at canvaset ser bra ut og skalerer */
+        canvas {
+            background: #0d1117; /* Mørk bakgrunn for spillet */
+            border: 2px solid #30363d;
+            border-radius: 12px; /* Avrundede hjørner */
+            max-width: 100%; /* Sørger for responsivitet på små skjermer */
+            height: auto; /* Beholder sideforholdet */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        h3 {
+            background-color: rgb(157, 127, 255);
+            color: #0d1117;
+            font-size: 40px;
+            padding: 1rem;
+        }
