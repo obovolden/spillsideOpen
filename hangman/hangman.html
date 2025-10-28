@@ -450,6 +450,40 @@
         // Start et helt nytt spill (gå tilbake til oppsett)
         nyttSpillKnapp.addEventListener('click', initNyttSpill);
 
+        // --- 5. NY FUNKSJON FOR TASTATUR ---
+        
+        /**
+         * Håndterer tastetrykk fra det fysiske tastaturet.
+         */
+        function handleTastetrykk(event) {
+            // 1. Sjekk om vi er på spill-skjermen, ikke oppsett-skjermen.
+            //    Vi vil ikke registrere tastetrykk når spiller 1 skriver ordet.
+            if (spillSeksjon.style.display !== 'block') {
+                return; // Avslutt funksjonen tidlig
+            }
+
+            // 2. Gjør om tasten til stor bokstav
+            const tast = event.key.toUpperCase();
+
+            // 3. Sjekk om tasten er en gyldig bokstav i alfabetet vårt
+            if (alfabet.includes(tast)) {
+                
+                // 4. Finn den tilsvarende knappen på skjermen
+                const knapp = document.querySelector(`.alfabet-knapp[data-bokstav="${tast}"]`);
+
+                // 5. Sjekk om knappen eksisterer OG at den ikke allerede er trykket
+                if (knapp && !knapp.disabled) {
+                    // 6. Simuler et klikk på knappen
+                    knapp.click();
+                }
+            }
+        }
+
+        // --- 6. KOBLE TIL TASTATURET ---
+        
+        // Legg til lytteren på hele dokumentet for å fange opp alle tastetrykk
+        document.addEventListener('keydown', handleTastetrykk);
+
     </script>
 
 </body>
