@@ -46,7 +46,7 @@ let spiller = {
 let jager = {
     x: -40,
     bredde: 40,
-    hastighet: 0.8
+    hastighet: 4.5
 };
 
 // --- Objekter ---
