@@ -63,3 +63,13 @@ section {
         text-decoration: none;
     }
 }
+
+/* Stil for Footer */
+footer {
+    text-align: center;  /* Senterstiller teksten */
+    padding: 20px 0;     /* Gir 20px luft over og under teksten */
+    margin-top: 30px;    /* Legger til en marg på toppen for å skille den fra innholdet */
+    border-top: 1px solid #eee; /* Legger til en svak, lys grå linje over */
+    color: #888;         /* Gir teksten en mørkegrå farge */
+    font-size: 0.9em;    /* Gjør skriften litt mindre enn vanlig brødtekst */
+}
