@@ -1,0 +1,58 @@
+body {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    background-color: #111;
+    color: white;
+}
+
+#game-board {
+    display: grid;
+    /* Rutenettet settes av JavaScript, men vi kan ha en fallback */
+    border: 3px solid #007BFF;
+    margin: 20px auto;
+    width: fit-content; /* Tilpasser seg innholdet */
+}
+
+/* * Vi definerer hvordan hver 'celle' på brettet ser ut.
+ * Hver celle er 30x30 pikseler.
+*/
+
+.cell {
+    width: 30px;
+    height: 30px;
+    box-sizing: border-box; /* Sørger for at border er inkludert i størrelsen */
+}
+
+.wall {
+    background-color: #007BFF;
+    border: 1px solid #0056b3;
+}
+
+.empty {
+    background-color: #000;
+}
+
+.dot {
+    background-color: #000;
+    /* Vi lager prikken med en pseudo-element */
+    position: relative; 
+}
+
+.dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background-color: #FFFF00; /* Gul prikk */
+    border-radius: 50%;
+}
+
+.pacman {
+    background-color: #FFFF00; /* Gul pacman */
+    border-radius: 50%;
+    border: 2px solid #333;
+    box-shadow: 0 0 5px #FFFF00;
+}
