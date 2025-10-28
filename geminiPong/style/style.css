@@ -14,5 +14,8 @@
         }
 
         h3 {
-            background-color: aquamarine;
+            background-color: rgb(157, 127, 255);
+            color: #0d1117;
+            font-size: 40px;
+            padding: 1rem;
         }
