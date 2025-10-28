@@ -3,25 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style/style.css">
     <title>Pong Spill</title>
     <!-- Laster inn Tailwind CSS for enkel styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Setter Inter som standard fontfamilie som forespurt */
-        body {
-            font-family: 'Inter', sans-serif;
-            overflow: hidden; /* Forhindrer scrolling */
-        }
-        /* Sørger for at canvaset ser bra ut og skalerer */
-        canvas {
-            background: #0d1117; /* Mørk bakgrunn for spillet */
-            border: 2px solid #30363d;
-            border-radius: 12px; /* Avrundede hjørner */
-            max-width: 100%; /* Sørger for responsivitet på små skjermer */
-            height: auto; /* Beholder sideforholdet */
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-    </style>
+
 </head>
 <body class="bg-gray-950 text-gray-200 flex flex-col items-center justify-center min-h-screen p-4">
 
@@ -37,6 +23,8 @@
         &nbsp;&nbsp;|&nbsp;&nbsp;
         Spiller 2 (Høyre): <span class="font-bold text-white">Piltast Opp</span> / <span class="font-bold text-white">Piltast Ned</span>
     </p>
+
+    <h3><a href="../index.html">Forside</a></h3>
 
     <script>
         // --- Oppsett av Canvas ---
