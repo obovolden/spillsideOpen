@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tre på Rad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #a8a8a8;
+        }
+        h1 {
+            color: #1b1c1c;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 2px solid #555;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none; /* Hindrer tekst-markering */
+            transition: background-color 0.2s;
+        }
+        .cell:hover {
+            background-color: #eee;
+        }
+        .cell.x {
+            color: #E25041; /* Rød for X */
+        }
+        .cell.o {
+            color: #4A90E2; /* Blå for O */
+        }
+        #status {
+            font-size: 1.5em;
+            font-weight: bold;
+            height: 30px; /* Slik at layouten ikke hopper */
+        }
+        #reset-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50; /* Grønn knapp */
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #reset-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tre på Rad</h1>
+    
+    <div id="game-board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+
+    <div id="status">Spiller X sin tur</div>
+    <button id="reset-button">Start på nytt</button>
+
+    <script>
+        // Henter elementer fra DOM
+        const statusDisplay = document.getElementById('status');
+        const gameBoard = document.getElementById('game-board');
+        const cells = document.querySelectorAll('.cell');
+        const resetButton = document.getElementById('reset-button');
+
+        // Spillets tilstand
+        let gameActive = true;
+        let currentPlayer = 'X';
+        let gameState = ["", "", "", "", "", "", "", "", ""]; // 9 tomme strenger for brettet
+
+        // Meldinger
+        const winningMessage = () => `Spiller ${currentPlayer} vinner! 🏆`;
+        const drawMessage = () => `Det ble uavgjort! 🤝`;
+        const currentPlayerTurn = () => `Spiller ${currentPlayer} sin tur`;
+
+        // Vinnerkombinasjoner (indekser i gameState-arrayet)
+        const winningConditions = [
+            [0, 1, 2], // Horisontal
+            [3, 4, 5], // Horisontal
+            [6, 7, 8], // Horisontal
+            [0, 3, 6], // Vertikal
+            [1, 4, 7], // Vertikal
+            [2, 5, 8], // Vertikal
+            [0, 4, 8], // Diagonal
+            [2, 4, 6]  // Diagonal
+        ];
+
+        // Setter startmeldingen
+        statusDisplay.innerHTML = currentPlayerTurn();
+
+        // Funksjon for å håndtere et klikk på en rute
+        function handleCellClick(clickedCellEvent) {
+            const clickedCell = clickedCellEvent.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            // Sjekk om ruten allerede er tatt eller om spillet er over
+            if (gameState[clickedCellIndex] !== "" || !gameActive) {
+                return;
+            }
+
+            // Hvis ruten er gyldig, kjør resten
+            handleCellPlayed(clickedCell, clickedCellIndex);
+            handleResultValidation();
+        }
+
+        // Oppdaterer spillets tilstand og UI
+        function handleCellPlayed(clickedCell, clickedCellIndex) {
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.innerHTML = currentPlayer;
+            // Legg til CSS-klasse for farge
+            clickedCell.classList.add(currentPlayer.toLowerCase()); 
+        }
+
+        // Sjekker om noen har vunnet eller om det er uavgjort
+        function handleResultValidation() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                let a = gameState[winCondition[0]];
+                let b = gameState[winCondition[1]];
+                let c = gameState[winCondition[2]];
+
+                if (a === '' || b === '' || c === '') {
+                    continue; // Gå til neste kombinasjon hvis en rute er tom
+                }
+                if (a === b && b === c) {
+                    roundWon = true; // Vi fant en vinner!
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusDisplay.innerHTML = winningMessage();
+                gameActive = false;
+                return;
+            }
+
+            // Sjekk for uavgjort (ingen tomme ruter igjen)
+            let roundDraw = !gameState.includes("");
+            if (roundDraw) {
+                statusDisplay.innerHTML = drawMessage();
+                gameActive = false;
+                return;
+            }
+
+            // Hvis ingen har vunnet og det ikke er uavgjort, bytt spiller
+            handlePlayerChange();
+        }
+
+        // Bytt mellom 'X' og 'O'
+        function handlePlayerChange() {
+            currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+            statusDisplay.innerHTML = currentPlayerTurn();
+        }
+
+        // Nullstiller spillet
+        function handleRestartGame() {
+            gameActive = true;
+            currentPlayer = 'X';
+            gameState = ["", "", "", "", "", "", "", "", ""];
+            statusDisplay.innerHTML = currentPlayerTurn();
+            
+            // Tøm brettet i UI
+            cells.forEach(cell => {
+                cell.innerHTML = "";
+                cell.classList.remove('x', 'o'); // Fjern fargeklassene
+            });
+        }
+
+        // Legger til lyttere på rutene og nullstill-knappen
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetButton.addEventListener('click', handleRestartGame);
+
+    </script>
+
+</body>
+</html>
