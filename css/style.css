@@ -57,3 +57,9 @@ body {
             line-height: 1.6;
             color: #cccccc;
         }
+
+section {
+    a{
+        text-decoration: none;
+    }
+}
