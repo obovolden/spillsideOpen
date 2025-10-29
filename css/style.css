@@ -34,6 +34,7 @@ body {
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             transition: transform 0.3s ease;
+            min-height: 405px;
         }
         .game-item:hover {
             transform: translateY(-5px);
