@@ -1,0 +1,112 @@
+/* Grunnleggende oppsett */
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f0f4f8;
+    color: #333;
+}
+
+h1 {
+    margin-bottom: 1rem;
+}
+
+.game-info {
+    margin-bottom: 1.5rem;
+}
+
+#reset-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#reset-button:hover {
+    background-color: #0056b3;
+}
+
+/* Spillbrettet (Grid) */
+.memory-game {
+    width: 90%;
+    max-width: 640px;
+    margin: auto;
+    display: grid;
+    /* Vi bruker 4 kolonner */
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    /* Dette sikrer at brettet holder formen */
+    perspective: 1000px; 
+}
+
+/* Selve kortet */
+.memory-card {
+    background-color: transparent;
+    /* Dette gjør kortet kvadratisk og responsivt */
+    aspect-ratio: 1 / 1; 
+    transform-style: preserve-3d;
+    transition: transform 0.5s;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.memory-card.flip {
+    transform: rotateY(180deg);
+}
+
+/* Baksiden og forsiden av kortet */
+.front-face,
+.back-face {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    position: absolute;
+    border-radius: 8px;
+    /* Skjuler baksiden av elementet når det er snudd */
+    backface-visibility: hidden; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem; /* Emoji-størrelse */
+}
+
+.front-face {
+    background: #f8f9fa;
+    color: #333;
+    /* Vi snur forsiden i starten */
+    transform: rotateY(180deg); 
+}
+
+.back-face {
+    background: #007bff;
+    color: white;
+    font-size: 3rem; /* Større '?' */
+}
+
+/* Justerer emoji-størrelsen på små skjermer */
+@media (max-width: 600px) {
+    .front-face, .back-face {
+        font-size: 2rem;
+    }
+    .back-face {
+        font-size: 2.5rem;
+    }
+    .memory-game {
+        gap: 0.5rem;
+    }
+}
