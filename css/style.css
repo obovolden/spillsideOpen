@@ -67,9 +67,9 @@ section {
 /* Stil for Footer */
 footer {
     text-align: center;  /* Senterstiller teksten */
-    padding: 20px 0;     /* Gir 20px luft over og under teksten */
-    margin-top: 30px;    /* Legger til en marg på toppen for å skille den fra innholdet */
-    border-top: 1px solid #eee; /* Legger til en svak, lys grå linje over */
-    color: #888;         /* Gir teksten en mørkegrå farge */
-    font-size: 0.9em;    /* Gjør skriften litt mindre enn vanlig brødtekst */
+    padding: 0;     /* Gir 20px luft over og under teksten */
+    margin-top: 15px;    /* Legger til en marg på toppen for å skille den fra innholdet */
+    border-top: 1px solid #000000; /* Legger til en svak, lys grå linje over */
+    color: #8d8787;         /* Gir teksten en mørkegrå farge */
+    font-size: 1.5em;    /* Gjør skriften litt mindre enn vanlig brødtekst */
 }
