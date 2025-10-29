@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sopp-Spretten</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <h1>Sopp-Spretten</h1>
+
+    <div id="spill-container">
+
+        <div id="spill-wrapper">
+            
+            <div id="start-menu">
+                <h2>Velkommen!</h2>
+                <p>Hold **Høyre Pil** for å løpe, **Mellomrom** for å hoppe.</p>
+                <input type="text" id="playerNameInput" placeholder="Skriv inn navnet ditt..." maxlength="10">
+                <button id="startButton">Start Spill</button>
+            </div>
+
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        </div>
+
+        <div id="highscore-container">
+            <h2>Highscore (Topp 5)</h2>
+            <ol id="highscore-list">
+                </ol>
+        </div>
+
+    </div>
+    
+    <script src="game.js"></script>
+
+</body>
+</html>

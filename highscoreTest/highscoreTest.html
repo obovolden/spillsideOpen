@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="utf-8">
+    <title>Highscore Eksempel</title>
+</head>
+<body>
+
+    <h1>Registrer ny score</h1>
+    <input type="text" id="navnInput" placeholder="Ditt navn">
+    <input type="number" id="poengInput" placeholder="Din poengsum">
+    <button onclick="lagreScore()">Lagre Score</button>
+
+    <hr>
+
+    <h1>Highscore Liste</h1>
+    <button onclick="hentScores()">Oppdater listen</button>
+    <ol id="highscoreListe"></ol>
+
+    <script>
+        // Funksjon for å lagre en ny poengsum
+        async function lagreScore() {
+            const spillerNavn = document.getElementById('navnInput').value;
+            const poeng = document.getElementById('poengInput').value;
+
+            const formData = new FormData();
+            formData.append('spiller_navn', spillerNavn);
+            formData.append('poeng', poeng);
+
+            try {
+                // Bytt ut 'add_score.php' med den fulle URL-en hvis den ligger et annet sted
+                const response = await fetch('../api/add_score.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                console.log(result.message); // Viser "Highscore lagret!" i konsollen
+                hentScores(); // Oppdaterer listen automatisk
+            } catch (error) {
+                console.error('Feil ved lagring:', error);
+            }
+        }
+
+        // Funksjon for å hente og vise highscore-listen
+        async function hentScores() {
+            try {
+                // Bytt ut 'get_scores.php' med den fulle URL-en
+                const response = await fetch('../api/get_scores.php');
+                const scores = await response.json();
+                
+                const listeElement = document.getElementById('highscoreListe');
+                listeElement.innerHTML = ''; // Tømmer listen først
+
+                scores.forEach(score => {
+                    const li = document.createElement('li');
+                    li.textContent = `${score.spiller_navn}: ${score.poeng} poeng`;
+                    listeElement.appendChild(li);
+                });
+
+            } catch (error) {
+                console.error('Feil ved henting:', error);
+            }
+        }
+
+        // Hent listen med en gang siden laster
+        hentScores();
+    </script>
+
+</body>
+</html>

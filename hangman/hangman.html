@@ -268,328 +268,219 @@
         </aside>
 
     </div> <script>
-        // --- 1. HENT HTML-ELEMENTER ---
-        const ordInputSeksjon = document.getElementById('ord-input-seksjon');
-        const spillSeksjon = document.getElementById('spill-seksjon');
-        
-        const spillerNavnInput = document.getElementById('spillerNavnInput'); // NY
-        const hemmeligOrdInput = document.getElementById('hemmeligOrdInput');
-        const startSpillKnapp = document.getElementById('startSpillKnapp');
-        
-        const visSpillerNavn = document.getElementById('vis-spiller-navn'); // NY
-        const hangmanTegning = document.getElementById('hangman-tegning');
-        const ordStreker = document.getElementById('ord-streker');
-        const alfabetSeksjon = document.getElementById('alfabet-seksjon');
-        const spillMelding = document.getElementById('spill-melding');
-        const nyttSpillKnapp = document.getElementById('nyttSpillKnapp');
-        
-        const highscoreTbody = document.getElementById('highscore-tbody'); // NY
-        const HIGHSCORE_KEY = 'hangmanHighscores'; // NY (Nøkkel for localStorage)
+    // --- 1. HENT HTML-ELEMENTER ---
+    const ordInputSeksjon = document.getElementById('ord-input-seksjon');
+    const spillSeksjon = document.getElementById('spill-seksjon');
+    
+    const spillerNavnInput = document.getElementById('spillerNavnInput');
+    const hemmeligOrdInput = document.getElementById('hemmeligOrdInput');
+    const startSpillKnapp = document.getElementById('startSpillKnapp');
+    
+    const visSpillerNavn = document.getElementById('vis-spiller-navn');
+    const hangmanTegning = document.getElementById('hangman-tegning');
+    const ordStreker = document.getElementById('ord-streker');
+    const alfabetSeksjon = document.getElementById('alfabet-seksjon');
+    const spillMelding = document.getElementById('spill-melding');
+    const nyttSpillKnapp = document.getElementById('nyttSpillKnapp');
+    
+    const highscoreTbody = document.getElementById('highscore-tbody');
 
-        // --- 2. SPILL-VARIABLER ---
-        let hemmeligOrd = '';
-        let aktivSpillerNavn = ''; // NY
-        let gjettedeBokstaver = [];
-        let feilGjett = 0;
-        const maksFeil = 6;
-        
-        const alfabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ'.split('');
-        const hangmanTegninger = [
-`
- +---+
- |   |
-     |
-     |
-     |
-     |
-=========`, // ... (resten av tegningene)
-`
- +---+
- |   |
- O   |
-     |
-     |
-     |
-=========`, 
-`
- +---+
- |   |
- O   |
- |   |
-     |
-     |
-=========`, 
-`
- +---+
- |   |
- O   |
-/|   |
-     |
-     |
-=========`, 
-`
- +---+
- |   |
- O   |
-/|\\  |
-     |
-     |
-=========`, 
-`
- +---+
- |   |
- O   |
-/|\\  |
-/    |
-     |
-=========`, 
-`
- +---+
- |   |
- O   |
-/|\\  |
-/ \\  |
-     |
-=========`,
-        ];
+    // --- 2. SPILL-VARIABLER ---
+    let hemmeligOrd = '';
+    let aktivSpillerNavn = '';
+    let gjettedeBokstaver = [];
+    let feilGjett = 0;
+    const maksFeil = 6;
+    
+    const alfabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ'.split('');
+    const hangmanTegninger = [
+        `\n +---+\n |   |\n     |\n     |\n     |\n     |\n=========\n`,
+        `\n +---+\n |   |\n O   |\n     |\n     |\n     |\n=========\n`,
+        `\n +---+\n |   |\n O   |\n |   |\n     |\n     |\n=========\n`,
+        `\n +---+\n |   |\n O   |\n/|   |\n     |\n     |\n=========\n`,
+        `\n +---+\n |   |\n O   |\n/|\\  |\n     |\n     |\n=========\n`,
+        `\n +---+\n |   |\n O   |\n/|\\  |\n/    |\n     |\n=========\n`,
+        `\n +---+\n |   |\n O   |\n/|\\  |\n/ \\  |\n     |\n=========\n`,
+    ];
 
-        // --- 3. HIGHSCORE-FUNKSJONER (NYE) ---
-
-        /**
-         * Henter highscores fra localStorage.
-         * Returnerer en sortert liste.
-         */
-        function hentHighscores() {
-            const scoresJSON = localStorage.getItem(HIGHSCORE_KEY);
-            const scores = scoresJSON ? JSON.parse(scoresJSON) : [];
-            // Sorterer alltid for sikkerhets skyld
-            scores.sort((a, b) => b.poeng - a.poeng);
-            return scores;
-        }
-
-        /**
-         * Viser highscore-listen i HTML-tabellen.
-         */
-        function oppdaterHighscoreTabell() {
-            const scores = hentHighscores();
+    // =================================================================
+    // --- 3. NYE DATABASE-FUNKSJONER (erstatter localStorage) ---
+    // =================================================================
+    
+    // VIKTIG: Pass på at stien til PHP-filene er riktig!
+    const addScoreURL = 'api/add_hangman_score.php';
+    const getScoresURL = 'api/get_hangman_scores.php';
+    
+    /**
+     * Viser highscore-listen ved å hente den fra databasen.
+     */
+    async function visHighscoresFraDatabase() {
+        try {
+            const response = await fetch(getScoresURL);
+            const scores = await response.json();
+            
             highscoreTbody.innerHTML = ''; // Tømmer tabellen
             
-            // Viser kun topp 10
-            scores.slice(0, 10).forEach((score, index) => {
+            scores.forEach((score, index) => {
                 const rad = highscoreTbody.insertRow();
                 rad.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${score.navn}</td>
+                    <td>${score.spiller_navn}</td>
                     <td>${score.poeng}</td>
                 `;
             });
+        } catch (error) {
+            console.error("Klarte ikke hente highscores fra databasen:", error);
+            highscoreTbody.innerHTML = '<tr><td colspan="3">Kunne ikke laste listen.</td></tr>';
         }
+    }
+    
+    /**
+     * Lagrer en ny score til databasen.
+     */
+    async function lagreScoreTilDatabase(navn, poeng) {
+        const formData = new FormData();
+        formData.append('spiller_navn', navn);
+        formData.append('poeng', poeng);
         
-        /**
-         * Lagrer en ny score, sorterer listen, og oppdaterer tabellen.
-         */
-        function lagreNyHighscore(navn, poeng) {
-            const scores = hentHighscores();
-            
-            scores.push({ navn, poeng });
-            scores.sort((a, b) => b.poeng - a.poeng); // Sorter synkende
-            
-            // Behold kun de 10 beste
-            const topp10 = scores.slice(0, 10);
-            
-            localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(topp10));
-            
-            oppdaterHighscoreTabell(); // Oppdater den synlige tabellen
+        try {
+            await fetch(addScoreURL, { method: 'POST', body: formData });
+            console.log(`Lagret score for ${navn}: ${poeng} poeng.`);
+            // Oppdater tabellen med en gang en ny score er lagret
+            await visHighscoresFraDatabase();
+        } catch (error) {
+            console.error("Klarte ikke lagre highscore til databasen:", error);
         }
+    }
 
-
-        // --- 4. KJERNEFUNKSJONER (Oppdatert) ---
-
-        /**
-         * Starter spillet (Oppdatert)
-         */
-        function startSelveSpillet() {
-            // Hent verdier fra input
-            aktivSpillerNavn = spillerNavnInput.value;
-            hemmeligOrd = hemmeligOrdInput.value.toUpperCase();
-            
-            // Validering
-            if (hemmeligOrd.length === 0 || aktivSpillerNavn.length === 0) {
-                alert('Du må fylle ut BÅDE navnet ditt og et hemmelig ord!');
-                return;
-            }
-
-            // Bytt "skjerm"
-            ordInputSeksjon.style.display = 'none';
-            spillSeksjon.style.display = 'block';
-
-            // Nullstill variabler
-            gjettedeBokstaver = [];
-            feilGjett = 0;
-            
-            // Sett opp spillbrettet
-            visSpillerNavn.textContent = aktivSpillerNavn; // Vis navn
-            genererAlfabetKnapper();
-            oppdaterOrdVisning();
-            oppdaterHangman();
-            spillMelding.textContent = '';
-            spillMelding.className = '';
-            nyttSpillKnapp.style.display = 'none';
-        }
-
-        /**
-         * Lager og viser alle alfabet-knappene. (Uendret)
-         */
-        function genererAlfabetKnapper() {
-            alfabetSeksjon.innerHTML = '';
-            alfabet.forEach(bokstav => {
-                const knapp = document.createElement('button');
-                knapp.textContent = bokstav;
-                knapp.classList.add('alfabet-knapp');
-                knapp.dataset.bokstav = bokstav;
-                knapp.addEventListener('click', () => gjettBokstav(bokstav));
-                alfabetSeksjon.appendChild(knapp);
-            });
-        }
+    // --- 4. KJERNEFUNKSJONER ---
+    
+    function startSelveSpillet() {
+        aktivSpillerNavn = spillerNavnInput.value;
+        hemmeligOrd = hemmeligOrdInput.value.toUpperCase();
         
-        /**
-         * Kjøres når en alfabet-knapp trykkes. (Oppdatert for farge)
-         */
-        function gjettBokstav(bokstav) {
-            const knapp = document.querySelector(`.alfabet-knapp[data-bokstav="${bokstav}"]`);
-            if (knapp) knapp.disabled = true;
-
-            if (hemmeligOrd.includes(bokstav)) {
-                gjettedeBokstaver.push(bokstav);
-                if (knapp) knapp.classList.add('riktig');
-            } else {
-                feilGjett++;
-                if (knapp) knapp.classList.add('feil');
-            }
-            
-            oppdaterOrdVisning();
-            oppdaterHangman();
-            sjekkSpillStatus();
+        if (hemmeligOrd.length === 0 || aktivSpillerNavn.length === 0) {
+            alert('Du må fylle ut BÅDE navnet ditt og et hemmelig ord!');
+            return;
         }
 
-        /**
-         * Oppdaterer strekene (_ _ A _ B) (Uendret)
-         */
-        function oppdaterOrdVisning() {
-            let visning = '';
-            for (const bokstav of hemmeligOrd) {
-                if (bokstav === ' ') {
-                    visning += ' &nbsp; ';
-                } else if (gjettedeBokstaver.includes(bokstav)) {
-                    visning += `${bokstav} `;
-                } else {
-                    visning += '_ ';
-                }
-            }
-            ordStreker.innerHTML = visning.trim();
-        }
-        
-        /**
-         * Oppdaterer hangman-tegningen. (Uendret)
-         */
-        function oppdaterHangman() {
-            hangmanTegning.textContent = hangmanTegninger[feilGjett];
-        }
+        ordInputSeksjon.style.display = 'none';
+        spillSeksjon.style.display = 'block';
 
-        /**
-         * Sjekker om spillet er vunnet eller tapt. (Oppdatert for poeng)
-         */
-        function sjekkSpillStatus() {
-            // Sjekk for tap
-            if (feilGjett >= maksFeil) {
-                spillMelding.textContent = `Du tapte! Ordet var: ${hemmeligOrd}`;
-                spillMelding.className = 'tap';
-                avsluttSpill(true);
-return;
-            }
+        gjettedeBokstaver = [];
+        feilGjett = 0;
+        
+        visSpillerNavn.textContent = aktivSpillerNavn;
+        genererAlfabetKnapper();
+        oppdaterOrdVisning();
+        oppdaterHangman();
+        spillMelding.textContent = '';
+        spillMelding.className = '';
+        nyttSpillKnapp.style.display = 'none';
+    }
 
-            // Sjekk for vinn
-            let harVunnet = true;
-            for (const bokstav of hemmeligOrd) {
-                if (bokstav !== ' ' && !gjettedeBokstaver.includes(bokstav)) {
-                    harVunnet = false;
-                    break;
-                }
-            }
-            
-            if (harVunnet) {
-                // NY: Beregn poengsum (6 poeng for 0 feil, 1 poeng for 5 feil)
-                let poeng = maksFeil - feilGjett;
-                
-                spillMelding.textContent = `Gratulerer, du vant! Du fikk ${poeng} poeng.`;
-                spillMelding.className = 'vinn';
-                
-                // NY: Lagre scoren
-                lagreNyHighscore(aktivSpillerNavn, poeng);
-                
-                avsluttSpill(false);
-            }
-        }
-        
-        /**
-         * Deaktiverer knapper og viser "Spill på nytt". (Uendret)
-         */
-        function avsluttSpill(tapt) {
-            document.querySelectorAll('.alfabet-knapp').forEach(knapp => {
-                knapp.disabled = true;
-            });
-            nyttSpillKnapp.style.display = 'inline-block';
-            if (tapt) {
-                ordStreker.innerHTML = hemmeligOrd.split('').join(' ');
-            }
-        }
-        
-        /**
-         * Nullstiller spillet og går tilbake til oppsett-skjermen. (Oppdatert)
-         */
-        function initNyttSpill() {
-            spillSeksjon.style.display = 'none';
-            ordInputSeksjon.style.display = 'block';
-            
-            // Tøm kun ord-feltet, behold navnet for en ny runde
-            hemmeligOrdInput.value = '';
-            // aktivSpillerNavn blir værende i variabelen og i input-feltet
-        }
-        
-        /**
-         * Håndterer tastetrykk fra det fysiske tastaturet. (Uendret)
-         */
-        function handleTastetrykk(event) {
-            if (spillSeksjon.style.display !== 'block') {
-                return;
-            }
-            const tast = event.key.toUpperCase();
-            if (alfabet.includes(tast)) {
-                const knapp = document.querySelector(`.alfabet-knapp[data-bokstav="${tast}"]`);
-                if (knapp && !knapp.disabled) {
-                    knapp.click();
-                }
-            }
-        }
-
-        // --- 5. KOBLE HENDELSER OG START ---
-        
-        startSpillKnapp.addEventListener('click', startSelveSpillet);
-        nyttSpillKnapp.addEventListener('click', initNyttSpill);
-        document.addEventListener('keydown', handleTastetrykk);
-        
-        // La "Enter" i input-feltene også starte spillet
-        hemmeligOrdInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') startSelveSpillet();
+    function genererAlfabetKnapper() {
+        alfabetSeksjon.innerHTML = '';
+        alfabet.forEach(bokstav => {
+            const knapp = document.createElement('button');
+            knapp.textContent = bokstav;
+            knapp.classList.add('alfabet-knapp');
+            knapp.dataset.bokstav = bokstav;
+            knapp.addEventListener('click', () => gjettBokstav(bokstav));
+            alfabetSeksjon.appendChild(knapp);
         });
-        spillerNavnInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') startSelveSpillet();
-        });
+    }
+    
+    function gjettBokstav(bokstav) {
+        const knapp = document.querySelector(`.alfabet-knapp[data-bokstav="${bokstav}"]`);
+        if (knapp) knapp.disabled = true;
 
-        // NY: Last inn highscore-tabellen med en gang siden lastes
-        oppdaterHighscoreTabell();
+        if (hemmeligOrd.includes(bokstav)) {
+            gjettedeBokstaver.push(bokstav);
+            if (knapp) knapp.classList.add('riktig');
+        } else {
+            feilGjett++;
+            if (knapp) knapp.classList.add('feil');
+        }
+        
+        oppdaterOrdVisning();
+        oppdaterHangman();
+        sjekkSpillStatus();
+    }
 
-    </script>
+    function oppdaterOrdVisning() {
+        let visning = hemmeligOrd.split('').map(bokstav => {
+            if (bokstav === ' ') return ' &nbsp; ';
+            return gjettedeBokstaver.includes(bokstav) ? `${bokstav} ` : '_ ';
+        }).join('');
+        ordStreker.innerHTML = visning.trim();
+    }
+    
+    function oppdaterHangman() {
+        hangmanTegning.textContent = hangmanTegninger[feilGjett];
+    }
+
+    // --- ENDRET `sjekkSpillStatus` for å bruke den nye lagringsfunksjonen ---
+    function sjekkSpillStatus() {
+        if (feilGjett >= maksFeil) {
+            spillMelding.textContent = `Du tapte! Ordet var: ${hemmeligOrd}`;
+            spillMelding.className = 'tap';
+            avsluttSpill(true);
+            return;
+        }
+
+        const harVunnet = hemmeligOrd.split('').every(b => b === ' ' || gjettedeBokstaver.includes(b));
+        
+        if (harVunnet) {
+            let poeng = maksFeil - feilGjett;
+            spillMelding.textContent = `Gratulerer, du vant! Du fikk ${poeng} poeng.`;
+            spillMelding.className = 'vinn';
+            
+            // ENDRING: Kall den nye database-funksjonen
+            lagreScoreTilDatabase(aktivSpillerNavn, poeng);
+            
+            avsluttSpill(false);
+        }
+    }
+    
+    function avsluttSpill(tapt) {
+        document.querySelectorAll('.alfabet-knapp').forEach(knapp => knapp.disabled = true);
+        nyttSpillKnapp.style.display = 'inline-block';
+        if (tapt) {
+            ordStreker.innerHTML = hemmeligOrd.split('').join(' ');
+        }
+    }
+    
+    function initNyttSpill() {
+        spillSeksjon.style.display = 'none';
+        ordInputSeksjon.style.display = 'block';
+        hemmeligOrdInput.value = '';
+    }
+    
+    function handleTastetrykk(event) {
+        if (spillSeksjon.style.display !== 'block') return;
+        const tast = event.key.toUpperCase();
+        const knapp = document.querySelector(`.alfabet-knapp[data-bokstav="${tast}"]`);
+        if (knapp && !knapp.disabled) knapp.click();
+    }
+
+    // --- 5. KOBLE HENDELSER OG START ---
+    
+    startSpillKnapp.addEventListener('click', startSelveSpillet);
+    nyttSpillKnapp.addEventListener('click', initNyttSpill);
+    document.addEventListener('keydown', handleTastetrykk);
+    
+    hemmeligOrdInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') startSelveSpillet();
+    });
+    spillerNavnInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') startSelveSpillet();
+    });
+
+    // ENDRING: Kall den nye database-funksjonen for å laste listen ved start
+    visHighscoresFraDatabase();
+
+</script>
 
 </body>
 </html>
