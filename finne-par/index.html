@@ -8,8 +8,22 @@
 </head>
 <body>
 
+    <div id="username-modal-overlay">
+        <div id="username-modal">
+            <h2>Velkommen!</h2>
+            <p>Vennligst skriv inn et brukernavn for highscore-listen.</p>
+            <input type="text" id="username-input" placeholder="Ditt brukernavn" maxlength="15">
+            <button id="username-save-btn">Lagre og start</button>
+            <p id="username-error"></p>
+        </div>
+    </div>
+
     <h1>Finne par-spillet</h1>
     
+    <p id="welcome-message"></p>
+
+    <h2>Tid: <span id="timer">0.0s</span></h2>
+
     <div class="game-controls">
         <div>
             <label for="level-select">Velg nivå:</label>
@@ -24,6 +38,22 @@
 
     <section class="memory-game">
         </section>
+
+    <div class="highscore-container">
+        <h3>Highscores (Topp 5)</h3>
+        
+        <h4>Enkelt</h4>
+        <ol id="highscore-list-easy">
+            </ol>
+
+        <h4>Middels</h4>
+        <ol id="highscore-list-medium">
+            </ol>
+
+        <h4>Vanskelig</h4>
+        <ol id="highscore-list-hard">
+            </ol>
+    </div>
 
     <script src="script.js"></script>
 </body>
