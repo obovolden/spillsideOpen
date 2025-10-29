@@ -14,14 +14,36 @@ body {
     min-height: 100vh;
     background-color: #f0f4f8;
     color: #333;
+    padding: 1rem;
 }
 
 h1 {
     margin-bottom: 1rem;
 }
 
-.game-info {
+/* --- NY/OPPDATERT --- */
+/* Kontroller for nivå og reset */
+.game-controls {
+    display: flex;
+    flex-wrap: wrap; /* Sørger for at det ser bra ut på mobil */
+    gap: 1rem 2rem; /* Mellomrom */
+    align-items: center;
+    justify-content: center;
     margin-bottom: 1.5rem;
+}
+
+.game-controls label {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+#level-select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: white;
 }
 
 #reset-button {
@@ -35,6 +57,7 @@ h1 {
     cursor: pointer;
     transition: background-color 0.2s;
 }
+/* --- Slutt på NY/OPPDATERT --- */
 
 #reset-button:hover {
     background-color: #0056b3;
@@ -46,17 +69,15 @@ h1 {
     max-width: 640px;
     margin: auto;
     display: grid;
-    /* Vi bruker 4 kolonner */
-    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
-    /* Dette sikrer at brettet holder formen */
     perspective: 1000px; 
+    /* grid-template-columns fjernes herfra, settes nå i JS */
 }
 
 /* Selve kortet */
 .memory-card {
-    background-color: transparent;
-    /* Dette gjør kortet kvadratisk og responsivt */
+    /* --- OPPDATERT --- */
+    background-color: #f8f9fa; /* Solid farge for å hindre "smitte" */
     aspect-ratio: 1 / 1; 
     transform-style: preserve-3d;
     transition: transform 0.5s;
@@ -77,34 +98,37 @@ h1 {
     padding: 10px;
     position: absolute;
     border-radius: 8px;
-    /* Skjuler baksiden av elementet når det er snudd */
     backface-visibility: hidden; 
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem; /* Emoji-størrelse */
+    
+    /* --- OPPDATERT: Større symboler --- */
+    font-size: 3.5rem; /* Emoji-størrelse */
 }
 
 .front-face {
     background: #f8f9fa;
     color: #333;
-    /* Vi snur forsiden i starten */
     transform: rotateY(180deg); 
 }
 
 .back-face {
     background: #007bff;
     color: white;
-    font-size: 3rem; /* Større '?' */
+    /* --- OPPDATERT: Større '?' --- */
+    font-size: 4rem; 
 }
 
 /* Justerer emoji-størrelsen på små skjermer */
 @media (max-width: 600px) {
-    .front-face, .back-face {
-        font-size: 2rem;
+    .front-face {
+        /* --- OPPDATERT --- */
+        font-size: 2.5rem;
     }
     .back-face {
-        font-size: 2.5rem;
+        /* --- OPPDATERT --- */
+        font-size: 3rem;
     }
     .memory-game {
         gap: 0.5rem;
