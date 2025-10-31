@@ -1,0 +1,167 @@
+/* --- Generell Stil --- */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f8ff;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+h1, h2, h3 {
+    text-align: center;
+    color: #c52915;
+    margin-top: 0;
+}
+
+/* --- Spill-container og Canvas --- */
+#game-container {
+    position: relative; /* Nødvendig for å posisjonere UI over canvas */
+    width: 100%;
+    max-width: 800px; /* Spillets maksimale bredde */
+}
+
+canvas {
+    width: 100%; /* Gjør canvas responsivt */
+    height: auto; /* Beholder sideforholdet (800x600) */
+    aspect-ratio: 800 / 600;
+    background-color: #aaddff;
+    border: 3px solid #555;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    display: block; /* Fjerner ekstra mellomrom under */
+}
+
+/* --- UI Over Spillet (Game Over Skjema) --- */
+#game-ui-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Lar klikk gå "gjennom" til canvas */
+}
+
+#gameover-form-container {
+    display: none; /* Vises av JS */
+    background: rgba(255, 255, 255, 0.9);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    text-align: center;
+    pointer-events: auto; /* Gjør selve skjemaet klikkbart */
+    width: 80%;
+    max-width: 300px;
+}
+#gameover-form-container input {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+#gameover-form-container button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* --- Highscore Liste --- */
+#highscore-container {
+    width: 100%;
+    max-width: 800px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+#highscore-list {
+    padding-left: 20px;
+}
+#highscore-list li {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+#highscore-list li strong {
+    color: #e67e22;
+}
+
+/* --- Mobilkontroller --- */
+#touch-controls {
+    display: none; /* Skjult på desktop */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+#dpad {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    width: 150px;
+    height: 150px;
+}
+#dpad button {
+    font-size: 1.5em;
+    background: rgba(255, 255, 255, 0.7);
+    border: 2px solid #aaa;
+    border-radius: 10px;
+}
+#btn-up    { grid-column: 2; grid-row: 1; }
+#btn-left  { grid-column: 1; grid-row: 2; }
+#btn-down  { grid-column: 2; grid-row: 3; }
+#btn-right { grid-column: 3; grid-row: 2; }
+
+#action-button button {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; /* Rund knapp */
+    font-size: 1.2em;
+    font-weight: bold;
+    background: rgba(76, 175, 80, 0.8);
+    border: 2px solid #2a682c;
+    color: white;
+    margin-right: 20px;
+}
+
+/* Media Query: Skjul mobilkontroller på større skjermer */
+@media (min-width: 768px) {
+    #touch-controls {
+        display: none;
+    }
+}
+
+/* Media Query: Vis mobilkontroller på små skjermer */
+@media (max-width: 767px) {
+    body {
+        padding: 5px;
+        padding-bottom: 180px; /* Lag plass til kontroller nederst */
+    }
+    h1 { font-size: 1.5em; }
+    #highscore-container {
+        padding: 5px 10px;
+        margin-top: 10px;
+    }
+}
