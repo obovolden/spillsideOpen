@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kabal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Kabal</h1>
+
+    <div class="controls">
+        <label for="draw-mode">Trekk:</label>
+        <select id="draw-mode">
+            <option value="1">1 kort</option>
+            <option value="3">3 kort</option>
+        </select>
+        <button id="start-game-btn">Start nytt spill</button>
+        <div class="timer">Tid: <span id="time-display">0</span>s</div>
+    </div>
+
+    <div id="game-board">
+        <div class="top-row">
+            <div class="stack-area">
+                <div id="stock-pile" class="card-slot"></div>
+                <div id="waste-pile" class="card-slot"></div>
+            </div>
+            <div class="foundation-area">
+                <div class="card-slot foundation" id="foundation-1"></div>
+                <div class="card-slot foundation" id="foundation-2"></div>
+                <div class="card-slot foundation" id="foundation-3"></div>
+                <div class="card-slot foundation" id="foundation-4"></div>
+            </div>
+        </div>
+
+        <div id="tableau-area">
+            <div class="card-slot tableau" id="tableau-1"></div>
+            <div class="card-slot tableau" id="tableau-2"></div>
+            <div class="card-slot tableau" id="tableau-3"></div>
+            <div class="card-slot tableau" id="tableau-4"></div>
+            <div class="card-slot tableau" id="tableau-5"></div>
+            <div class="card-slot tableau" id="tableau-6"></div>
+            <div class="card-slot tableau" id="tableau-7"></div>
+        </div>
+    </div>
+
+    <div class="highscore-section">
+        <h3>Highscores (Trekk 1)</h3>
+        <ol id="highscore-list-1"></ol>
+        <h3>Highscores (Trekk 3)</h3>
+        <ol id="highscore-list-3"></ol>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
