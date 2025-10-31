@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gull-Jakten</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Gull-Jakten</h1>
+    
+    <div id="game-ui">
+        <div id="player-stats">
+            ❤️ **HP:** <span id="player-hp">10</span> / 10
+        </div>
+        <div id="player-score">
+            💰 **Gull:** <span id="player-gold">0</span>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="game-ui-overlay">
+            <form id="gameover-form-container" style="display: none;">
+                <h2>Game Over!</h2>
+                <p>Din poengsum: <strong id="final-score">0</strong></p>
+                <label for="username">Skriv inn navn (valgfritt):</label>
+                <input type="text" id="username" placeholder="Anonym Ridder">
+                <button type="submit" id="submit-score">Lagre poeng</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="highscore-container">
+        <h3>🏆 Highscore Topp 5 🏆</h3>
+        <ol id="highscore-list">
+            </ol>
+    </div>
+
+    <div id="touch-controls">
+        <div id="dpad-move">
+            <button id="btn-left">◀</button>
+            <button id="btn-right">▶</button>
+        </div>
+        <div id="action-buttons">
+            <button id="btn-block">🛡️ K</button>
+            <button id="btn-attack">⚔️ J</button>
+            <button id="btn-jump">⬆️ W</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

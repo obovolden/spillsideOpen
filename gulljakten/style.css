@@ -1,0 +1,165 @@
+/* --- Generell Stil --- */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f8ff;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 10px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+h1, h2, h3 {
+    text-align: center;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+/* --- Spill-UI (HP og Poeng) --- */
+#game-ui {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+#player-stats { color: #c0392b; }
+#player-score { color: #f39c12; }
+
+/* --- Spill-container og Canvas --- */
+#game-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+}
+
+canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 800 / 600;
+    background: #87CEEB; /* Himmelblå */
+    border: 3px solid #555;
+    border-radius: 8px;
+    display: block;
+}
+
+/* --- UI Over Spillet (Game Over Skjema) --- */
+#game-ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Lar klikk gå "gjennom" til canvas */
+}
+
+#gameover-form-container {
+    display: none; /* Vises av JS */
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    text-align: center;
+    pointer-events: auto; /* Gjør selve skjemaet klikkbart */
+    width: 80%;
+    max-width: 300px;
+}
+#gameover-form-container input {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+#gameover-form-container button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* --- Highscore Liste --- */
+#highscore-container {
+    width: 100%;
+    max-width: 800px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+#highscore-list {
+    padding-left: 20px;
+}
+#highscore-list li {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+#highscore-list li strong {
+    color: #e67e22;
+}
+
+/* --- Mobilkontroller --- */
+#touch-controls {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+#dpad-move { display: flex; }
+#dpad-move button {
+    width: 80px;
+    height: 80px;
+    font-size: 2em;
+    margin: 0 5px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 2px solid #aaa;
+    border-radius: 20px;
+}
+
+#action-buttons { display: flex; }
+#action-buttons button {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: white;
+    margin: 0 5px;
+    border: none;
+}
+#btn-attack { background-color: rgba(200, 50, 50, 0.8); }
+#btn-block  { background-color: rgba(50, 100, 200, 0.8); }
+#btn-jump   { background-color: rgba(50, 150, 50, 0.8); }
+
+/* Media Queries */
+@media (min-width: 768px) {
+    #touch-controls { display: none; }
+}
+@media (max-width: 767px) {
+    body { padding-bottom: 120px; }
+    #action-buttons button { width: 60px; height: 60px; font-size: 1.2em; }
+    #dpad-move button { width: 70px; height: 70px; font-size: 1.8em; }
+}
