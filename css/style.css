@@ -7,10 +7,11 @@ body {
         }
         header {
             background-color: #0d0d0d;
-            padding: 2rem;
+            padding-right: 1rem;
             border-bottom: 4px solid #ff4500;
             align-items: center;
             display: flex;
+            height: fit-content;
             
 
             h1{
