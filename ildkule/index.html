@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Unngå Ildkulene!</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>Unngå Ildkulene!</h1>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div id="game-ui-container">
+            <form id="gameover-form-container" style="display: none;">
+                <h2>Game Over!</h2>
+                <p>Din poengsum: <strong id="final-score">0</strong></p>
+                <label for="username">Skriv inn navn (valgfritt):</label>
+                <input type="text" id="username" placeholder="Anonym">
+                <button type="submit" id="submit-score">Lagre poeng</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="highscore-container">
+        <h3>🏆 Highscore Topp 5 🏆</h3>
+        <ol id="highscore-list">
+            </ol>
+    </div>
+
+    <div id="touch-controls">
+        <div id="dpad">
+            <button id="btn-up">W</button>
+            <button id="btn-left">A</button>
+            <button id="btn-down">S</button>
+            <button id="btn-right">D</button>
+        </div>
+        <div id="action-button">
+            <button id="btn-action">START</button>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
