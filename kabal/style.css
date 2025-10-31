@@ -72,11 +72,11 @@ h1 {
 
 /* --- Kort-plassholder / Bunke --- */
 .card-slot {
-    width: 100px; /* Litt bredere kort */
-    height: 140px; /* Litt høyere kort */
+    width: 100px; 
+    height: 140px; 
     border: 2px dashed rgba(255, 255, 255, 0.3);
     border-radius: 8px;
-    position: relative; /* VIKTIG for stabling av kort */
+    position: relative; 
 }
 
 /* Tomme plasser i toppen får en svak bakgrunn */
@@ -95,35 +95,29 @@ h1 {
     height: 140px;
     border-radius: 8px;
     background-color: white;
-    color: black;
+    color: black; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-    box-sizing: border-box; /* Sørger for at border er inkludert i størrelsen */
+    box-sizing: border-box; 
     border: 1px solid #aaa;
-    
-    /* OPPDATERT for det nye designet */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 3rem; /* Størrelse på midt-symbolet */
-    font-weight: bold;
-    
-    position: absolute; /* VIKTIG: Alle kort posisjoneres absolutt */
+    position: absolute; 
     top: 0;
     left: 0;
-    
     transition: top 0.1s ease-out, transform 0.1s ease-out, left 0.1s ease-out;
+    display: block; 
 }
+
+/* Setter fargen for røde kort (hjerter, ruter) */
+.card.red-card {
+    color: #D00000; /* Mørk rød */
+}
+
 
 /* Kort med forsiden opp som kan dras */
 .card[draggable="true"] {
     cursor: grab;
 }
 .card[draggable="true"]:hover {
-    transform: scale(1.03); /* Liten zoom på hover */
-}
-
-.card.red-card {
-    color: #D00000; /* Mørkere rød */
+    transform: scale(1.03); 
 }
 
 /* Kort med baksiden opp */
@@ -132,14 +126,13 @@ h1 {
     background-image: linear-gradient(135deg, #3a7bd5 25%, #3a60bd 25%, #3a60bd 50%, #3a7bd5 50%, #3a7bd5 75%, #3a60bd 75%, #3a60bd 100%);
     background-size: 28.28px 28.28px;
     border: 5px solid white;
-    color: transparent;
+    color: transparent; 
 }
 
 /* --- Stabling i snu-bunken (waste-pile) --- */
 .waste-pile .card {
-    top: 0; /* Alltid øverst */
+    top: 0; 
 }
-
 
 /* --- Highscore --- */
 .highscore-section {
@@ -164,39 +157,144 @@ h1 {
 }
 
 
-/* --- NYTT: Kort-design med hjørner --- */
+/* --- Kort-design med hjørner og pips --- */
 
-/* NY: Stil for hjørnene */
 .card-info {
     position: absolute;
-    font-size: 1.1rem; /* Liten skrift i hjørnene */
+    font-size: 1.1rem; 
     font-weight: bold;
     line-height: 1;
     padding: 5px 7px;
-    font-family: Arial, sans-serif; /* En tydelig font */
-    white-space: pre; /* Sørger for at f.eks. "10♥" holder seg pent */
+    font-family: Arial, sans-serif; 
+    white-space: pre; 
+    z-index: 10; 
 }
 
-/* NY: Posisjon for øverste hjørne */
 .card-info.top {
     top: 0;
     left: 0;
 }
 
-/* NY: Posisjon for nederste hjørne (rotert) */
 .card-info.bottom {
     bottom: 0;
     right: 0;
     transform: rotate(180deg);
 }
 
-/* NY: Midt-symbolet (arver farge fra .card eller .red-card) */
-.card-suit-middle {
-    font-size: 3.5rem; /* Kan justeres */
+/* Beholder for pips eller bildekort */
+.card-content {
+    position: absolute;
+    
+    /* ENDRING: Økt fra 15px til 30px for å unngå overlapping */
+    top: 30px; 
+    bottom: 30px; 
+    
+    left: 10px;
+    right: 10px;
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: center; 
+    align-content: space-around; 
+    overflow: hidden; 
+    font-size: 2.2rem; 
+    line-height: 1;
+    text-align: center;
 }
 
-/* NY: Skjul innholdet (span-elementene) når kortet er snudd */
-.card.face-down .card-info,
-.card.face-down .card-suit-middle {
+/* Individuelle pips (symboler) */
+.pip {
+    position: absolute; 
+    display: block; 
+    transform-origin: center center; 
+}
+
+
+/* Posisjonering for A (1) */
+.pip-1-1 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Posisjonering for 2 */
+.pip-2-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
+.pip-2-2 { bottom: 10%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); }
+
+/* Posisjonering for 3 */
+.pip-3-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
+.pip-3-2 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.pip-3-3 { bottom: 10%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); }
+
+/* Posisjonering for 4 */
+.pip-4-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
+.pip-4-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
+.pip-4-3 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-4-4 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+
+/* Posisjonering for 5 */
+.pip-5-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
+.pip-5-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
+.pip-5-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.pip-5-4 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-5-5 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+
+/* Posisjonering for 6 */
+.pip-6-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
+.pip-6-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
+.pip-6-3 { top: 50%; left: 25%; transform: translate(-50%, -50%); }
+.pip-6-4 { top: 50%; right: 25%; transform: translate(50%, -50%); }
+.pip-6-5 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-6-6 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+
+/* Posisjonering for 7 (som 6 + 1 i midten) */
+.pip-7-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
+.pip-7-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
+.pip-7-3 { top: 30%; left: 50%; transform: translate(-50%, -50%); } /* Midtre øverst */
+.pip-7-4 { top: 50%; left: 25%; transform: translate(-50%, -50%); }
+.pip-7-5 { top: 50%; right: 25%; transform: translate(50%, -50%); }
+.pip-7-6 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-7-7 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+
+/* Posisjonering for 8 (som 7 + 1 i midten nederst) */
+.pip-8-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
+.pip-8-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
+.pip-8-3 { top: 30%; left: 50%; transform: translate(-50%, -50%); } /* Midtre øverst */
+.pip-8-4 { top: 50%; left: 25%; transform: translate(-50%, -50%); }
+.pip-8-5 { top: 50%; right: 25%; transform: translate(50%, -50%); }
+.pip-8-6 { bottom: 30%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); } /* Midtre nederst */
+.pip-8-7 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-8-8 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+
+/* Posisjonering for 9 */
+.pip-9-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
+.pip-9-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
+.pip-9-3 { top: 30%; left: 25%; transform: translate(-50%, -50%); }
+.pip-9-4 { top: 30%; right: 25%; transform: translate(50%, -50%); }
+.pip-9-5 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.pip-9-6 { bottom: 30%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-9-7 { bottom: 30%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+.pip-9-8 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-9-9 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+
+/* ENDRING: Posisjonering for 10 (basert på 8 + 2 i midten) */
+.pip-10-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
+.pip-10-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
+.pip-10-3 { top: 30%; left: 25%; transform: translate(-50%, -50%); }
+.pip-10-4 { top: 30%; right: 25%; transform: translate(50%, -50%); }
+.pip-10-5 { top: 35%; left: 50%; transform: translate(-50%, -50%); } /* Øvre midtre */
+.pip-10-6 { bottom: 35%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); } /* Nedre midtre */
+.pip-10-7 { bottom: 30%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-10-8 { bottom: 30%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+.pip-10-9 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
+.pip-10-10 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
+
+
+/* Stiler for bildekort (Jack, Queen, King) */
+.face-card-img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain; 
+    display: block; 
+    margin: auto; 
+}
+
+/* Skjul card-content når kortet er snudd (gjelder pips og bildekort) */
+.card.face-down .card-content {
     display: none;
 }

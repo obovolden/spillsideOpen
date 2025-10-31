@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- Konstanter ---
-    const TABLEAU_STACK_OFFSET_Y = 30; // Piksler kortene stables med i Y-aksen
-    const WASTE_STACK_OFFSET_X = 20; // Piksler kortene stables med i X-aksen for waste-pile
+    const TABLEAU_STACK_OFFSET_Y = 35; 
+    const WASTE_STACK_OFFSET_X = 20; 
 
     // --- Globale variabler ---
     let deck = [];
@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startGameBtn.addEventListener('click', startGame);
     stockPile.addEventListener('click', onStockPileClick);
     
-    // Sett opp dra-og-slipp lyttere for alle bunker
     document.querySelectorAll('.card-slot').forEach(slot => {
         slot.addEventListener('dragover', onDragOver);
         slot.addEventListener('drop', onDrop);
@@ -36,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Kjernefunksjoner ---
 
     function startGame() {
-        console.log("Starter nytt spill...");
+        console.log("Starting new game...");
         gameMode = parseInt(drawModeSelect.value);
         
         resetBoard();
@@ -46,16 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         dealFullGame(deck); 
 
-        console.log(`Spillmodus: Trekk ${gameMode}. Stokket ${deck.length} kort.`);
+        console.log(`Game mode: Draw ${gameMode}. Shuffled ${deck.length} cards.`);
         loadHighScores();
-        // Timere starter ikke før første trekk
     }
 
     function resetBoard() {
-        // Tøm alle kort fra brettet
         document.querySelectorAll('.card').forEach(card => card.remove());
         
-        // Stopp og nullstill timer
         if (timerInterval) {
             clearInterval(timerInterval);
         }
@@ -85,11 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Lager et HTML-element for et kort
-     * @param {object} cardData - { suit, value }
-     * @param {boolean} isFaceUp - Om kortet skal vises med forsiden opp
-     */
     function createCardElement(cardData, isFaceUp = false) {
         const cardEl = document.createElement('div');
         cardEl.classList.add('card');
@@ -98,19 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
         cardEl.dataset.value = cardData.value;
         cardEl.dataset.suit = cardData.suit;
 
-        // --- NYTT: Legg til struktur for hjørner og midten ---
+        // Struktur for hjørner
         const topInfo = document.createElement('span');
         topInfo.classList.add('card-info', 'top');
         cardEl.appendChild(topInfo);
 
-        const middleSuit = document.createElement('span');
-        middleSuit.classList.add('card-suit-middle');
-        cardEl.appendChild(middleSuit);
+        // Beholder for pips/bildekort
+        const cardContent = document.createElement('div');
+        cardContent.classList.add('card-content');
+        cardEl.appendChild(cardContent);
 
         const bottomInfo = document.createElement('span');
         bottomInfo.classList.add('card-info', 'bottom');
         cardEl.appendChild(bottomInfo);
-        // --- SLUTT NYTT ---
         
         cardEl.dataset.isFaceUp = 'false'; 
 
@@ -124,27 +115,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
 
-    /**
-     * Deler ut hele spillet
-     */
     function dealFullGame(deck) {
         let tempDeck = [...deck];
 
-        // 1. Del ut til Tableau (spillebunkene)
         tableauSlots.forEach((slot, tableauIndex) => {
             for (let i = 0; i < tableauIndex + 1; i++) {
                 const cardData = tempDeck.pop();
                 const isFaceUp = (i === tableauIndex);
                 const cardEl = createCardElement(cardData, isFaceUp);
                 
-                // --- KORREKT STABLINGSLOGIKK ---
                 cardEl.style.top = (i * TABLEAU_STACK_OFFSET_Y) + 'px';
                 
                 slot.appendChild(cardEl);
             }
         });
 
-        // 2. Legg resten av kortene i trekkebunken
         while (tempDeck.length > 0) {
             const cardData = tempDeck.pop();
             const cardEl = createCardElement(cardData, false);
@@ -155,47 +140,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Spill-logikk (Trekkebunke) ---
 
     function onStockPileClick() {
-        if (timerInterval === null) startTimer(); // Start timer på første trekk
+        if (timerInterval === null) startTimer(); 
 
-        // 1. Sjekk om trekkebunken er tom
         if (stockPile.children.length === 0) {
             recycleWastePile();
             return;
         }
         
-        // 2. Flytt 'numToDraw' kort fra stock til waste
         const numToDraw = gameMode;
         for (let i = 0; i < numToDraw; i++) {
             const topCard = stockPile.lastElementChild;
             if (topCard) {
-                turnCardFaceUp(topCard); // Snur kortet
+                turnCardFaceUp(topCard); 
                 topCard.style.top = '0px'; 
-                topCard.style.left = '0px'; // Nullstill venstre-posisjon
+                topCard.style.left = '0px'; 
                 wastePile.appendChild(topCard);
             }
         }
         
-        // 3. Oppdater det visuelle for waste-bunken
         updateWastePileVisuals();
     }
     
-    // NY OG FORENKLET FUNKSJON
     function updateWastePileVisuals() {
         const wasteCards = Array.from(wastePile.children);
         const numCards = wasteCards.length;
         
         wasteCards.forEach((card, index) => {
             let offset = 0;
-            // Viser de 3 siste kortene (eller færre) spredt ut
             if (index >= numCards - 3) { 
                 offset = (index - (Math.max(0, numCards - 3))) * WASTE_STACK_OFFSET_X;
             } else if (numCards > 3) {
-                 // Alle eldre kort stables på 0
                 offset = 0;
             }
             
             card.style.left = offset + 'px';
-            card.style.zIndex = index; // Sørg for at de øverste er synlige
+            card.style.zIndex = index; 
         });
     }
 
@@ -205,25 +184,26 @@ document.addEventListener('DOMContentLoaded', () => {
         while(wasteCards.length > 0) {
             const cardEl = wasteCards.pop(); 
             
-            // Snu det med baksiden opp igjen
             cardEl.classList.add('face-down');
-            cardEl.classList.remove('red-card');
+            cardEl.classList.remove('red-card'); // Viktig å fjerne denne!
             cardEl.dataset.isFaceUp = 'false';
             
-            // --- NYTT: Tøm de nye span-elementene ---
             const topInfo = cardEl.querySelector('.card-info.top');
             const bottomInfo = cardEl.querySelector('.card-info.bottom');
-            const middleSuit = cardEl.querySelector('.card-suit-middle');
             if (topInfo) topInfo.textContent = '';
             if (bottomInfo) bottomInfo.textContent = '';
-            if (middleSuit) middleSuit.textContent = '';
-            // --- SLUTT NYTT ---
+            
+            const cardContent = cardEl.querySelector('.card-content');
+            if (cardContent) cardContent.innerHTML = '';
+
 
             cardEl.draggable = false;
             cardEl.removeEventListener('dragstart', onDragStart);
             cardEl.removeEventListener('dragend', onDragEnd);
+            cardEl.removeEventListener('dragover', onDragOver);
+            cardEl.removeEventListener('drop', onDrop);
+            cardEl.removeEventListener('dblclick', onCardDoubleClick);
             
-            // Nullstill posisjon og z-index
             cardEl.style.top = '0px';
             cardEl.style.left = '0px';
             cardEl.style.zIndex = 'auto';
@@ -237,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function turnCardFaceUp(cardEl, suit, value) {
         if (!cardEl) return;
-        if (cardEl.dataset.isFaceUp === 'true') return; // Allerede snudd
+        if (cardEl.dataset.isFaceUp === 'true') return; 
 
         const cardSuit = suit || cardEl.dataset.suit;
         const cardValue = value || cardEl.dataset.value;
@@ -245,36 +225,61 @@ document.addEventListener('DOMContentLoaded', () => {
         cardEl.classList.remove('face-down');
         cardEl.dataset.isFaceUp = 'true';
         
-        // --- NYTT: Fyll inn de nye span-elementene ---
+        // Fyll inn hjørne-tekst
         const cardInfoText = `${cardValue}${cardSuit}`;
-        
         const topInfo = cardEl.querySelector('.card-info.top');
         const bottomInfo = cardEl.querySelector('.card-info.bottom');
-        const middleSuit = cardEl.querySelector('.card-suit-middle');
-
         if (topInfo) topInfo.textContent = cardInfoText;
-        if (middleSuit) middleSuit.textContent = cardSuit;
         if (bottomInfo) bottomInfo.textContent = cardInfoText;
-        // --- SLUTT NYTT ---
+
+        // Fyll inn pips eller bildekort
+        const cardContent = cardEl.querySelector('.card-content');
+        if (cardContent) {
+            cardContent.innerHTML = ''; // Tøm først
+            if (['J', 'Q', 'K'].includes(cardValue)) {
+                // For bildekort
+                const faceCardImg = document.createElement('img');
+                faceCardImg.src = `img/${cardValue.toLowerCase()}.svg`; // Antar bilder i 'img/'
+                faceCardImg.alt = cardValue;
+                faceCardImg.classList.add('face-card-img');
+                cardContent.appendChild(faceCardImg);
+            } else {
+                // For numeriske kort (inkludert A)
+                const numPips = getNumericValue(cardValue) + 1; // A=1, 2=2, etc.
+                
+                // --- FORENKLING: isRed og .red-pip er fjernet ---
+                for (let i = 0; i < numPips; i++) {
+                    const pip = document.createElement('span');
+                    pip.classList.add('pip', `pip-${numPips}-${i + 1}`); // Klasser for posisjonering
+                    pip.textContent = cardSuit;
+                    cardContent.appendChild(pip);
+                }
+            }
+        }
         
+        // --- DENNE ER NÅ HOVEDKONTROLLEN FOR FARGE ---
         if (getCardColor(cardSuit) === 'red') {
             cardEl.classList.add('red-card');
+        } else {
+            cardEl.classList.remove('red-card'); 
         }
+        // --- SLUTT ENDRING ---
 
         cardEl.draggable = true;
         cardEl.addEventListener('dragstart', onDragStart);
         cardEl.addEventListener('dragend', onDragEnd);
+        cardEl.addEventListener('dragover', onDragOver);
+        cardEl.addEventListener('drop', onDrop);
+        cardEl.addEventListener('dblclick', onCardDoubleClick);
     }
 
     // --- Dra-og-slipp Logikk ---
 
     function onDragStart(e) {
-        if (timerInterval === null) startTimer(); // Start timer på første trekk
+        if (timerInterval === null) startTimer(); 
 
-        // Sjekk om vi drar fra waste-bunken
         const isFromWaste = e.target.parentElement === wastePile;
         
-        // Hvis vi drar fra waste, KUN tillat å dra det øverste kortet
         if (isFromWaste && e.target !== wastePile.lastElementChild) {
             e.preventDefault();
             return;
@@ -283,14 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
         e.dataTransfer.setData('text/plain', e.target.id);
         e.dataTransfer.effectAllowed = 'move';
         
-        // Gir en liten visuell effekt og øker z-index
         setTimeout(() => {
             let currentCard = e.target;
             let z = 100;
             while(currentCard) {
                 currentCard.style.opacity = '0.7';
                 currentCard.style.zIndex = z++;
-                if (isFromWaste) currentCard = null; // Stopp hvis fra waste
+                if (isFromWaste) currentCard = null; 
                 else currentCard = currentCard.nextElementSibling;
             }
         }, 0);
@@ -309,36 +313,41 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!draggedCard) return;
 
-        let dropTarget = e.target;
-        
-        if (dropTarget.classList.contains('card')) {
-            dropTarget = dropTarget.parentElement;
+        const dropTargetElement = e.target.closest('.card, .card-slot');
+
+        if (!dropTargetElement) {
+            console.log("Slipp på ugyldig område.");
+            return; 
         }
 
-        if (!dropTarget.classList.contains('card-slot')) {
-             // Avbryt hvis dropp-målet er ugyldig
-            return;
+        let targetSlot;
+        if (dropTargetElement.classList.contains('card')) {
+            targetSlot = dropTargetElement.parentElement;
+        } else {
+            targetSlot = dropTargetElement;
+        }
+
+        if (!targetSlot || !targetSlot.classList.contains('card-slot')) {
+            console.log("Fant ikke en gyldig bunke ('card-slot').");
+            return; 
         }
 
         const originalParent = draggedCard.parentElement;
 
-        if (isValidMove(draggedCard, dropTarget)) {
+        if (isValidMove(draggedCard, targetSlot)) {
             
-            // Håndter flytting av én eller flere kort
             const stackToMove = [];
             let currentCard = draggedCard;
             while(currentCard) {
                 stackToMove.push(currentCard);
-                // Hvis fra waste, flytt kun ett kort
                 if (originalParent === wastePile) currentCard = null; 
                 else currentCard = currentCard.nextElementSibling;
             }
             
-            const baseIndex = dropTarget.children.length; // Start-indeks i den nye bunken
+            const baseIndex = targetSlot.children.length; 
 
             stackToMove.forEach((card, index) => {
-                // For foundation-bunker, ikke stable i høyden
-                if (dropTarget.classList.contains('foundation')) {
+                if (targetSlot.classList.contains('foundation')) {
                     card.style.top = '0px';
                 } else {
                     card.style.top = (baseIndex + index) * TABLEAU_STACK_OFFSET_Y + 'px';
@@ -347,15 +356,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.style.opacity = '1';
                 card.style.zIndex = baseIndex + index + 1;
                 
-                dropTarget.appendChild(card);
+                targetSlot.appendChild(card); 
             });
             
-            // Snu kortet som lå under
             if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
                 turnCardFaceUp(originalParent.lastElementChild);
             }
             
-            // Oppdater waste-bunken hvis vi flyttet derfra
             if (originalParent === wastePile) {
                 updateWastePileVisuals();
             }
@@ -367,45 +374,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- NY FUNKSJON: Kjører alltid etter en dra-operasjon ---
     function onDragEnd(e) {
-        // Tilbakestill stilen på kortet (og evt. bunken)
-        // uansett om flyttingen var vellykket eller ikke.
         resetCardStackStyle(e.target);
     }
+    
+    function onCardDoubleClick(e) {
+        if (timerInterval === null) startTimer(); 
 
-    // NY Hjelpefunksjon: Tilbakestiller stil ved ugyldig dropp
+        const cardEl = e.target.closest('.card');
+        if (!cardEl) return;
+
+        const originalParent = cardEl.parentElement;
+
+        const isTopWasteCard = (originalParent === wastePile && cardEl === wastePile.lastElementChild);
+        const isBottomTableauCard = (originalParent.classList.contains('tableau') && cardEl.nextElementSibling === null);
+
+        if (!isTopWasteCard && !isBottomTableauCard) {
+            return; 
+        }
+
+        for (const slot of foundationSlots) {
+            if (isValidMove(cardEl, slot)) {
+                cardEl.style.top = '0px';
+                cardEl.style.left = '0px';
+                slot.appendChild(cardEl);
+
+                if (isBottomTableauCard && originalParent.lastElementChild) {
+                    turnCardFaceUp(originalParent.lastElementChild);
+                }
+                if (isTopWasteCard) {
+                    updateWastePileVisuals();
+                }
+
+                checkWinCondition();
+                break; 
+            }
+        }
+    }
+
+
     function resetCardStackStyle(topCard) {
+        if (!topCard) return;
+
         let currentCard = topCard;
         while(currentCard) {
             currentCard.style.opacity = '1';
-            
-            // Nullstill zIndex kun hvis den ikke er i en bunke
-            // (La onDrop håndtere zIndex for vellykkede trekk)
-            if (currentCard.parentElement.children.length > 1 && currentCard.style.zIndex >= 100) {
-                 // Denne logikken er vanskelig, la oss forenkle:
-                 // onDrop setter RIKTIG zIndex. Denne nullstiller bare.
-                 // Vi setter den til auto, så den følger dokumentflyten
-                 // ELLER, vi kan sette den basert på posisjonen i bunken
-                 
-                 // Enkleste: la zIndex være som den var, onDrop fikser den
-                 // hvis trekket er gyldig. Hvis ikke, er det ikke så farlig.
-                 // Men opacity MÅ tilbake.
-            }
-
             currentCard = currentCard.nextElementSibling;
         }
 
-        // Reposisjoner z-index for hele den opprinnelige bunken
-        // Dette er den tryggeste måten å unngå "flytende" kort
-        if (topCard && topCard.parentElement) {
+        if (topCard.parentElement) {
             const children = Array.from(topCard.parentElement.children);
             children.forEach((child, index) => {
                 if (child.classList.contains('card')) {
                     child.style.zIndex = index + 1;
                 }
             });
-            // Og oppdater waste-bunken visuelt hvis det var der
+            
             if(topCard.parentElement === wastePile) {
                 updateWastePileVisuals();
             }
@@ -437,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- REGEL 1: Flytte til MÅL-BUNKENE (Foundation) ---
         if (targetSlot.classList.contains('foundation')) {
-            // Kan bare flytte ETT kort om gangen
             if (draggedCard.nextElementSibling) return false; 
             
             if (!topCard) {
@@ -468,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return oppositeColor && oneValueLower;
         }
         
-        return false; // Ikke et gyldig mål
+        return false; 
     }
 
     // --- Seier-sjekk ---
@@ -520,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const scores = getHighScores(mode);
         scores.push(time);
         scores.sort((a, b) => a - b); 
-        const topScores = scores.slice(0, 5); // Lagre topp 5
+        const topScores = scores.slice(0, 5); 
 
         const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
         localStorage.setItem(key, JSON.stringify(topScores));
@@ -543,7 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             scores.forEach(score => {
                 const li = document.createElement('li');
-                // Sikrer at denne linjen bruker backticks (`)
                 li.textContent = `${score} sekunder`; 
                 listElement.appendChild(li);
             });
