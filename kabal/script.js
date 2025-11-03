@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval = null;
     let startTime = 0;
     let elapsedTime = 0;
+    let onConfirmCallback = null; 
 
     // --- DOM-elementer ---
     const timeDisplay = document.getElementById('time-display');
@@ -23,35 +24,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const foundationSlots = document.querySelectorAll('.foundation');
     const tableauSlots = document.querySelectorAll('.tableau');
 
+    // --- MODAL-ELEMENTER ---
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+    const modalConfirmBtn = document.getElementById('modal-confirm');
+    const modalCancelBtn = document.getElementById('modal-cancel');
+
+    // --- START PÅ NY, "SKUDDSIKKER" FIKS ---
+    // Tvinger modalen til å være skjult med inline-stil,
+    // uavhengig av om CSS-filen er ødelagt.
+    if (modalOverlay) {
+        modalOverlay.style.display = 'none'; // Bruker inline-stil
+    }
+    // --- SLUTT PÅ NY FIKS ---
+
+
     // --- Event Listeners ---
-    startGameBtn.addEventListener('click', startGame);
-    stockPile.addEventListener('click', onStockPileClick);
+    
+    if (startGameBtn) {
+        startGameBtn.addEventListener('click', () => {
+            if (timerInterval) {
+                if (modalOverlay) {
+                    showConfirmModal(
+                        "Starte nytt spill?", 
+                        "Er du sikker på at du vil starte? All fremgang vil gå tapt.", 
+                        startGame 
+                    );
+                } else {
+                    if (confirm("Er du sikker på at du vil starte et nytt spill? Fremgangen din vil gå tapt.")) {
+                        startGame();
+                    }
+                }
+            } else {
+                startGame();
+            }
+        });
+    } else {
+        console.error("Finner ikke 'start-game-btn'. Spillet kan ikke starte.");
+    }
+
+    if (stockPile) {
+        stockPile.addEventListener('click', onStockPileClick);
+    }
     
     document.querySelectorAll('.card-slot').forEach(slot => {
         slot.addEventListener('dragover', onDragOver);
         slot.addEventListener('drop', onDrop);
     });
 
-    // --- Kjernefunksjoner ---
+    if (modalOverlay && modalConfirmBtn && modalCancelBtn) {
+        modalConfirmBtn.addEventListener('click', () => {
+            if (onConfirmCallback) {
+                onConfirmCallback(); 
+            }
+            hideModal();
+        });
 
+        modalCancelBtn.addEventListener('click', hideModal);
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                hideModal();
+            }
+        });
+    } else {
+        console.warn("Modal HTML-elementer ble ikke funnet. Spillet vil falle tilbake til 'alert' og 'confirm'.");
+    }
+
+    // --- Kjernefunksjoner ---
     function startGame() {
         console.log("Starting new game...");
         gameMode = parseInt(drawModeSelect.value);
-        
         resetBoard();
-        
         deck = createDeck();
         shuffleDeck(deck);
-        
         dealFullGame(deck); 
-
         console.log(`Game mode: Draw ${gameMode}. Shuffled ${deck.length} cards.`);
         loadHighScores();
     }
 
     function resetBoard() {
         document.querySelectorAll('.card').forEach(card => card.remove());
-        
         if (timerInterval) {
             clearInterval(timerInterval);
         }
@@ -61,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Kort-oppretting og Utdeling ---
-
     function createDeck() {
         const suits = ['♥', '♦', '♣', '♠'];
         const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -84,27 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function createCardElement(cardData, isFaceUp = false) {
         const cardEl = document.createElement('div');
         cardEl.classList.add('card');
-        
         cardEl.id = `card-${cardData.suit}-${cardData.value}`;
         cardEl.dataset.value = cardData.value;
         cardEl.dataset.suit = cardData.suit;
-
-        // Struktur for hjørner
-        const topInfo = document.createElement('span');
-        topInfo.classList.add('card-info', 'top');
-        cardEl.appendChild(topInfo);
-
-        // Beholder for pips/bildekort
-        const cardContent = document.createElement('div');
-        cardContent.classList.add('card-content');
-        cardEl.appendChild(cardContent);
-
-        const bottomInfo = document.createElement('span');
-        bottomInfo.classList.add('card-info', 'bottom');
-        cardEl.appendChild(bottomInfo);
-        
         cardEl.dataset.isFaceUp = 'false'; 
-
         if (isFaceUp) {
             turnCardFaceUp(cardEl); 
         } else {
@@ -114,22 +150,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return cardEl;
     }
     
-
     function dealFullGame(deck) {
         let tempDeck = [...deck];
-
         tableauSlots.forEach((slot, tableauIndex) => {
             for (let i = 0; i < tableauIndex + 1; i++) {
                 const cardData = tempDeck.pop();
                 const isFaceUp = (i === tableauIndex);
                 const cardEl = createCardElement(cardData, isFaceUp);
-                
                 cardEl.style.top = (i * TABLEAU_STACK_OFFSET_Y) + 'px';
-                
                 slot.appendChild(cardEl);
             }
         });
-
         while (tempDeck.length > 0) {
             const cardData = tempDeck.pop();
             const cardEl = createCardElement(cardData, false);
@@ -138,15 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Spill-logikk (Trekkebunke) ---
-
     function onStockPileClick() {
         if (timerInterval === null) startTimer(); 
-
         if (stockPile.children.length === 0) {
             recycleWastePile();
             return;
         }
-        
         const numToDraw = gameMode;
         for (let i = 0; i < numToDraw; i++) {
             const topCard = stockPile.lastElementChild;
@@ -157,14 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 wastePile.appendChild(topCard);
             }
         }
-        
         updateWastePileVisuals();
     }
     
     function updateWastePileVisuals() {
         const wasteCards = Array.from(wastePile.children);
         const numCards = wasteCards.length;
-        
         wasteCards.forEach((card, index) => {
             let offset = 0;
             if (index >= numCards - 3) { 
@@ -172,99 +198,56 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (numCards > 3) {
                 offset = 0;
             }
-            
             card.style.left = offset + 'px';
             card.style.zIndex = index; 
         });
     }
 
-
     function recycleWastePile() {
         const wasteCards = Array.from(wastePile.children);
         while(wasteCards.length > 0) {
             const cardEl = wasteCards.pop(); 
-            
             cardEl.classList.add('face-down');
-            cardEl.classList.remove('red-card'); // Viktig å fjerne denne!
+            cardEl.classList.remove('red-card');
             cardEl.dataset.isFaceUp = 'false';
-            
-            const topInfo = cardEl.querySelector('.card-info.top');
-            const bottomInfo = cardEl.querySelector('.card-info.bottom');
-            if (topInfo) topInfo.textContent = '';
-            if (bottomInfo) bottomInfo.textContent = '';
-            
-            const cardContent = cardEl.querySelector('.card-content');
-            if (cardContent) cardContent.innerHTML = '';
-
-
+            cardEl.style.backgroundImage = 'none';
             cardEl.draggable = false;
             cardEl.removeEventListener('dragstart', onDragStart);
             cardEl.removeEventListener('dragend', onDragEnd);
             cardEl.removeEventListener('dragover', onDragOver);
             cardEl.removeEventListener('drop', onDrop);
             cardEl.removeEventListener('dblclick', onCardDoubleClick);
-            
             cardEl.style.top = '0px';
             cardEl.style.left = '0px';
             cardEl.style.zIndex = 'auto';
-
             stockPile.appendChild(cardEl);
         }
     }
 
-    /**
-     * Hjelpefunksjon for å snu et kort med forsiden opp
-     */
+    function getCardImageFilename(suit, value) {
+        let suitLetter;
+        if (suit === '♥') suitLetter = 'H';
+        else if (suit === '♦') suitLetter = 'D';
+        else if (suit === '♣') suitLetter = 'C';
+        else if (suit === '♠') suitLetter = 'S';
+        return `${value}${suitLetter}.png`;
+    }
+
     function turnCardFaceUp(cardEl, suit, value) {
         if (!cardEl) return;
         if (cardEl.dataset.isFaceUp === 'true') return; 
-
         const cardSuit = suit || cardEl.dataset.suit;
         const cardValue = value || cardEl.dataset.value;
-
         cardEl.classList.remove('face-down');
         cardEl.dataset.isFaceUp = 'true';
-        
-        // Fyll inn hjørne-tekst
-        const cardInfoText = `${cardValue}${cardSuit}`;
-        const topInfo = cardEl.querySelector('.card-info.top');
-        const bottomInfo = cardEl.querySelector('.card-info.bottom');
-        if (topInfo) topInfo.textContent = cardInfoText;
-        if (bottomInfo) bottomInfo.textContent = cardInfoText;
-
-        // Fyll inn pips eller bildekort
-        const cardContent = cardEl.querySelector('.card-content');
-        if (cardContent) {
-            cardContent.innerHTML = ''; // Tøm først
-            if (['J', 'Q', 'K'].includes(cardValue)) {
-                // For bildekort
-                const faceCardImg = document.createElement('img');
-                faceCardImg.src = `img/${cardValue.toLowerCase()}.svg`; // Antar bilder i 'img/'
-                faceCardImg.alt = cardValue;
-                faceCardImg.classList.add('face-card-img');
-                cardContent.appendChild(faceCardImg);
-            } else {
-                // For numeriske kort (inkludert A)
-                const numPips = getNumericValue(cardValue) + 1; // A=1, 2=2, etc.
-                
-                // --- FORENKLING: isRed og .red-pip er fjernet ---
-                for (let i = 0; i < numPips; i++) {
-                    const pip = document.createElement('span');
-                    pip.classList.add('pip', `pip-${numPips}-${i + 1}`); // Klasser for posisjonering
-                    pip.textContent = cardSuit;
-                    cardContent.appendChild(pip);
-                }
-            }
-        }
-        
-        // --- DENNE ER NÅ HOVEDKONTROLLEN FOR FARGE ---
+        cardEl.classList.add('flipped');
+        const filename = getCardImageFilename(cardSuit, cardValue);
+        cardEl.style.backgroundImage = `url('img/cards/${filename}')`;
         if (getCardColor(cardSuit) === 'red') {
             cardEl.classList.add('red-card');
         } else {
             cardEl.classList.remove('red-card'); 
         }
-        // --- SLUTT ENDRING ---
-
         cardEl.draggable = true;
         cardEl.addEventListener('dragstart', onDragStart);
         cardEl.addEventListener('dragend', onDragEnd);
@@ -274,20 +257,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Dra-og-slipp Logikk ---
-
     function onDragStart(e) {
         if (timerInterval === null) startTimer(); 
-
         const isFromWaste = e.target.parentElement === wastePile;
-        
         if (isFromWaste && e.target !== wastePile.lastElementChild) {
             e.preventDefault();
             return;
         }
-
         e.dataTransfer.setData('text/plain', e.target.id);
         e.dataTransfer.effectAllowed = 'move';
-        
         setTimeout(() => {
             let currentCard = e.target;
             let z = 100;
@@ -307,35 +285,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function onDrop(e) {
         e.preventDefault();
-
         const cardId = e.dataTransfer.getData('text/plain');
         const draggedCard = document.getElementById(cardId);
-        
         if (!draggedCard) return;
-
         const dropTargetElement = e.target.closest('.card, .card-slot');
-
         if (!dropTargetElement) {
             console.log("Slipp på ugyldig område.");
             return; 
         }
-
         let targetSlot;
         if (dropTargetElement.classList.contains('card')) {
             targetSlot = dropTargetElement.parentElement;
         } else {
             targetSlot = dropTargetElement;
         }
-
         if (!targetSlot || !targetSlot.classList.contains('card-slot')) {
             console.log("Fant ikke en gyldig bunke ('card-slot').");
             return; 
         }
-
         const originalParent = draggedCard.parentElement;
-
         if (isValidMove(draggedCard, targetSlot)) {
-            
             const stackToMove = [];
             let currentCard = draggedCard;
             while(currentCard) {
@@ -343,32 +312,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (originalParent === wastePile) currentCard = null; 
                 else currentCard = currentCard.nextElementSibling;
             }
-            
             const baseIndex = targetSlot.children.length; 
-
             stackToMove.forEach((card, index) => {
-                if (targetSlot.classList.contains('foundation')) {
-                    card.style.top = '0px';
-                } else {
-                    card.style.top = (baseIndex + index) * TABLEAU_STACK_OFFSET_Y + 'px';
-                }
                 card.style.left = '0px'; 
                 card.style.opacity = '1';
-                card.style.zIndex = baseIndex + index + 1;
-                
+                if (targetSlot.classList.contains('foundation')) {
+                    card.style.top = '0px';
+                    card.style.zIndex = getNumericValue(card.dataset.value) + 1;
+                } else {
+                    card.style.top = (baseIndex + index) * TABLEAU_STACK_OFFSET_Y + 'px';
+                    card.style.zIndex = baseIndex + index + 1;
+                }
                 targetSlot.appendChild(card); 
             });
-            
             if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
                 turnCardFaceUp(originalParent.lastElementChild);
             }
-            
             if (originalParent === wastePile) {
                 updateWastePileVisuals();
             }
-
             checkWinCondition();
-            
         } else {
             console.log("Ugyldig trekk!");
         }
@@ -380,65 +343,52 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function onCardDoubleClick(e) {
         if (timerInterval === null) startTimer(); 
-
         const cardEl = e.target.closest('.card');
         if (!cardEl) return;
-
         const originalParent = cardEl.parentElement;
-
         const isTopWasteCard = (originalParent === wastePile && cardEl === wastePile.lastElementChild);
         const isBottomTableauCard = (originalParent.classList.contains('tableau') && cardEl.nextElementSibling === null);
-
         if (!isTopWasteCard && !isBottomTableauCard) {
             return; 
         }
-
         for (const slot of foundationSlots) {
             if (isValidMove(cardEl, slot)) {
                 cardEl.style.top = '0px';
                 cardEl.style.left = '0px';
+                cardEl.style.zIndex = getNumericValue(cardEl.dataset.value) + 1;
                 slot.appendChild(cardEl);
-
                 if (isBottomTableauCard && originalParent.lastElementChild) {
                     turnCardFaceUp(originalParent.lastElementChild);
                 }
                 if (isTopWasteCard) {
                     updateWastePileVisuals();
                 }
-
                 checkWinCondition();
                 break; 
             }
         }
     }
 
-
     function resetCardStackStyle(topCard) {
         if (!topCard) return;
-
         let currentCard = topCard;
         while(currentCard) {
             currentCard.style.opacity = '1';
             currentCard = currentCard.nextElementSibling;
         }
-
-        if (topCard.parentElement) {
+        if (topCard.parentElement && topCard.parentElement.classList.contains('tableau')) {
             const children = Array.from(topCard.parentElement.children);
             children.forEach((child, index) => {
                 if (child.classList.contains('card')) {
                     child.style.zIndex = index + 1;
                 }
             });
-            
-            if(topCard.parentElement === wastePile) {
-                updateWastePileVisuals();
-            }
+        } else if (topCard.parentElement && topCard.parentElement === wastePile) {
+             updateWastePileVisuals();
         }
     }
 
-
     // --- Regel-validering ---
-    
     const CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
     function getNumericValue(valueStr) {
@@ -454,50 +404,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const draggedValue = draggedCard.dataset.value;
         const draggedColor = getCardColor(draggedSuit);
         const draggedNumericValue = getNumericValue(draggedValue);
-        
         if (draggedCard.dataset.isFaceUp === 'false') return false;
-
         const topCard = targetSlot.lastElementChild;
 
-        // --- REGEL 1: Flytte til MÅL-BUNKENE (Foundation) ---
+        // REGEL 1: Flytte til MÅL-BUNKENE (Foundation)
         if (targetSlot.classList.contains('foundation')) {
             if (draggedCard.nextElementSibling) return false; 
-            
             if (!topCard) {
                 return draggedValue === 'A';
             }
-            
             const topCardSuit = topCard.dataset.suit;
             const topCardNumericValue = getNumericValue(topCard.dataset.value);
-
             const sameSuit = (draggedSuit === topCardSuit);
             const oneValueHigher = (draggedNumericValue === topCardNumericValue + 1);
             return sameSuit && oneValueHigher;
         }
 
-        // --- REGEL 2: Flytte til SPILLE-BUNKENE (Tableau) ---
+        // REGEL 2: Flytte til SPILLE-BUNKENE (Tableau)
         if (targetSlot.classList.contains('tableau')) {
             if (!topCard) {
                 return draggedValue === 'K';
             }
-
             const topCardColor = getCardColor(topCard.dataset.suit);
             const topCardNumericValue = getNumericValue(topCard.dataset.value);
-            
             if (topCard.dataset.isFaceUp === 'false') return false; 
-
             const oppositeColor = (draggedColor !== topCardColor);
             const oneValueLower = (draggedNumericValue === topCardNumericValue - 1);
             return oppositeColor && oneValueLower;
         }
-        
         return false; 
     }
 
     // --- Seier-sjekk ---
     function checkWinCondition() {
         if (timerInterval === null) return; 
-
         let totalFoundationCards = 0;
         foundationSlots.forEach(slot => {
             totalFoundationCards += slot.children.length;
@@ -505,13 +445,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (totalFoundationCards === 52) {
             stopTimer();
+            const finalTime = elapsedTime; 
             setTimeout(() => { 
-                alert(`Gratulerer! Du vant på ${elapsedTime} sekunder!`);
-                saveHighScore(elapsedTime, gameMode);
-            }, 200);
+                if (modalOverlay) {
+                    showAlertModal(
+                        "Gratulerer!", 
+                        `Du vant på ${finalTime} sekunder!`,
+                        () => { saveHighScore(finalTime, gameMode); } 
+                    );
+                } else {
+                    alert(`Gratulerer! Du vant på ${finalTime} sekunder!`);
+                    saveHighScore(finalTime, gameMode);
+                }
+            }, 500); 
         }
     }
-
 
     // --- Timer-logikk ---
     function startTimer() {
@@ -544,17 +492,14 @@ document.addEventListener('DOMContentLoaded', () => {
         scores.push(time);
         scores.sort((a, b) => a - b); 
         const topScores = scores.slice(0, 5); 
-
         const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
         localStorage.setItem(key, JSON.stringify(topScores));
-        
         loadHighScores();
     }
 
     function loadHighScores() {
         const scores1 = getHighScores(1);
         const scores3 = getHighScores(3);
-
         displayScores(scores1, highscoreList1);
         displayScores(scores3, highscoreList3);
     }
@@ -571,6 +516,37 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // --- NYE MODAL-HJELPEFUNKSJONER (Bruker inline-stil) ---
+    
+    function showConfirmModal(title, text, callback) {
+        if (!modalOverlay) return; 
+        modalOverlay.classList.remove('hidden');
+        modalOverlay.style.display = 'flex';
+        modalTitle.textContent = title;
+        modalText.textContent = text;
+        modalConfirmBtn.textContent = "Ja";
+        modalCancelBtn.style.display = 'inline-block';
+        onConfirmCallback = callback; 
+    }
+
+
+    function showAlertModal(title, text, callback = null) {
+        if (!modalOverlay) return; 
+        modalTitle.textContent = title;
+        modalText.textContent = text;
+        modalConfirmBtn.textContent = "OK";
+        modalCancelBtn.style.display = 'none'; // Bruker inline-stil
+        modalOverlay.style.display = 'flex'; // Bruker inline-stil
+        onConfirmCallback = callback; 
+    }
+
+    function hideModal() {
+        if (!modalOverlay) return; 
+        modalOverlay.style.display = 'none'; // Bruker inline-stil
+        onConfirmCallback = null;
+    }
+
     
     // --- Initialiser spillet ---
     loadHighScores();

@@ -1,16 +1,26 @@
 /* --- Generell layout og bakgrunn --- */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #006400; /* Mørkegrønn "filt" */
+    /* NYTT: Bytter ut flat farge med en "spotlight"-gradient */
+    background: radial-gradient(circle, #018001 0%, #005a00 100%);
     color: white;
     padding: 20px;
-    user-select: none; /* Forhindrer tekst-markering under dragging */
+    user-select: none;
+    min-height: 100vh; /* Sikrer at gradienten fyller hele høyden */
 }
 
+/* NYTT: "Freshet opp" tittelen */
 h1 {
     text-align: center;
-    font-weight: 300;
-    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: Arial, Helvetica, sans-serif, 'Times New Roman', Times, serif; /* Mer "classy" font */
+    font-size: 3.5rem; /* Større og mer slagkraftig */
+    text-decoration: underline;
+    font-weight: 700;
+    color: #E0D6B3; /* En dempet, "gammel" gullfarge */
+    letter-spacing: 3px; /* Gir den mer plass */
+    text-shadow: 2px 2px 2px rgba(0,0,0,0.7), 0 0 5px rgba(0,0,0,0.5); /* Dypere skygge */
+    margin-bottom: 15px; /* Litt mer luft ned til kontrollpanelet */
 }
 
 /* --- Kontrollpanel (Knapper, timer) --- */
@@ -20,27 +30,39 @@ h1 {
     align-items: center;
     gap: 20px;
     margin-bottom: 25px;
-    background-color: rgba(0, 0, 0, 0.2);
+    
+    /* NYTT: "Frostet glass"-effekt */
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
     padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border-radius: 12px; /* Mykere kanter */
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
 }
 
+/* NYTT: Mer moderne knapper */
 .controls button, .controls select {
-    padding: 8px 12px;
+    padding: 10px 15px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    background-color: #f0f0f0;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 .controls button:hover {
-    background-color: #ddd;
+    background-color: rgba(255, 255, 255, 1);
+    transform: scale(1.05); /* Liten "pop"-effekt */
 }
 
 .timer {
     font-size: 1.2rem;
     font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 /* --- Spillbrettet --- */
@@ -48,8 +70,12 @@ h1 {
     max-width: 900px;
     margin: 0 auto;
     padding: 20px;
-    background-color: rgba(0, 0, 0, 0.1);
+    
+    /* NYTT: Mørkere, "nedsunket" effekt */
+    background-color: rgba(0, 0, 0, 0.25);
     border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.3);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5); /* Inni-skygge */
 }
 
 .top-row {
@@ -74,19 +100,33 @@ h1 {
 .card-slot {
     width: 100px; 
     height: 140px; 
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
     position: relative; 
+    box-sizing: border-box; 
+    
+    /* VIKTIG: La til disse som manglet i koden din */
+    border-radius: 8px;
 }
 
-/* Tomme plasser i toppen får en svak bakgrunn */
+/* NYTT: Finere stil for tomme plasser */
 .stack-area .card-slot, .foundation-area .card-slot {
     background-color: rgba(0, 0, 0, 0.15);
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
 }
 
-/* Gjør trekkebunken klikkbar */
+/* NYTT: Stil for tomme spille-bunker */
+#tableau-area .card-slot {
+    background-color: rgba(0, 0, 0, 0.15);
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+}
+
+/* NYTT: Tips 1 - Fremhever trekkebunken */
 #stock-pile {
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+#stock-pile:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(255, 255, 200, 0.6);
 }
 
 /* --- Selve kortet --- */
@@ -94,7 +134,7 @@ h1 {
     width: 100px;
     height: 140px;
     border-radius: 8px;
-    background-color: white;
+    background-color: white; /* Vises mens bildet laster */
     color: black; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.4);
     box-sizing: border-box; 
@@ -104,30 +144,25 @@ h1 {
     left: 0;
     transition: top 0.1s ease-out, transform 0.1s ease-out, left 0.1s ease-out;
     display: block; 
-}
-
-/* Setter fargen for røde kort (hjerter, ruter) */
-.card.red-card {
-    color: #D00000; /* Mørk rød */
-}
-
-
-/* Kort med forsiden opp som kan dras */
-.card[draggable="true"] {
-    cursor: grab;
-}
-.card[draggable="true"]:hover {
-    transform: scale(1.03); 
+    
+    background-size: 100% 100%; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+    
+    image-rendering: -webkit-optimize-contrast; 
+    image-rendering: crisp-edges; 
 }
 
 /* Kort med baksiden opp */
 .card.face-down {
-    background-color: #3a7bd5;
-    background-image: linear-gradient(135deg, #3a7bd5 25%, #3a60bd 25%, #3a60bd 50%, #3a7bd5 50%, #3a7bd5 75%, #3a60bd 75%, #3a60bd 100%);
-    background-size: 28.28px 28.28px;
-    border: 5px solid white;
+    background-image: url('img/cards/card_back.png'); 
+    background-size: 110% 110%; /* Beholder zoomen du la inn */
+    background-position: center;
+    background-color: #888; 
+    border: 5px solid white; 
     color: transparent; 
 }
+
 
 /* --- Stabling i snu-bunken (waste-pile) --- */
 .waste-pile .card {
@@ -138,15 +173,24 @@ h1 {
 .highscore-section {
     max-width: 900px;
     margin: 40px auto;
-    background-color: rgba(0, 0, 0, 0.2);
+    
+    /* NYTT: Matcher "frostet glass"-stilen */
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 12px; /* Mykere kanter */
     display: flex;
     gap: 20px;
     justify-content: space-around;
 }
 .highscore-section h3 {
     margin-top: 0;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    padding-bottom: 5px;
 }
 .highscore-section ol {
     padding-left: 30px;
@@ -156,145 +200,120 @@ h1 {
     font-size: 1.1rem;
 }
 
-
-/* --- Kort-design med hjørner og pips --- */
-
-.card-info {
-    position: absolute;
-    font-size: 1.1rem; 
-    font-weight: bold;
-    line-height: 1;
-    padding: 5px 7px;
-    font-family: Arial, sans-serif; 
-    white-space: pre; 
-    z-index: 10; 
+/* NYTT: Animasjon for når et kort snus */
+.card.flipped {
+    animation: flipIn 0.4s ease-in-out;
 }
 
-.card-info.top {
+@keyframes flipIn {
+    from {
+        transform: scale(1.05) rotateY(90deg); /* Starter "på siden" */
+        opacity: 0.8;
+    }
+    to {
+        transform: scale(1) rotateY(0deg); /* Snur ferdig */
+        opacity: 1;
+    }
+}
+
+/* --- START PÅ KODEN SOM FIKSER MODALEN --- */
+
+/* Mørk bakgrunn som dekker alt */
+#modal-overlay {
+    position: fixed; /* Løfter den opp fra bunnen og dekker HELE skjermen */
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px); 
+    display: flex; /* Sentrerer innholdet (boksen) */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ligger over alt annet */
+    transition: opacity 0.2s ease;
 }
 
-.card-info.bottom {
-    bottom: 0;
-    right: 0;
-    transform: rotate(180deg);
-}
-
-/* Beholder for pips eller bildekort */
-.card-content {
-    position: absolute;
-    
-    /* ENDRING: Økt fra 15px til 30px for å unngå overlapping */
-    top: 30px; 
-    bottom: 30px; 
-    
-    left: 10px;
-    right: 10px;
-    display: flex;
-    flex-wrap: wrap; 
-    justify-content: center; 
-    align-content: space-around; 
-    overflow: hidden; 
-    font-size: 2.2rem; 
-    line-height: 1;
+/* Selve dialogboksen */
+.modal-content {
+    background: rgba(255, 255, 255, 0.95); 
+    color: #222; 
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
     text-align: center;
+    max-width: 400px;
+    border: 1px solid rgba(255, 255, 255, 1);
+    
+    animation: modalPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Individuelle pips (symboler) */
-.pip {
-    position: absolute; 
-    display: block; 
-    transform-origin: center center; 
+.modal-content h2 {
+    margin-top: 0;
+    font-size: 1.8rem;
+    color: #000;
+}
+
+.modal-content p {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Generell knappestil inni modalen */
+.modal-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+.modal-buttons button:hover {
+    transform: scale(1.05);
+}
+
+/* "Ja" / "OK" -knappen (positiv) */
+#modal-confirm {
+    background-color: #007bff; /* Blå */
+    color: white;
+}
+#modal-confirm:hover {
+    background-color: #0056b3;
+}
+
+/* "Nei" -knsappen (negativ/avbryt) */
+#modal-cancel {
+    background-color: #ccc; /* Grå */
+    color: #333;
+}
+#modal-cancel:hover {
+    background-color: #aaa;
 }
 
 
-/* Posisjonering for A (1) */
-.pip-1-1 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-
-/* Posisjonering for 2 */
-.pip-2-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
-.pip-2-2 { bottom: 10%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); }
-
-/* Posisjonering for 3 */
-.pip-3-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
-.pip-3-2 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.pip-3-3 { bottom: 10%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); }
-
-/* Posisjonering for 4 */
-.pip-4-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
-.pip-4-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
-.pip-4-3 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-4-4 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-
-/* Posisjonering for 5 */
-.pip-5-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
-.pip-5-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
-.pip-5-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.pip-5-4 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-5-5 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-
-/* Posisjonering for 6 */
-.pip-6-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
-.pip-6-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
-.pip-6-3 { top: 50%; left: 25%; transform: translate(-50%, -50%); }
-.pip-6-4 { top: 50%; right: 25%; transform: translate(50%, -50%); }
-.pip-6-5 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-6-6 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-
-/* Posisjonering for 7 (som 6 + 1 i midten) */
-.pip-7-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
-.pip-7-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
-.pip-7-3 { top: 30%; left: 50%; transform: translate(-50%, -50%); } /* Midtre øverst */
-.pip-7-4 { top: 50%; left: 25%; transform: translate(-50%, -50%); }
-.pip-7-5 { top: 50%; right: 25%; transform: translate(50%, -50%); }
-.pip-7-6 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-7-7 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-
-/* Posisjonering for 8 (som 7 + 1 i midten nederst) */
-.pip-8-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
-.pip-8-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
-.pip-8-3 { top: 30%; left: 50%; transform: translate(-50%, -50%); } /* Midtre øverst */
-.pip-8-4 { top: 50%; left: 25%; transform: translate(-50%, -50%); }
-.pip-8-5 { top: 50%; right: 25%; transform: translate(50%, -50%); }
-.pip-8-6 { bottom: 30%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); } /* Midtre nederst */
-.pip-8-7 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-8-8 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-
-/* Posisjonering for 9 */
-.pip-9-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
-.pip-9-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
-.pip-9-3 { top: 30%; left: 25%; transform: translate(-50%, -50%); }
-.pip-9-4 { top: 30%; right: 25%; transform: translate(50%, -50%); }
-.pip-9-5 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.pip-9-6 { bottom: 30%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-9-7 { bottom: 30%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-.pip-9-8 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-9-9 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-
-/* ENDRING: Posisjonering for 10 (basert på 8 + 2 i midten) */
-.pip-10-1 { top: 10%; left: 25%; transform: translate(-50%, -50%); }
-.pip-10-2 { top: 10%; right: 25%; transform: translate(50%, -50%); }
-.pip-10-3 { top: 30%; left: 25%; transform: translate(-50%, -50%); }
-.pip-10-4 { top: 30%; right: 25%; transform: translate(50%, -50%); }
-.pip-10-5 { top: 35%; left: 50%; transform: translate(-50%, -50%); } /* Øvre midtre */
-.pip-10-6 { bottom: 35%; left: 50%; transform: translate(-50%, 50%) rotate(180deg); } /* Nedre midtre */
-.pip-10-7 { bottom: 30%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-10-8 { bottom: 30%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-.pip-10-9 { bottom: 10%; left: 25%; transform: translate(-50%, 50%) rotate(180deg); }
-.pip-10-10 { bottom: 10%; right: 25%; transform: translate(50%, 50%) rotate(180deg); }
-
-
-/* Stiler for bildekort (Jack, Queen, King) */
-.face-card-img {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain; 
-    display: block; 
-    margin: auto; 
-}
-
-/* Skjul card-content når kortet er snudd (gjelder pips og bildekort) */
-.card.face-down .card-content {
+/* DENNE ER RIKTIG: */
+#modal-overlay.hidden, .hidden {
     display: none;
+    opacity: 0;
+}
+
+
+/* Animasjon for modalen */
+@keyframes modalPopIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
