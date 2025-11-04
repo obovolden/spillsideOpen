@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const TABLEAU_STACK_OFFSET_Y = 35; 
     const WASTE_STACK_OFFSET_X = 20; 
 
+    // --- NYE DATABASE-KONSTANTER ---
+    const addScoreURL = 'api/add_solitaire_score.php';
+    const getScoresURL = 'api/get_solitaire_scores.php';
+
     // --- Globale variabler ---
     let deck = [];
     let gameMode = 1; // 1 eller 3
@@ -31,17 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalConfirmBtn = document.getElementById('modal-confirm');
     const modalCancelBtn = document.getElementById('modal-cancel');
 
-    // --- START PÅ NY, "SKUDDSIKKER" FIKS ---
-    // Tvinger modalen til å være skjult med inline-stil,
-    // uavhengig av om CSS-filen er ødelagt.
     if (modalOverlay) {
-        modalOverlay.style.display = 'none'; // Bruker inline-stil
+        modalOverlay.style.display = 'none';
     }
-    // --- SLUTT PÅ NY FIKS ---
-
 
     // --- Event Listeners ---
-    
     if (startGameBtn) {
         startGameBtn.addEventListener('click', () => {
             if (timerInterval) {
@@ -80,16 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             hideModal();
         });
-
         modalCancelBtn.addEventListener('click', hideModal);
-
         modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                hideModal();
-            }
+            if (e.target === modalOverlay) hideModal();
         });
     } else {
-        console.warn("Modal HTML-elementer ble ikke funnet. Spillet vil falle tilbake til 'alert' og 'confirm'.");
+        console.warn("Modal HTML-elementer ble ikke funnet.");
     }
 
     // --- Kjernefunksjoner ---
@@ -101,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         shuffleDeck(deck);
         dealFullGame(deck); 
         console.log(`Game mode: Draw ${gameMode}. Shuffled ${deck.length} cards.`);
-        loadHighScores();
+        loadHighScores(); // Laster fra databasen
     }
 
     function resetBoard() {
@@ -111,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         timerInterval = null;
         elapsedTime = 0;
-        timeDisplay.textContent = '0';
+        timeDisplay.textContent = '0s'; // Satt til '0s' for konsistens
     }
 
     // --- Kort-oppretting og Utdeling ---
@@ -234,8 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function turnCardFaceUp(cardEl, suit, value) {
-        if (!cardEl) return;
-        if (cardEl.dataset.isFaceUp === 'true') return; 
+        if (!cardEl || cardEl.dataset.isFaceUp === 'true') return; 
         const cardSuit = suit || cardEl.dataset.suit;
         const cardValue = value || cardEl.dataset.value;
         cardEl.classList.remove('face-down');
@@ -290,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!draggedCard) return;
         const dropTargetElement = e.target.closest('.card, .card-slot');
         if (!dropTargetElement) {
-            console.log("Slipp på ugyldig område.");
             return; 
         }
         let targetSlot;
@@ -300,7 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
             targetSlot = dropTargetElement;
         }
         if (!targetSlot || !targetSlot.classList.contains('card-slot')) {
-            console.log("Fant ikke en gyldig bunke ('card-slot').");
             return; 
         }
         const originalParent = draggedCard.parentElement;
@@ -332,8 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateWastePileVisuals();
             }
             checkWinCondition();
-        } else {
-            console.log("Ugyldig trekk!");
         }
     }
 
@@ -384,20 +373,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } else if (topCard.parentElement && topCard.parentElement === wastePile) {
-             updateWastePileVisuals();
+            updateWastePileVisuals();
         }
     }
 
     // --- Regel-validering ---
     const CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-
-    function getNumericValue(valueStr) {
-        return CARD_VALUES.indexOf(valueStr);
-    }
-
-    function getCardColor(suit) {
-        return (suit === '♥' || suit === '♦') ? 'red' : 'black';
-    }
+    function getNumericValue(valueStr) { return CARD_VALUES.indexOf(valueStr); }
+    function getCardColor(suit) { return (suit === '♥' || suit === '♦') ? 'red' : 'black'; }
 
     function isValidMove(draggedCard, targetSlot) {
         const draggedSuit = draggedCard.dataset.suit;
@@ -407,35 +390,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draggedCard.dataset.isFaceUp === 'false') return false;
         const topCard = targetSlot.lastElementChild;
 
-        // REGEL 1: Flytte til MÅL-BUNKENE (Foundation)
         if (targetSlot.classList.contains('foundation')) {
             if (draggedCard.nextElementSibling) return false; 
-            if (!topCard) {
-                return draggedValue === 'A';
-            }
+            if (!topCard) return draggedValue === 'A';
             const topCardSuit = topCard.dataset.suit;
             const topCardNumericValue = getNumericValue(topCard.dataset.value);
-            const sameSuit = (draggedSuit === topCardSuit);
-            const oneValueHigher = (draggedNumericValue === topCardNumericValue + 1);
-            return sameSuit && oneValueHigher;
+            return (draggedSuit === topCardSuit) && (draggedNumericValue === topCardNumericValue + 1);
         }
-
-        // REGEL 2: Flytte til SPILLE-BUNKENE (Tableau)
         if (targetSlot.classList.contains('tableau')) {
-            if (!topCard) {
-                return draggedValue === 'K';
-            }
+            if (!topCard) return draggedValue === 'K';
             const topCardColor = getCardColor(topCard.dataset.suit);
             const topCardNumericValue = getNumericValue(topCard.dataset.value);
             if (topCard.dataset.isFaceUp === 'false') return false; 
-            const oppositeColor = (draggedColor !== topCardColor);
-            const oneValueLower = (draggedNumericValue === topCardNumericValue - 1);
-            return oppositeColor && oneValueLower;
+            return (draggedColor !== topCardColor) && (draggedNumericValue === topCardNumericValue - 1);
         }
         return false; 
     }
 
-    // --- Seier-sjekk ---
+    // --- Seier-sjekk (ENDRET) ---
     function checkWinCondition() {
         if (timerInterval === null) return; 
         let totalFoundationCards = 0;
@@ -446,17 +418,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalFoundationCards === 52) {
             stopTimer();
             const finalTime = elapsedTime; 
+            
+            // Kaller saveHighScore direkte. Den håndterer nå "Gratulerer"-melding
+            // og navneinnsamling via prompt().
             setTimeout(() => { 
-                if (modalOverlay) {
-                    showAlertModal(
-                        "Gratulerer!", 
-                        `Du vant på ${finalTime} sekunder!`,
-                        () => { saveHighScore(finalTime, gameMode); } 
-                    );
-                } else {
-                    alert(`Gratulerer! Du vant på ${finalTime} sekunder!`);
-                    saveHighScore(finalTime, gameMode);
-                }
+                saveHighScore(finalTime, gameMode);
             }, 500); 
         }
     }
@@ -467,41 +433,37 @@ document.addEventListener('DOMContentLoaded', () => {
         startTime = Date.now() - (elapsedTime * 1000); 
         timerInterval = setInterval(updateTimer, 1000);
     }
-
     function stopTimer() {
         if (timerInterval) {
             clearInterval(timerInterval);
             timerInterval = null;
         }
     }
-
     function updateTimer() {
         elapsedTime = Math.floor((Date.now() - startTime) / 1000);
         timeDisplay.textContent = `${elapsedTime}s`;
     }
 
-    // --- Highscore-logikk ---
-    function getHighScores(mode) {
-        const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
-        const scoresJSON = localStorage.getItem(key);
-        return scoresJSON ? JSON.parse(scoresJSON) : [];
-    }
+    // ========================================================
+    // --- Highscore-logikk (HELT NY, med database) ---
+    // ========================================================
+    
+    async function loadHighScores() {
+        try {
+            const response = await fetch(getScoresURL);
+            const scores = await response.json(); // Forventer { draw1: [...], draw3: [...] }
 
-    function saveHighScore(time, mode) {
-        const scores = getHighScores(mode);
-        scores.push(time);
-        scores.sort((a, b) => a - b); 
-        const topScores = scores.slice(0, 5); 
-        const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
-        localStorage.setItem(key, JSON.stringify(topScores));
-        loadHighScores();
-    }
-
-    function loadHighScores() {
-        const scores1 = getHighScores(1);
-        const scores3 = getHighScores(3);
-        displayScores(scores1, highscoreList1);
-        displayScores(scores3, highscoreList3);
+            if (scores.draw1) {
+                displayScores(scores.draw1, highscoreList1);
+            }
+            if (scores.draw3) {
+                displayScores(scores.draw3, highscoreList3);
+            }
+        } catch (error) {
+            console.error("Kunne ikke laste highscores:", error);
+            highscoreList1.innerHTML = '<li>Klarte ikke laste</li>';
+            highscoreList3.innerHTML = '<li>Klarte ikke laste</li>';
+        }
     }
 
     function displayScores(scores, listElement) {
@@ -511,17 +473,39 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             scores.forEach(score => {
                 const li = document.createElement('li');
-                li.textContent = `${score} sekunder`; 
+                li.textContent = `${score.spiller_navn} - ${score.time_seconds} sekunder`; 
                 listElement.appendChild(li);
             });
         }
     }
 
-    // --- NYE MODAL-HJELPEFUNKSJONER (Bruker inline-stil) ---
-    
+    async function saveHighScore(time, mode) {
+        // Bruker prompt() for å be om navn. Mye enklere enn å bygge om modalen.
+        const playerName = prompt(`Gratulerer! Du vant på ${time} sekunder!\nSkriv inn navnet ditt:`, "Anonym");
+        
+        if (playerName === null) {
+            // Brukeren kansellerte, ikke lagre
+            loadHighScores(); // Bare last listene på nytt
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('spiller_navn', playerName || 'Anonym'); // Default til Anonym
+        formData.append('time_seconds', time);
+        formData.append('game_mode', mode);
+
+        try {
+            await fetch(addScoreURL, { method: 'POST', body: formData });
+            console.log("Highscore lagret!");
+            await loadHighScores(); // Last inn listene på nytt for å vise den nye scoren
+        } catch (error) {
+            console.error("Kunne ikke lagre highscore:", error);
+        }
+    }
+
+    // --- MODAL-HJELPEFUNKSJONER (uendret) ---
     function showConfirmModal(title, text, callback) {
         if (!modalOverlay) return; 
-        modalOverlay.classList.remove('hidden');
         modalOverlay.style.display = 'flex';
         modalTitle.textContent = title;
         modalText.textContent = text;
@@ -529,24 +513,23 @@ document.addEventListener('DOMContentLoaded', () => {
         modalCancelBtn.style.display = 'inline-block';
         onConfirmCallback = callback; 
     }
-
-
+    // Kommenterer ut showAlertModal siden den ikke trengs lenger
+    /*
     function showAlertModal(title, text, callback = null) {
         if (!modalOverlay) return; 
         modalTitle.textContent = title;
         modalText.textContent = text;
         modalConfirmBtn.textContent = "OK";
-        modalCancelBtn.style.display = 'none'; // Bruker inline-stil
-        modalOverlay.style.display = 'flex'; // Bruker inline-stil
+        modalCancelBtn.style.display = 'none';
+        modalOverlay.style.display = 'flex';
         onConfirmCallback = callback; 
     }
-
+    */
     function hideModal() {
         if (!modalOverlay) return; 
-        modalOverlay.style.display = 'none'; // Bruker inline-stil
+        modalOverlay.style.display = 'none';
         onConfirmCallback = null;
     }
-
     
     // --- Initialiser spillet ---
     loadHighScores();
