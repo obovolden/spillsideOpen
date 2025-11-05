@@ -102,8 +102,6 @@ h1 {
     height: 140px; 
     position: relative; 
     box-sizing: border-box; 
-    
-    /* VIKTIG: La til disse som manglet i koden din */
     border-radius: 8px;
 }
 
@@ -289,7 +287,7 @@ h1 {
     background-color: #0056b3;
 }
 
-/* "Nei" -knsappen (negativ/avbryt) */
+/* "Nei" -knappen (negativ/avbryt) */
 #modal-cancel {
     background-color: #ccc; /* Grå */
     color: #333;
@@ -299,7 +297,6 @@ h1 {
 }
 
 
-/* DENNE ER RIKTIG: */
 #modal-overlay.hidden, .hidden {
     display: none;
     opacity: 0;
