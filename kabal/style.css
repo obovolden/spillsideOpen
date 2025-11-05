@@ -1,13 +1,38 @@
 /* --- Generell layout og bakgrunn --- */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* NYTT: Bytter ut flat farge med en "spotlight"-gradient */
-    background: radial-gradient(circle, #018001 0%, #005a00 100%);
+    /* background: ... ER FLYTTET TIL TEMAKLASSE ... */
     color: white;
     padding: 20px;
     user-select: none;
     min-height: 100vh; /* Sikrer at gradienten fyller hele høyden */
+    overflow-x: hidden; /* Forhindrer horisontal scroll fra animasjon */
+    
+    /* NYTT: Gir en myk overgang når tema byttes */
+    transition: background 0.3s ease;
 }
+
+/* --- NYTT: Bakgrunnstemaer --- */
+body.theme-green {
+    background: radial-gradient(circle, #018001 0%, #005a00 100%);
+}
+
+body.theme-burgundy {
+    background: radial-gradient(circle, #800020 0%, #5a0000 100%);
+}
+
+body.theme-blue {
+    background: radial-gradient(circle, #004e92 0%, #000428 100%);
+}
+
+body.theme-gray {
+    background: radial-gradient(circle, #808080 0%, #4a4a4a 100%);
+}
+
+body.theme-black {
+    background: radial-gradient(circle, #333333 0%, #000000 100%);
+}
+/* --- SLUTT PÅ NY KODE --- */
 
 /* NYTT: "Freshet opp" tittelen */
 h1 {
@@ -28,7 +53,7 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 15px; /* Litt mindre gap for å få plass til mer */
     margin-bottom: 25px;
     
     /* NYTT: "Frostet glass"-effekt */
@@ -59,11 +84,37 @@ h1 {
     transform: scale(1.05); /* Liten "pop"-effekt */
 }
 
-.timer {
+/* NY STIL FOR AUTOFULLFØR-KNAPP */
+#autocomplete-btn {
+    background-color: #28a745; /* Grønn */
+    color: white;
+}
+#autocomplete-btn:hover {
+    background-color: #218838;
+}
+
+/* --- START PÅ NY KODE --- */
+#hint-btn {
+    background-color: #007bff; /* Blå */
+    color: white;
+}
+#hint-btn:hover { background-color: #0056b3; }
+
+#undo-btn {
+    background-color: #6c757d; /* Grå */
+    color: white;
+}
+#undo-btn:hover { background-color: #5a6268; }
+
+.timer, .moves, .score { /* Gruppestil for all statistikk */
     font-size: 1.2rem;
     font-weight: bold;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    padding: 0 5px; /* Litt luft */
+    min-width: 80px; /* Sikrer at de ikke hopper for mye */
+    text-align: left;
 }
+/* --- SLUTT PÅ NY KODE --- */
 
 /* --- Spillbrettet --- */
 #game-board {
@@ -169,7 +220,7 @@ h1 {
 
 /* --- Highscore --- */
 .highscore-section {
-    max-width: 900px;
+    max-width: 300px;
     margin: 40px auto;
     
     /* NYTT: Matcher "frostet glass"-stilen */
@@ -181,9 +232,10 @@ h1 {
     padding: 20px;
     border-radius: 12px; /* Mykere kanter */
     display: flex;
-    gap: 20px;
-    justify-content: space-around;
+    justify-content: space-around; /* Fordeler kolonnene jevnt */
+    gap: 20px; /* (Valgfri) Gir litt luft mellom dem */
 }
+
 .highscore-section h3 {
     margin-top: 0;
     font-weight: 500;
@@ -213,6 +265,21 @@ h1 {
         opacity: 1;
     }
 }
+
+/* --- START PÅ NY KODE: HINT-ANIMASJON --- */
+.hint-pulse {
+    animation: pulse 1.2s 2; /* Kjør 2 ganger */
+    box-shadow: 0 0 20px 5px rgba(255, 255, 0, 0.8) !important; /* Sterk gul glød */
+    z-index: 5000 !important; /* Over alt */
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+/* --- SLUTT PÅ NY KODE --- */
+
 
 /* --- START PÅ KODEN SOM FIKSER MODALEN --- */
 
@@ -314,3 +381,124 @@ h1 {
         opacity: 1;
     }
 }
+
+/* --- NYTT: VINNERANIMASJON --- */
+.win-card {
+    position: absolute; /* Faller over alt */
+    z-index: 2000; /* Over modal-overlay */
+    width: 100px; /* Matcher vanlige kort */
+    height: 140px; /* Matcher vanlige kort */
+    background-image: url('img/cards/card_back.png');
+    background-size: 110% 110%;
+    background-position: center;
+    border: 5px solid white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    /* Animasjonen settes av JavaScript */
+}
+
+
+/* --- START PÅ RESPONSIV KODE (MOBIL) --- */
+
+@media (max-width: 800px) {
+
+    body {
+        padding: 10px;
+        min-height: 100vh;
+    }
+
+    h1 {
+        font-size: 2.5rem; /* Mindre tittel */
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+    }
+
+    /* --- Kontroller --- */
+    .controls {
+        flex-wrap: wrap; /* Lar elementene legge seg under hverandre */
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    /* NYTT: Justeringer for nye elementer */
+    .controls .timer, .controls .moves, .controls .score {
+        width: 30%; /* Prøver å få plass til 3 på en linje */
+        text-align: center;
+        font-size: 1.1rem;
+        margin-top: 5px;
+        min-width: 60px; /* Mindre min-width */
+        padding: 0;
+    }
+    
+    /* Hvis timeren er alene (som i din gamle kode), bruk dette: */
+    /* .controls .timer {
+        width: 100%;
+        text-align: center;
+        font-size: 1.4rem;
+        margin-top: 5px;
+    }
+    .controls .moves, .controls .score {
+        width: 45%; 
+        text-align: center;
+        font-size: 1.1rem;
+        margin-top: 5px;
+    } */
+
+
+    /* --- Spillbrettet --- */
+    #game-board {
+        padding: 10px;
+    }
+
+    .top-row, #tableau-area, .stack-area, .foundation-area {
+        gap: 1.5vw; /* Bruker viewport-bredde for mellomrom */
+    }
+
+    .top-row {
+        margin-bottom: 20px;
+    }
+
+    /* --- RESPONSIVE KORT --- */
+    .card-slot, .card {
+        width: 13vw;
+        height: calc(13vw * 1.4); /* Beholder 1:1.4 aspect ratio */
+        border-radius: 5px; /* Litt mindre avrunding */
+    }
+    
+    /* Responsiv vinner-animasjon */
+    .win-card {
+        width: 13vw;
+        height: calc(13vw * 1.4);
+        border-radius: 5px;
+    }
+
+
+    /* --- Highscores --- */
+    .highscore-section {
+        flex-direction: column; /* Stabler de to listene */
+        gap: 20px;
+        margin: 20px auto;
+        padding: 15px;
+    }
+    .highscore-section h3 {
+        font-size: 1.2rem;
+    }
+    .highscore-section li {
+        font-size: 1rem;
+    }
+
+    /* --- Modal --- */
+    .modal-content {
+        /* Gjør modalen litt smalere på mobil */
+        width: 90%;
+        max-width: 350px;
+        padding: 20px;
+    }
+    .modal-content h2 {
+        font-size: 1.5rem;
+    }
+    .modal-content p {
+        font-size: 1rem;
+    }
+}
+/* --- SLUTT PÅ RESPONSIV KODE --- */

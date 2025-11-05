@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-    <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-5FMKQ5B8');</script>
-    <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kabal</title>
     <link rel="stylesheet" href="style.css?v=3"> 
 </head>
-<body>
+<body class="theme-green">
 
     <h1>Kabal</h1>
 
@@ -23,7 +21,21 @@
             <option value="1">1 kort</option>
             <option value="3">3 kort</option>
         </select>
+        <label for="theme-select">Tema:</label>
+        <select id="theme-select">
+            <option value="theme-green">Klassisk Grønn</option>
+            <option value="theme-burgundy">Burgunder</option>
+            <option value="theme-blue">Mørkeblå</option> <option value="theme-gray">Grå</option>
+            <option value="theme-black">Sort</option>
+        </select>
         <button id="start-game-btn">Start nytt spill</button>
+        <button id="autocomplete-btn" style="display: none;">Fullfør spillet</button>
+        
+        <button id="hint-btn" style="display: none;">💡 Hint</button>
+        <button id="undo-btn" style="display: none;">↩️ Angre</button>
+
+        <div class="moves">Trekk: <span id="move-display">0</span></div>
+        <div class="score">Poeng: <span id="score-display">0</span></div>
         <div class="timer">Tid: <span id="time-display">0</span>s</div>
     </div>
 
@@ -51,13 +63,18 @@
             <div class="card-slot tableau" id="tableau-7"></div>
         </div>
     </div>
-
-    <div class="highscore-section">
+    
+<div class="highscore-section">
+    <div class="highscore-column">
         <h3>Highscores (Trekk 1)</h3>
         <ol id="highscore-list-1"></ol>
+    </div>
+    
+    <div class="highscore-column">
         <h3>Highscores (Trekk 3)</h3>
         <ol id="highscore-list-3"></ol>
     </div>
+</div>
 
     <div id="modal-overlay" class="hidden">
         <div class="modal-content">
@@ -70,7 +87,5 @@
         </div>
     </div>
     
-    <script src="script.js?v=3"></script>
-    
-</body>
+    <script src="script.js?v=4"></script> </body>
 </html>
