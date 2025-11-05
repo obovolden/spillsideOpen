@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enkel Ord-Teller</title>
+    <style>
+        html {
+            box-sizing: border-box;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #222;
+        }
+        #tellerVisning {
+            font-size: 5em;
+            color: darkgreen;
+            display: block;
+            margin: 20px 0;
+            font-weight: 700;
+        }
+        #totalKlikkVisning {
+            font-size: 1.5em;
+            color: #555;
+        }
+        
+        .knappe-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        #tellKnapp {
+            background-color: darkgreen;
+            color: white;
+            font-weight: bold;
+            font-size: 1.4em;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            padding: 20px;
+            line-height: 1.3;
+            
+            /* NYE LINJER FOR Å FORHINDRE IPHONE-ZOOM */
+            touch-action: manipulation; /* Forhindrer dobbelttrykk-zoom */
+            user-select: none; /* Forhindrer tekst-markering */
+            -webkit-user-select: none; /* Safari-spesifikk */
+        }
+
+        /* FJERNET HOVER-EFFEKTEN SOM FORÅRSAKET ZOOM */
+        /*
+        #tellKnapp:hover {
+            transform: scale(1.1); 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        */
+
+        #tellKnapp span {
+            display: block;
+        }
+
+        #tilbakestillKnapp {
+            background-color: #6c757d;
+            color: white;
+            display: block;
+            margin: 10px auto;
+        }
+        #tilbakestillKnapp:hover {
+            background-color: #5a6268;
+        }
+
+        #highscore-container {
+            margin-top: 40px;
+            text-align: left;
+            background-color: #ffffff;
+            max-width: 400px;
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        #highscore-container h2 {
+            margin-top: 0;
+        }
+        #highscore-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #highscore-list li:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            #tellerVisning {
+                font-size: 4em;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            h2 {
+                font-size: 1.3em;
+            }
+            #totalKlikkVisning {
+                font-size: 1.2em;
+            }
+            #tellKnapp {
+                width: 150px;
+                height: 150px;
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Teller for Ordet: "Øøøøh"</h1>
+        
+        <span id="tellerVisning">0</span>
+        
+        <h2>Totalt antall "Øøøøh" lagret: <span id="totalKlikkVisning">...</span></h2>
+
+        <div class="knappe-container">
+            <button id="tellKnapp"><span>Klikk eller<br>bruk Spacebar</span></button>
+            <button id="tilbakestillKnapp">Lagre og Tilbakestill</button>
+        </div>
+        
+        <p>Hint: **Spacebar** teller også!</p>
+
+        <div id="highscore-container">
+            <h2>🏆 Highscore Topp 5 🏆</h2>
+            <ol id="highscore-list">
+                <li>Laster...</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // === JAVASCRIPT (Uendret) ===
+        
+        let telling = 0;
+
+        const tellerVisning = document.getElementById('tellerVisning');
+        const tellKnapp = document.getElementById('tellKnapp');
+        const tilbakestillKnapp = document.getElementById('tilbakestillKnapp');
+        const highscoreList = document.getElementById('highscore-list');
+        const totalKlikkVisning = document.getElementById('totalKlikkVisning');
+        
+        const addScoreURL = 'api/add_clicker_score.php';
+        const getScoresURL = 'api/get_clicker_scores.php';
+        const getTotalClicksURL = 'api/get_clicker_total.php';
+
+        function økTelling() {
+            telling++;
+            tellerVisning.textContent = telling;
+        }
+
+        function tilbakestillTelling() {
+            telling = 0;
+            tellerVisning.textContent = telling;
+        }
+        
+        async function lagreScoreTilDatabase(navn, poeng) {
+            const formData = new FormData();
+            formData.append('spiller_navn', navn);
+            formData.append('poeng', poeng);
+            
+            try {
+                await fetch(addScoreURL, { method: 'POST', body: formData });
+                console.log("Poengsum lagret!");
+                await visHighscoresFraDatabase();
+                await visTotalKlikkFraDatabase();
+            } catch (error) {
+                console.error("Klarte ikke lagre score:", error);
+            }
+        }
+        
+        async function visHighscoresFraDatabase() {
+            try {
+                const response = await fetch(getScoresURL);
+                const scores = await response.json();
+                
+                highscoreList.innerHTML = ''; 
+                
+                if (scores.length === 0) {
+                    highscoreList.innerHTML = '<li>Ingen poeng lagret ennå.</li>';
+                } else {
+                    scores.forEach(score => {
+                        const li = document.createElement('li');
+                        li.textContent = `${score.spiller_navn}: ${score.poeng} klikk`;
+                        highscoreList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error("Klarte ikke hente highscores:", error);
+                highscoreList.innerHTML = '<li>Kunne ikke laste listen.</li>';
+            }
+        }
+
+        async function visTotalKlikkFraDatabase() {
+            try {
+                const response = await fetch(getTotalClicksURL);
+                const data = await response.json();
+                totalKlikkVisning.textContent = data.total_klikk;
+            } catch (error) {
+                console.error("Klarte ikke hente totalt antall klikk:", error);
+                totalKlikkVisning.textContent = "Feil";
+            }
+        }
+
+        tellKnapp.addEventListener('click', økTelling);
+        
+        tilbakestillKnapp.addEventListener('click', async () => {
+            if (telling > 0) {
+                const navn = prompt("Du lagrer poengsummen din! Skriv inn navnet ditt:", "Anonym");
+                if (navn !== null) { 
+                    await lagreScoreTilDatabase(navn, telling);
+                }
+            }
+            tilbakestillTelling();
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                event.preventDefault();
+                økTelling();
+            }
+        });
+        
+        visHighscoresFraDatabase();
+        visTotalKlikkFraDatabase();
+        
+    </script>
+</body>
+</html>
