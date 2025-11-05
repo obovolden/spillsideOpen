@@ -1,0 +1,239 @@
+:root {
+    /* Fargepalett */
+    --primary-color: #4CAF50; /* Grønn */
+    --primary-dark: #388E3C;
+    --secondary-color: #FFC107; /* Gul */
+    --text-color: #333;
+    --light-gray: #f5f5f5;
+    --medium-gray: #ccc;
+    --dark-gray: #888;
+    --revealed-bg: #e0e0e0;
+
+    /* Font-størrelser */
+    --base-font-size: 16px;
+    --cell-font-min: 1.2rem; /* Minimum størrelse for tall i ruter */
+    --cell-font-max: 1.8rem; /* Maksimal størrelse for tall i ruter */
+    --icon-size-min: 1.2rem;
+    --icon-size-max: 1.8rem;
+}
+
+body {
+    font-family: 'Roboto', sans-serif; /* Bruker Roboto */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--light-gray); /* LYS BAKGRUNN */
+    color: var(--text-color);
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    min-height: 100vh; /* Sikrer at body fyller hele høyden */
+}
+
+.game-container {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fff; /* Hvit bakgrunn for container */
+    padding: 20px;
+    border-radius: 12px; /* Mykere kanter */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Subtil skygge */
+}
+
+h1 {
+    text-align: center;
+    color: var(--primary-dark);
+    margin-bottom: 25px;
+    font-weight: 700; /* Tykkere tittel */
+}
+
+/* Felles styling for alle knapper */
+button {
+    padding: 10px 15px;
+    font-size: 1em;
+    font-weight: bold;
+    border: none; /* Fjernet kantlinje */
+    border-radius: 8px; /* Avrundede kanter */
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease; /* Jevnere overganger */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Liten skygge på knapper */
+}
+
+button:hover {
+    transform: translateY(-1px); /* Liten "løft" effekt */
+}
+
+button:active {
+    transform: translateY(0); /* Tilbake til normal */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.difficulty-controls {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: center;
+    gap: 12px; /* Mer avstand mellom knapper */
+}
+
+.difficulty-button { /* Ny klasse for vanskelighetsknapper */
+    background-color: var(--medium-gray);
+    color: var(--text-color);
+}
+
+.difficulty-button:hover {
+    background-color: var(--dark-gray);
+    color: #fff;
+}
+
+
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    width: 100%; 
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    align-items: center;
+    background-color: var(--light-gray);
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+#mines-count, #timer {
+    font-weight: bold;
+    color: var(--primary-dark);
+    font-size: 1.2em; /* Større tall i statuslinjen */
+}
+
+.action-button { /* Klasse for Start på nytt og Modus-knapp */
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 10px 20px;
+}
+
+.action-button:hover {
+    background-color: var(--primary-dark);
+}
+
+.mobile-controls {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+#mode-toggle {
+    width: 100%;
+    background-color: var(--secondary-color); /* Gul bakgrunn for modus */
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Mellom ikon og tekst */
+}
+
+#mode-toggle i { /* Styler Font Awesome ikoner i knappen */
+    font-size: 1.2em;
+}
+
+#mode-toggle.flag-mode {
+    background-color: var(--primary-color); /* Grønn når i flagg-modus */
+    color: #fff;
+}
+
+#game-board {
+    display: grid;
+    /* Fjernet 'border' */
+    
+    background-color: var(--dark-gray); /* Dette er nå fargen på ALLE linjer */
+    gap: 1px; /* Linjer mellom rutene */
+    
+    /* 'padding' lager den ytre linjen */
+    padding: 1px; 
+    
+    margin-bottom: 25px;
+    width: 100%; 
+    border-radius: 8px;
+    overflow: hidden; 
+}
+
+
+.cell {
+    width: 100%; 
+    aspect-ratio: 1 / 1; 
+    background-color: var(--medium-gray); /* Fargen på uåpnet rute */
+    
+    /* Ingen border her */
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(var(--cell-font-min), 3.5vw, var(--cell-font-max)); 
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none; 
+    transition: background-color 0.1s ease; 
+    
+    /* *** DENNE LINJEN ER FIKSEN *** */
+    transform: translateZ(0);
+}
+
+.cell.revealed {
+    background-color: var(--revealed-bg);
+    
+    /* Ingen border her */
+}
+
+.cell.mine {
+    background-color: #ff5e5e; /* Mer intens rød for mine */
+    color: #fff; /* Hvit bombe-ikon */
+}
+
+/* Styling for Font Awesome ikoner i celler */
+.cell i {
+    font-size: clamp(var(--icon-size-min), 4vw, var(--icon-size-max));
+}
+
+/* Fargekoder for tallene */
+.cell.c1 { color: #0000ff; }
+.cell.c2 { color: #008000; }
+.cell.c3 { color: #ff0000; }
+.cell.c4 { color: #000080; }
+.cell.c5 { color: #800000; }
+.cell.c6 { color: #008080; }
+.cell.c7 { color: #000000; }
+.cell.c8 { color: #808080; }
+
+#high-scores {
+    width: 100%; 
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--light-gray); /* Liten separator */
+}
+
+#high-scores h2 {
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+}
+
+#high-scores small {
+    font-weight: normal;
+    color: var(--dark-gray);
+}
+
+#high-scores-list {
+    list-style-type: none;
+    padding: 0;
+    font-size: 1.1em;
+    line-height: 1.6; /* Bedre linjeavstand */
+}
+
+#high-scores-list li {
+    background-color: var(--light-gray);
+    padding: 8px 15px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+}

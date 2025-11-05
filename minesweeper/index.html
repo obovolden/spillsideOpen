@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesveiper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <div class="game-container">
+
+        <h1>Minesveiper</h1>
+
+        <div class="difficulty-controls">
+            <button id="btn-easy" class="difficulty-button">Enkel (9x9)</button>
+            <button id="btn-medium" class="difficulty-button">Middels (16x16)</button>
+            <button id="btn-hard" class="difficulty-button">Vanskelig (20x20)</button>
+        </div>
+
+        <div class="status-bar">
+            <div>Miner: <span id="mines-count"></span></div>
+            <div id="timer">Tid: 0s</div>
+            <button id="reset-button" class="action-button">Start på nytt</button>
+        </div>
+
+        <div class="mobile-controls">
+            <button id="mode-toggle" class="action-button">
+                <i class="fas fa-bomb"></i> Sveip
+            </button>
+        </div>
+
+        <div id="game-board"></div>
+
+        <div id="high-scores">
+            <h2>High Scores <small>(beste tid)</small></h2>
+            <ul id="high-scores-list">
+                <li id="hs-easy">Enkel: Ingen</li>
+                <li id="hs-medium">Middels: Ingen</li>
+                <li id="hs-hard">Vanskelig: Ingen</li>
+            </ul>
+        </div>
+
+    </div> </body>
+</html>
