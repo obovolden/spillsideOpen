@@ -265,12 +265,19 @@ h1 {
         opacity: 1;
     }
 }
-
 /* --- START PÅ NY KODE: HINT-ANIMASJON --- */
 .hint-pulse {
+    /* Denne klassen er for KORT */
     animation: pulse 1.2s 2; /* Kjør 2 ganger */
     box-shadow: 0 0 20px 5px rgba(255, 255, 0, 0.8) !important; /* Sterk gul glød */
     z-index: 5000 !important; /* Over alt */
+}
+
+/* NYTT: Egen puls-klasse for TOMME slots */
+.hint-pulse-slot {
+    animation: pulse 1.2s 2; /* Bruker samme animasjon */
+    box-shadow: 0 0 20px 5px rgba(255, 255, 0, 0.8) !important;
+    /* INGEN z-index! Dette fikser bug 1 */
 }
 
 @keyframes pulse {
@@ -279,9 +286,6 @@ h1 {
     100% { transform: scale(1); }
 }
 /* --- SLUTT PÅ NY KODE --- */
-
-
-/* --- START PÅ KODEN SOM FIKSER MODALEN --- */
 
 /* Mørk bakgrunn som dekker alt */
 #modal-overlay {

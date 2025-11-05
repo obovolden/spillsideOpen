@@ -321,28 +321,42 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${value}${suitLetter}.png`;
     }
 
-    function turnCardFaceUp(cardEl, suit, value) {
+function turnCardFaceUp(cardEl, suit, value) {
         if (!cardEl) return;
-        if (cardEl.dataset.isFaceUp === 'true') return; 
+        
+        // Fikser "Angre"-bugen: Sjekk om kortet *allerede er* face-up
+        // (f.eks. fra en 'undo' som feilet).
+        const wasAlreadyFaceUp = cardEl.dataset.isFaceUp === 'true';
+
         const cardSuit = suit || cardEl.dataset.suit;
         const cardValue = value || cardEl.dataset.value;
         cardEl.classList.remove('face-down');
         cardEl.dataset.isFaceUp = 'true';
         cardEl.classList.add('flipped');
+        
+        // Sørger for at baksiden (inline-stil '') fjernes
+        // og erstattes med forsiden.
         const filename = getCardImageFilename(cardSuit, cardValue);
         cardEl.style.backgroundImage = `url('img/cards/${filename}')`;
+        
         if (getCardColor(cardSuit) === 'red') {
             cardEl.classList.add('red-card');
         } else {
             cardEl.classList.remove('red-card'); 
         }
+        
         cardEl.draggable = true;
-        cardEl.addEventListener('dragstart', onDragStart);
-        cardEl.addEventListener('dragend', onDragEnd);
-        cardEl.addEventListener('dragover', onDragOver);
-        cardEl.addEventListener('drop', onDrop);
-        cardEl.addEventListener('touchstart', onTouchStart, { passive: false });
-        cardEl.addEventListener('dblclick', onCardDoubleClick);
+        
+        // NY LOGIKK: Bare legg til listeners hvis kortet
+        // *faktisk* ble snudd (ikke hvis det bare ble flyttet)
+        if (!wasAlreadyFaceUp) {
+            cardEl.addEventListener('dragstart', onDragStart);
+            cardEl.addEventListener('dragend', onDragEnd);
+            cardEl.addEventListener('dragover', onDragOver);
+            cardEl.addEventListener('drop', onDrop);
+            cardEl.addEventListener('touchstart', onTouchStart, { passive: false });
+            cardEl.addEventListener('dblclick', onCardDoubleClick);
+        }
     }
 
     // --- Touch-logikk (Mobil) ---
@@ -1201,29 +1215,36 @@ document.addEventListener('DOMContentLoaded', () => {
         return null; // Ingen trekk funnet
     }
 
-    /**
-     * Viser hintet ved å "pulse" kortet og målet.
-     */
     function showHint(card, target) {
         if (isAnimating || !card || !target) return;
         
         isAnimating = true;
         
+        // Puls selve kortet (alltid trygt)
         card.classList.add('hint-pulse');
         
         let targetEl = target;
-        // Hvis målet er en bunke, puls det øverste kortet eller selve slot-en
-        if (target.classList.contains('tableau') || target.classList.contains('foundation')) {
-            targetEl = target.lastElementChild || target; 
-        } else if (target === stockPile) {
-            targetEl = stockPile; // Puls selve stokken
+        let targetClass = 'hint-pulse'; // Standard (med z-index)
+        
+        // Sjekk om målet er en bunke
+        if (target.classList.contains('card-slot')) {
+            targetEl = target.lastElementChild; // Prøv å finne topp-kortet
+            if (!targetEl) {
+                // Målet er en TOM BUNKE
+                targetEl = target; // Målrett selve bunken
+                targetClass = 'hint-pulse-slot'; // Bruk z-index-fri klasse
+            }
         }
-        targetEl.classList.add('hint-pulse');
+        
+        // Bruk riktig klasse (targetClass)
+        targetEl.classList.add(targetClass);
 
         // Fjern animasjon og lås opp input etterpå
         setTimeout(() => {
             card.classList.remove('hint-pulse');
+            // Fjern begge klassene for sikkerhets skyld
             targetEl.classList.remove('hint-pulse');
+            targetEl.classList.remove('hint-pulse-slot'); 
             isAnimating = false;
         }, 2400); // 1.2s animasjon * 2 runder
     }
