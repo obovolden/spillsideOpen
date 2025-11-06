@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <title>Mitt Løpespill</title>
+    <style>
+        /* CSS (Stil) */
+        
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        #game-container {
+            width: 600px;
+            height: 200px;
+            border: 3px solid #333;
+            margin: 20px auto;
+            position: relative; /* Viktig for å plassere elementer inni */
+            overflow: hidden; /* Skjuler hindringer som er utenfor */
+            background-color: white;
+        }
+
+        #player {
+            width: 50px; /* Juster størrelsen etter behov */
+            height: 50px; /* Juster størrelsen etter behov */
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+        }
+
+        /* Animasjon for å hoppe */
+        .jump-animation {
+            animation: jump 0.5s linear;
+        }
+
+        @keyframes jump {
+            0%   { bottom: 0; }
+            50%  { bottom: 100px; } /* Høyden på hoppet */
+            100% { bottom: 0; }
+        }
+
+        #obstacle {
+            width: 20px;
+            height: 40px;
+            background-color: #d9534f;
+            position: absolute;
+            bottom: 0;
+            right: -20px; /* Starter utenfor skjermen */
+            
+            /* Animasjon for å flytte hindringen */
+            animation: obstacleMove 2s linear infinite;
+        }
+
+        @keyframes obstacleMove {
+            0%   { right: -20px; }
+            100% { right: 600px; } /* Flytter over hele skjermen */
+        }
+        
+    </style>
+</head>
+<body>
+
+    <h1>Mitt Løpespill</h1>
+    <p>Trykk på Mellomrom (Space) for å hoppe!</p>
+
+    <div id="game-container">
+        <img id="player" src="player.png" alt="Spiller">
+        
+        <div id="obstacle"></div>
+    </div>
+
+    <script>
+        const player = document.getElementById('player');
+        const obstacle = document.getElementById('obstacle');
+
+        // 1. Funksjon for å hoppe
+        function jump() {
+            // Legger til CSS-klassen for å starte animasjonen
+            if (!player.classList.contains('jump-animation')) {
+                player.classList.add('jump-animation');
+
+                // Fjerner klassen etter at animasjonen er ferdig (500ms)
+                setTimeout(() => {
+                    player.classList.remove('jump-animation');
+                }, 500);
+            }
+        }
+
+        // 2. Lytt etter tastetrykk
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
+
+        // 3. Sjekk for kollisjon (spillets "loop")
+        setInterval(() => {
+            // Hent spillerens nåværende Y-posisjon (topp)
+            let playerTop = parseInt(window.getComputedStyle(player).getPropertyValue('top'));
+            
+            // Hent hindringens nåværende X-posisjon (venstre)
+            let obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue('left'));
+
+            // Enkel kollisjonssjekk
+            if (obstacleLeft < 70 && obstacleLeft > 30 && playerTop >= 130) {
+                // Hindringen er nær spilleren OG spilleren er på bakken
+                alert('Game Over!');
+            }
+        }, 10); // Sjekker hvert 10. millisekund
+
+    </script>
+
+</body>
+</html>
