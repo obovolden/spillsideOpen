@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         originalParent: null,
         initialX: 0,
         initialY: 0,
-        offsetX: 0,
-        offsetY: 0,
+        offsetX: 0, 
+        offsetY: 0, 
         isDragging: false,
         dragThreshold: 5 // Minste bevegelse (i px) før det telles som "drag"
     };
@@ -71,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startGameBtn) {
         startGameBtn.addEventListener('click', () => {
             if (timerInterval) {
+                
+                clearAllHints(); // <-- FIKS: Fjerner hint før modal vises
+                
                 if (modalOverlay) {
                     showConfirmModal(
                         "Starte nytt spill?", 
@@ -321,11 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${value}${suitLetter}.png`;
     }
 
-function turnCardFaceUp(cardEl, suit, value) {
+    function turnCardFaceUp(cardEl, suit, value) {
         if (!cardEl) return;
         
         // Fikser "Angre"-bugen: Sjekk om kortet *allerede er* face-up
-        // (f.eks. fra en 'undo' som feilet).
         const wasAlreadyFaceUp = cardEl.dataset.isFaceUp === 'true';
 
         const cardSuit = suit || cardEl.dataset.suit;
@@ -334,8 +336,6 @@ function turnCardFaceUp(cardEl, suit, value) {
         cardEl.dataset.isFaceUp = 'true';
         cardEl.classList.add('flipped');
         
-        // Sørger for at baksiden (inline-stil '') fjernes
-        // og erstattes med forsiden.
         const filename = getCardImageFilename(cardSuit, cardValue);
         cardEl.style.backgroundImage = `url('img/cards/${filename}')`;
         
@@ -361,8 +361,12 @@ function turnCardFaceUp(cardEl, suit, value) {
 
     // --- Touch-logikk (Mobil) ---
 
+    // ===============================================
+    // START PÅ FIKS FOR MOBIL-DRAG (VIDEO)
+    // ===============================================
+
     function onTouchStart(e) {
-        if (isAnimating) return; // NYTT
+        if (isAnimating) return;
         const cardEl = e.target.closest('.card');
         if (!cardEl || cardEl.dataset.isFaceUp === 'false') return;
 
@@ -394,11 +398,6 @@ function turnCardFaceUp(cardEl, suit, value) {
         activeDrag.stack.forEach(card => {
             card.style.opacity = '0.8';
             card.style.zIndex = z++;
-            const rect = card.getBoundingClientRect();
-            card.dataset.originalTop = rect.top;
-            card.dataset.originalLeft = rect.left;
-            activeDrag.offsetX = activeDrag.initialX - rect.left;
-            activeDrag.offsetY = activeDrag.initialY - rect.top;
         });
     }
 
@@ -416,19 +415,23 @@ function turnCardFaceUp(cardEl, suit, value) {
         }
 
         if (activeDrag.isDragging) {
-            const newX = touch.clientX - activeDrag.offsetX;
-            const newY = touch.clientY - activeDrag.offsetY;
             
             activeDrag.stack.forEach((card, index) => {
                 let yOffset = 0;
                 if (activeDrag.originalParent.classList.contains('tableau')) {
                     yOffset = index * TABLEAU_STACK_OFFSET_Y;
                 }
-                card.style.position = 'fixed'; 
-                card.style.transform = `translate(${newX}px, ${newY + yOffset}px)`;
+                
+                // --- FIKS: Bruker 'transform' i stedet for 'top/left' ---
+                card.style.transform = `translate(${deltaX}px, ${deltaY + yOffset}px)`;
             });
         }
     }
+    
+    // ===============================================
+    // SLUTT PÅ FIKS FOR MOBIL-DRAG
+    // ===============================================
+
 
     function onTouchEnd(e) {
         if (!activeDrag.card) return;
@@ -445,22 +448,26 @@ function turnCardFaceUp(cardEl, suit, value) {
             if (isTopWasteCard || isBottomTableauCard) {
                 for (const slot of foundationSlots) {
                     if (isValidMove(draggedCard, slot)) {
-                        // --- NYTT: Lagre undo-state og poeng ---
-                        const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== draggedCard) 
-                                            ? originalParent.lastElementChild 
+                        
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        const flippedCard = (originalParent.classList.contains('tableau') && draggedCard.previousElementSibling)
+                                            ? draggedCard.previousElementSibling
                                             : null;
+                        
+                        const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
                         pushToHistory({
                             type: 'MOVE',
                             cards: [draggedCard],
                             from: originalParent,
                             to: slot,
-                            flippedCard: flippedCard
+                            flippedCard: willFlipCard ? flippedCard : null
                         });
                         moveCount++; 
-                        score += 10;
-                        if (flippedCard) score += 5;
+                        score += 10; // Poeng for å flytte til foundation
+                        if (willFlipCard) score += 5;
                         updateScoreAndMoves();
-                        // --- SLUTT PÅ NY KODE ---
+                        // --- SLUTT PÅ FIKS ---
                         
                         draggedCard.style.top = '0px';
                         draggedCard.style.left = '0px';
@@ -470,9 +477,12 @@ function turnCardFaceUp(cardEl, suit, value) {
                         
                         slot.appendChild(draggedCard);
                         
-                        if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
-                            turnCardFaceUp(originalParent.lastElementChild);
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        if (flippedCard) {
+                            turnCardFaceUp(flippedCard);
                         }
+                        // --- SLUTT PÅ FIKS ---
+                        
                         if (originalParent === wastePile) {
                             updateWastePileVisuals();
                         }
@@ -502,23 +512,27 @@ function turnCardFaceUp(cardEl, suit, value) {
                     if (targetSlot.classList.contains('card-slot') && isValidMove(draggedCard, targetSlot)) {
                         // GYLDIG TREKK
                         
-                        // --- NYTT: Lagre undo-state og poeng ---
-                        const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== draggedCard) 
-                                            ? originalParent.lastElementChild 
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        const flippedCard = (originalParent.classList.contains('tableau') && draggedCard.previousElementSibling)
+                                            ? draggedCard.previousElementSibling
                                             : null;
+
+                        const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
                         pushToHistory({
                             type: 'MOVE',
                             cards: [...activeDrag.stack],
                             from: originalParent,
                             to: targetSlot,
-                            flippedCard: flippedCard
+                            flippedCard: willFlipCard ? flippedCard : null
                         });
+
                         moveCount++;
                         if (targetSlot.classList.contains('foundation')) score += 10;
                         else if (originalParent === wastePile) score += 5;
-                        if (flippedCard) score += 5;
+                        if (willFlipCard) score += 5;
                         updateScoreAndMoves();
-                        // --- SLUTT PÅ NY KODE ---
+                        // --- SLUTT PÅ FIKS ---
                         
                         const baseIndex = targetSlot.children.length;
                         
@@ -538,9 +552,12 @@ function turnCardFaceUp(cardEl, suit, value) {
                             targetSlot.appendChild(card);
                         });
 
-                        if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
-                            turnCardFaceUp(originalParent.lastElementChild);
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        if (flippedCard) {
+                            turnCardFaceUp(flippedCard);
                         }
+                        // --- SLUTT PÅ FIKS ---
+
                         if (originalParent === wastePile) {
                             updateWastePileVisuals();
                         }
@@ -648,23 +665,27 @@ function turnCardFaceUp(cardEl, suit, value) {
                 else currentCard = currentCard.nextElementSibling;
             }
             
-            // --- NYTT: Lagre undo-state og poeng ---
-            const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== draggedCard) 
-                                ? originalParent.lastElementChild 
+            // --- START PÅ FIKS (Angre-bug) ---
+            const flippedCard = (originalParent.classList.contains('tableau') && draggedCard.previousElementSibling)
+                                ? draggedCard.previousElementSibling
                                 : null;
+            
+            const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
             pushToHistory({
                 type: 'MOVE',
                 cards: [...stackToMove],
                 from: originalParent,
                 to: targetSlot,
-                flippedCard: flippedCard
+                flippedCard: willFlipCard ? flippedCard : null // Bare lagre hvis det faktisk ble snudd
             });
+            
             moveCount++;
             if (targetSlot.classList.contains('foundation')) score += 10;
             else if (originalParent === wastePile) score += 5;
-            if (flippedCard) score += 5;
+            if (willFlipCard) score += 5; // Poeng for å snu
             updateScoreAndMoves();
-            // --- SLUTT PÅ NY KODE ---
+            // --- SLUTT PÅ FIKS ---
             
             const baseIndex = targetSlot.children.length; 
             stackToMove.forEach((card, index) => {
@@ -679,9 +700,13 @@ function turnCardFaceUp(cardEl, suit, value) {
                 }
                 targetSlot.appendChild(card); 
             });
-            if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
-                turnCardFaceUp(originalParent.lastElementChild);
+
+            // --- START PÅ FIKS (Angre-bug) ---
+            if (flippedCard) {
+                turnCardFaceUp(flippedCard);
             }
+            // --- SLUTT PÅ FIKS ---
+
             if (originalParent === wastePile) {
                 updateWastePileVisuals();
             }
@@ -713,31 +738,38 @@ function turnCardFaceUp(cardEl, suit, value) {
         for (const slot of foundationSlots) {
             if (isValidMove(cardEl, slot)) {
                 
-                // --- NYTT: Lagre undo-state og poeng ---
-                const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== cardEl) 
-                                    ? originalParent.lastElementChild 
+                // --- START PÅ FIKS (Angre-bug) ---
+                // 'cardEl' is the 'draggedCard' in this context
+                const flippedCard = (originalParent.classList.contains('tableau') && cardEl.previousElementSibling)
+                                    ? cardEl.previousElementSibling
                                     : null;
+                
+                const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
                 pushToHistory({
                     type: 'MOVE',
                     cards: [cardEl],
                     from: originalParent,
                     to: slot,
-                    flippedCard: flippedCard
+                    flippedCard: willFlipCard ? flippedCard : null
                 });
                 moveCount++;
-                score += 10;
-                if (flippedCard) score += 5;
+                score += 10; // Poeng for å flytte til foundation
+                if (willFlipCard) score += 5;
                 updateScoreAndMoves();
-                // --- SLUTT PÅ NY KODE ---
+                // --- SLUTT PÅ FIKS ---
                 
                 cardEl.style.top = '0px';
                 cardEl.style.left = '0px';
                 cardEl.style.zIndex = getNumericValue(cardEl.dataset.value) + 1;
                 slot.appendChild(cardEl);
                 
-                if (isBottomTableauCard && originalParent.lastElementChild) {
-                    turnCardFaceUp(originalParent.lastElementChild);
+                // --- START PÅ FIKS (Angre-bug) ---
+                if (flippedCard) {
+                    turnCardFaceUp(flippedCard);
                 }
+                // --- SLUTT PÅ FIKS ---
+
                 if (isTopWasteCard) {
                     updateWastePileVisuals();
                 }
@@ -915,7 +947,7 @@ function turnCardFaceUp(cardEl, suit, value) {
                         "Gratulerer!", 
                         `Du vant på ${finalTime} sekunder! Poeng: ${score}`, // NYTT: Viser poeng
                         () => { 
-                            saveHighScore(finalTime, gameMode); // Bør utvides til å lagre poeng
+                            saveHighScore(finalTime, gameMode); // Sender nå 'score' globalt
                             startWinAnimation();
                         } 
                     );
@@ -930,11 +962,11 @@ function turnCardFaceUp(cardEl, suit, value) {
 
     // --- Vinneranimasjon ---
     function startWinAnimation() {
-        isAnimating = true; // Sørg for at alt er låst
         const foundationRects = Array.from(foundationSlots).map(slot => slot.getBoundingClientRect());
-        const styleSheet = document.styleSheets[0] || document.head.appendChild(document.createElement('style')).sheet;
+        const styleSheet = document.head.appendChild(document.createElement('style')).sheet; // <--- FIKSET!
 
         for (let i = 0; i < 52; i++) {
+// ...
             const winCard = document.createElement('div');
             winCard.classList.add('win-card');
             
@@ -1041,19 +1073,31 @@ function turnCardFaceUp(cardEl, suit, value) {
 
         const lastMove = moveHistory.pop();
         moveCount++; // Å angre er også et "trekk"
-        score -= 2; // Liten straff for å angre
         
+        // --- START PÅ FIKS (Poeng-farming) ---
+        // Reverser poengsummen for trekket som angres
         switch (lastMove.type) {
             case 'DRAW':
+                // Ingen poengendring for å trekke
                 undoDraw(lastMove.cards);
                 break;
             case 'RECYCLE':
+                score += 50; // Gi tilbake straffepoengene
                 undoRecycle(lastMove.cards);
                 break;
             case 'MOVE':
+                // Reverser poengene som ble tjent
+                if (lastMove.to.classList.contains('foundation')) score -= 10;
+                if (lastMove.flippedCard) score -= 5;
+                if (lastMove.from === wastePile) score -= 5;
+                
+                // Legg til en liten straff for å bruke angre
+                score -= 2; 
+
                 undoMove(lastMove);
                 break;
         }
+        // --- SLUTT PÅ FIKS ---
         
         updateScoreAndMoves();
         checkAutocompleteCondition(); // Status kan ha endret seg
@@ -1121,10 +1165,17 @@ function turnCardFaceUp(cardEl, suit, value) {
             flippedCard.removeEventListener('drop', onDrop);
             flippedCard.removeEventListener('touchstart', onTouchStart); 
             flippedCard.removeEventListener('dblclick', onCardDoubleClick);
+            
+            // NYTT: Fjern hint-puls i tilfelle
+            flippedCard.classList.remove('hint-pulse');
+            flippedCard.classList.remove('hint-pulse-slot');
         }
 
         // 2. Flytt kortene tilbake til 'from'-bunken
         cards.forEach(card => {
+            // NYTT: Fjern hint-puls FØR flytting
+            card.classList.remove('hint-pulse');
+            card.classList.remove('hint-pulse-slot');
             from.appendChild(card);
         });
         
@@ -1215,6 +1266,9 @@ function turnCardFaceUp(cardEl, suit, value) {
         return null; // Ingen trekk funnet
     }
 
+    /**
+     * Viser hintet ved å "pulse" kortet og målet.
+     */
     function showHint(card, target) {
         if (isAnimating || !card || !target) return;
         
@@ -1249,21 +1303,65 @@ function turnCardFaceUp(cardEl, suit, value) {
         }, 2400); // 1.2s animasjon * 2 runder
     }
     
+    /**
+     * NYTT: Fjerner alle aktive hint-animasjoner fra brettet.
+     */
+    function clearAllHints() {
+        const hintedCards = document.querySelectorAll('.hint-pulse');
+        const hintedSlots = document.querySelectorAll('.hint-pulse-slot');
+        
+        hintedCards.forEach(el => el.classList.remove('hint-pulse'));
+        hintedSlots.forEach(el => el.classList.remove('hint-pulse-slot'));
+        
+        // Nullstill animasjonslåsen, siden modalen tar over
+        if (isAnimating) {
+            isAnimating = false;
+        }
+    }
+    
     // --- SLUTT PÅ NY KODE ---
 
 
-    // --- Highscore-logikk ---
+    // --- Highscore-logikk (OMBYGGET FOR POENG) ---
     function getHighScores(mode) {
         const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
         const scoresJSON = localStorage.getItem(key);
-        return scoresJSON ? JSON.parse(scoresJSON) : [];
+        if (!scoresJSON) return []; // Tom
+
+        let scores;
+        try {
+            scores = JSON.parse(scoresJSON);
+        } catch (e) {
+            return []; // Korrupt JSON
+        }
+
+        if (scores.length === 0) return [];
+
+        // Sjekk formatet på det første elementet
+        if (typeof scores[0] === 'number') {
+            console.warn("Highscore-formatet er utdatert. Starter ny liste.");
+            localStorage.removeItem(key); // Fjern den gamle listen
+            return []; // Returner en tom liste
+        }
+
+        return scores; // Formatet er { score, time }
     }
 
     function saveHighScore(time, mode) {
-        // TODO: Bør utvides til å lagre { time: time, score: score }
+        const currentScore = score; // Hent global poengsum
         const scores = getHighScores(mode);
-        scores.push(time); // Lagrer kun tid foreløpig
-        scores.sort((a, b) => a - b); 
+
+        scores.push({ score: currentScore, time: time }); 
+
+        // Sorter: Høyeste poengsum først. Ved lik poengsum, lavest tid.
+        scores.sort((a, b) => {
+            if (a.score !== b.score) {
+                return b.score - a.score; // Høyeste poengsum (b - a)
+            } else {
+                return a.time - b.time; // Lavest tid (a - b)
+            }
+        });
+
         const topScores = scores.slice(0, 5); 
         const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
         localStorage.setItem(key, JSON.stringify(topScores));
@@ -1282,10 +1380,10 @@ function turnCardFaceUp(cardEl, suit, value) {
         if (scores.length === 0) {
             listElement.innerHTML = '<li>Ingen score ennå</li>';
         } else {
-            scores.forEach(score => {
+            scores.forEach(scoreData => { // scoreData er nå et objekt
                 const li = document.createElement('li');
-                // TODO: Oppdater dette når score lagres
-                li.textContent = `${score} sekunder`; 
+                // Viser poeng først, deretter tid
+                li.textContent = `${scoreData.score} poeng (${scoreData.time}s)`; 
                 listElement.appendChild(li);
             });
         }
