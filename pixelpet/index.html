@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Pet Saga</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>Pixel Pet Saga</h1>
+        
+        <div id="status-bar">
+            <p>💰 <span id="coins">100</span> mynter</p>
+            <p>🥚 Egg i samlingen: <span id="eggs">1</span></p>
+        </div>
+
+        <div id="pet-display">
+            <h2>Din Pixel Pet: <span id="pet-rarity">Rare</span></h2>
+            <div id="pet-image">
+                
+            </div>
+            <p>Lykke: <span id="pet-happiness">50</span>%</p>
+        </div>
+
+        <div id="actions">
+            <button id="mine-button">Mine Mynter (Klar om: <span id="cooldown-timer">00:00</span>)</button>
+            <button id="feed-button">Gi Mat (10 mynter)</button>
+            <button id="buy-egg-button">Kjøp Egg (50 mynter)</button>
+        </div>
+        
+        <div id="message-area"></div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
