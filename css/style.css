@@ -1,98 +1,318 @@
 body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #0d0d0d;
-            padding-right: 1rem;
-            border-bottom: 4px solid #ff4500;
-            align-items: center;
-            display: flex;
-            height: fit-content;
-            
-
-            h1{
-                width: fit-content;
-            }
-
-            button{
-                background-color: transparent;
-                border: 0;
-                height: fit-content;
-                width: fit-content;
-
-                img{
-                    height: 8rem;
-                    width: 8rem;
-                }
-            }
-        }
-        h1 {
-            font-size: 3rem;
-            color: #ff4500;
-            margin: 0;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        .game-list {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        .game-item {
-            background-color: #2a2a2a;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.3s ease;
-            min-height: 405px;
-        }
-        .game-item:hover {
-            transform: translateY(-5px);
-        }
-        .game-item img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-        }
-        .game-info {
-            padding: 1.5rem;
-        }
-        .game-info h2 {
-            font-size: 1.8rem;
-            color: #ff4500;
-            margin-top: 0;
-            margin-bottom: 0.5rem;
-        }
-        .game-info p {
-            font-size: 1rem;
-            line-height: 1.6;
-            color: #cccccc;
-        }
-
-section {
-    a{
-        text-decoration: none;
-    }
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
 }
 
-/* Stil for Footer */
+header {
+    background-color: #0d0d0d;
+    padding: 0.5rem 1rem;
+    border-bottom: 4px solid #ff4500;
+    align-items: center;
+    display: flex;
+    justify-content: space-between; 
+    position: relative; 
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+header button {
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.logo-button {
+    height: fit-content;
+    width: fit-content;
+    margin-right: 1rem;
+}
+
+/* DESKTOP STANDARD: LOGO STØRRELSE */
+.logo-button img {
+    height: 4rem; /* Standard desktop størrelse (mindre enn 6rem du hadde) */
+    width: 4rem;  /* Standard desktop størrelse */
+    display: block;
+}
+
+/* DESKTOP STANDARD: H1 TITTEL STØRRELSE */
+h1 {
+    font-size: 2.5rem; /* Standard desktop størrelse */
+    color: #ff4500;
+    margin: 0;
+}
+
+/* NAVIGASJONSMENY (Desktop standard) */
+.nav-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.nav-menu li {
+    margin-left: 2rem;
+}
+
+.nav-menu a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem; /* Standard desktop meny lenke-størrelse */
+    font-weight: bold;
+    padding: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.nav-menu a:hover {
+    color: #ff4500;
+}
+
+/* HAMBURGER KNAPP (Skjult på desktop som standard) */
+.hamburger {
+    display: none; /* Skjules som standard på desktop */
+    flex-direction: column;
+    justify-content: space-around;
+    width: 2rem;
+    height: 2rem;
+    z-index: 10;
+}
+
+.hamburger .bar {
+    width: 2rem;
+    height: 0.25rem;
+    background-color: #fff;
+    border-radius: 10px;
+    transition: all 0.3s linear;
+}
+
+
+/* INTROSEKSJON */
+.intro-section {
+    text-align: center; 
+    margin: 4rem auto 2rem auto; 
+    max-width: 800px;
+    padding: 0 1rem;
+}
+
+.intro-section h2 {
+    font-size: 3rem; 
+    color: #ff4500;
+    margin-bottom: 1rem;
+}
+
+.intro-section p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #cccccc;
+}
+
+/* CONTAINER OG SPILLSEKSJON */
+.container {
+    max-width: 1200px;
+    margin: 0 auto; 
+    padding: 0 1rem;
+}
+
+.game-section {
+    margin: 2rem auto;
+}
+
+.game-section > h2 {
+    font-size: 2.5rem; 
+    color: #ff4500;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.game-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.game-item {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+    min-height: 405px;
+}
+
+.game-item:hover {
+    transform: translateY(-5px);
+}
+
+.game-item img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.game-info {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.game-info h2 {
+    font-size: 1.8rem;
+    color: #ff4500;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.game-info p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #cccccc;
+}
+
+section a {
+    text-decoration: none;
+}
+
 footer {
-    text-align: center;  /* Senterstiller teksten */
-    padding: 0;     /* Gir 20px luft over og under teksten */
-    margin-top: 15px;    /* Legger til en marg på toppen for å skille den fra innholdet */
-    border-top: 1px solid #000000; /* Legger til en svak, lys grå linje over */
-    color: #8d8787;         /* Gir teksten en mørkegrå farge */
-    font-size: 1.5em;    /* Gjør skriften litt mindre enn vanlig brødtekst */
+    text-align: center;
+    padding: 0;
+    margin-top: 15px;
+    border-top: 1px solid #000000;
+    color: #8d8787;
+    font-size: 1.5em;
     background-color: #0d0d0d;
     padding: 2rem;
     border-top: 4px solid #ff4500;
+}
+
+
+/* ------------------------------------- */
+/* --- RESPONSIV DESIGN --- */
+/* ------------------------------------- */
+
+/* Justeringer for nettbrett og mindre laptoper (mellom 601px og 900px) */
+@media (max-width: 900px) {
+    /* Mindre logo og tittel i header */
+    .logo-button img {
+        height: 3.5rem; 
+        width: 3.5rem;
+    }
+
+    h1 {
+        font-size: 2rem; 
+    }
+
+    /* Mindre tekst i menyen for å spare plass */
+    .nav-menu a {
+        font-size: 0.9rem;
+        margin-left: 1.5rem; /* Litt mindre mellomrom mellom lenkene */
+    }
+
+    .intro-section h2 {
+        font-size: 2.5rem;
+    }
+    .intro-section p {
+        font-size: 1.1rem;
+    }
+    .game-section > h2 {
+        font-size: 2.2rem;
+    }
+}
+
+
+/* Justeringer for MOBIL (600px og mindre) */
+@media (max-width: 600px) {
+
+    header {
+        padding: 0.5rem 1rem;
+    }
+    
+    /* Logo-størrelse på mobil */
+    .logo-button img {
+        height: 3rem; /* Enda mindre på mobil */
+        width: 3rem;  /* Enda mindre på mobil */
+    }
+    
+    /* H1 tittel-størrelse på mobil */
+    h1 {
+        font-size: 1.5rem; 
+    }
+
+    /* Skjuler desktop-menyen og viser hamburger */
+    .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: #0d0d0d;
+        border-bottom: 2px solid #ff4500;
+    }
+
+    .nav-menu.open {
+        display: block;
+    }
+
+    .nav-menu ul {
+        flex-direction: column; 
+        width: 100%;
+    }
+
+    .nav-menu li {
+        margin: 0;
+        text-align: center;
+    }
+
+    .nav-menu a {
+        display: block;
+        padding: 1.5rem;
+        border-top: 1px solid #2a2a2a; 
+        font-size: 1.1rem; /* Litt større lenker i mobilmenyen for enkel klikking */
+    }
+
+    .hamburger {
+        display: flex; /* Viser hamburger-knappen */
+    }
+    
+    /* Hamburger "X" animasjon */
+    .hamburger.open .bar:nth-child(1) {
+        transform: rotate(45deg) translate(0.5rem, 0.6rem);
+    }
+    .hamburger.open .bar:nth-child(2) {
+        opacity: 0;
+    }
+    .hamburger.open .bar:nth-child(3) {
+        transform: rotate(-45deg) translate(0.5rem, -0.6rem);
+    }
+
+    /* Andre innholdsjusteringer for mobil */
+    .intro-section h2 {
+        font-size: 2rem; /* Enda mindre på mobil */
+    }
+    .intro-section p {
+        font-size: 1rem;
+    }
+    
+    .game-section > h2 {
+        font-size: 1.8rem; /* Enda mindre på mobil */
+    }
+
+    .game-info h2 {
+        font-size: 1.4rem;
+    }
+    
+    .game-info p {
+        font-size: 0.9rem;
+    }
+
+    footer {
+        font-size: 0.9em;
+        padding: 1.5rem;
+    }
 }
