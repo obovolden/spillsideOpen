@@ -2,7 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Konstanter ---
     const TABLEAU_STACK_OFFSET_Y = 25; // Endret for mobil
-    const WASTE_STACK_OFFSET_X = 10; // Endret for mobil
+    
+    // --- START PÅ FIKS (Mobil-offset) ---
+    const WASTE_OFFSET_DESKTOP = 17; // For desktop
+    const WASTE_OFFSET_MOBILE = 12; // For mobil (tettere)
+    
+    // Sjekker for mobil-view (matcher CSS @media query)
+    const mobileMediaQuery = window.matchMedia('(max-width: 800px)');
+    // --- SLUTT PÅ FIKS ---
 
     // --- Globale variabler ---
     let deck = [];
@@ -279,12 +286,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function updateWastePileVisuals() {
+        // --- START PÅ FIKS (Mobil-offset) ---
+        // Sjekk hvilken offset vi skal bruke
+        const currentWasteOffset = mobileMediaQuery.matches ? WASTE_OFFSET_MOBILE : WASTE_OFFSET_DESKTOP;
+        // --- SLUTT PÅ FIKS ---
+            
         const wasteCards = Array.from(wastePile.children);
         const numCards = wasteCards.length;
         wasteCards.forEach((card, index) => {
             let offset = 0;
             if (index >= numCards - 3) { 
-                offset = (index - (Math.max(0, numCards - 3))) * WASTE_STACK_OFFSET_X;
+                // --- START PÅ FIKS (Mobil-offset) ---
+                // Bruk den responsive verdien
+                offset = (index - (Math.max(0, numCards - 3))) * currentWasteOffset;
+                // --- SLUTT PÅ FIKS ---
             } else if (numCards > 3) {
                 offset = 0;
             }
@@ -891,6 +906,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (topCard) {
                     for (const foundation of foundationSlots) {
                         if (isValidMove(topCard, foundation)) {
+                            
+                            // --- START PÅ FIKS (Auto-poeng) ---
+                            score += 10;
+                            updateScoreAndMoves();
+                            // --- SLUTT PÅ FIKS ---
+                            
                             // Flytt kortet
                             topCard.style.top = '0px';
                             topCard.style.left = '0px';
@@ -962,11 +983,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Vinneranimasjon ---
     function startWinAnimation() {
+        isAnimating = true; // Sørg for at alt er låst
         const foundationRects = Array.from(foundationSlots).map(slot => slot.getBoundingClientRect());
-        const styleSheet = document.head.appendChild(document.createElement('style')).sheet; // <--- FIKSET!
+        // FIKS: Tvinger den til å lage et nytt, trygt stilark
+        const styleSheet = document.head.appendChild(document.createElement('style')).sheet;
 
         for (let i = 0; i < 52; i++) {
-// ...
             const winCard = document.createElement('div');
             winCard.classList.add('win-card');
             

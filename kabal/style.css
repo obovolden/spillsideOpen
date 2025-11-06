@@ -265,6 +265,7 @@ h1 {
         opacity: 1;
     }
 }
+
 /* --- START PÅ NY KODE: HINT-ANIMASJON --- */
 .hint-pulse {
     /* Denne klassen er for KORT */
@@ -286,6 +287,9 @@ h1 {
     100% { transform: scale(1); }
 }
 /* --- SLUTT PÅ NY KODE --- */
+
+
+/* --- START PÅ KODEN SOM FIKSER MODALEN --- */
 
 /* Mørk bakgrunn som dekker alt */
 #modal-overlay {
@@ -407,7 +411,8 @@ h1 {
 @media (max-width: 800px) {
 
     body {
-        padding: 10px;
+        /* FIKS: Mindre padding på sidene (10px -> 5px) */
+        padding: 10px 5px; 
         min-height: 100vh;
     }
 
@@ -434,24 +439,10 @@ h1 {
         padding: 0;
     }
     
-    /* Hvis timeren er alene (som i din gamle kode), bruk dette: */
-    /* .controls .timer {
-        width: 100%;
-        text-align: center;
-        font-size: 1.4rem;
-        margin-top: 5px;
-    }
-    .controls .moves, .controls .score {
-        width: 45%; 
-        text-align: center;
-        font-size: 1.1rem;
-        margin-top: 5px;
-    } */
-
-
     /* --- Spillbrettet --- */
     #game-board {
-        padding: 10px;
+        /* FIKS: Mindre padding på sidene (10px -> 5px) */
+        padding: 10px 5px;
     }
 
     .top-row, #tableau-area, .stack-area, .foundation-area {
