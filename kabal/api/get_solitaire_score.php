@@ -14,15 +14,23 @@ $output = [
     'draw3' => []
 ];
 
-// Hent Topp 5 for Tegn 1 (sortert etter tid, lavest først)
-$sql1 = "SELECT spiller_navn, time_seconds FROM solitaire_scores WHERE game_mode = 1 ORDER BY time_seconds ASC LIMIT 5";
+// Hent Topp 5 for Tegn 1 (game_mode = 1)
+$sql1 = "SELECT spiller_navn, score, time_seconds 
+         FROM solitaire_scores 
+         WHERE game_mode = 1 
+         ORDER BY score DESC, time_seconds ASC 
+         LIMIT 5";
 $result1 = $conn->query($sql1);
 while($row = $result1->fetch_assoc()) {
     $output['draw1'][] = $row;
 }
 
-// Hent Topp 5 for Tegn 3 (sortert etter tid, lavest først)
-$sql3 = "SELECT spiller_navn, time_seconds FROM solitaire_scores WHERE game_mode = 3 ORDER BY time_seconds ASC LIMIT 5";
+// Hent Topp 5 for Tegn 3 (game_mode = 3)
+$sql3 = "SELECT spiller_navn, score, time_seconds 
+         FROM solitaire_scores 
+         WHERE game_mode = 3 
+         ORDER BY score DESC, time_seconds ASC 
+         LIMIT 5";
 $result3 = $conn->query($sql3);
 while($row = $result3->fetch_assoc()) {
     $output['draw3'][] = $row;
