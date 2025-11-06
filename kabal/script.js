@@ -65,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalText = document.getElementById('modal-text');
     const modalConfirmBtn = document.getElementById('modal-confirm');
     const modalCancelBtn = document.getElementById('modal-cancel');
+    // NYTT: DOM-elementer for highscore-input
+    const modalInputContainer = document.getElementById('modal-input-container');
+    const modalInput = document.getElementById('modal-input');
+
 
     // --- START PÅ NY, "SKUDDSKKER" FIKS ---
     if (modalOverlay) {
@@ -131,24 +135,29 @@ document.addEventListener('DOMContentLoaded', () => {
         slot.addEventListener('drop', onDrop);
     });
 
-    if (modalOverlay && modalConfirmBtn && modalCancelBtn) {
+    // --- START PÅ FIKS (Robust modal) ---
+    // Separerte lytterne slik at om én knapp mangler, fungerer de andre.
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                hideModal();
+            }
+        });
+    }
+
+    if (modalConfirmBtn) {
         modalConfirmBtn.addEventListener('click', () => {
             if (onConfirmCallback) {
                 onConfirmCallback(); 
             }
             hideModal();
         });
-
-        modalCancelBtn.addEventListener('click', hideModal);
-
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                hideModal();
-            }
-        });
-    } else {
-        console.warn("Modal HTML-elementer ble ikke funnet. Spillet vil falle tilbake til 'alert' og 'confirm'.");
     }
+
+    if (modalCancelBtn) {
+        modalCancelBtn.addEventListener('click', hideModal);
+    }
+    // --- SLUTT PÅ FIKS ---
 
     // --- Kjernefunksjoner ---
     function startGame() {
@@ -992,18 +1001,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const finalTime = elapsedTime; 
             setTimeout(() => { 
                 if (modalOverlay) {
+                    // --- START PÅ FIKS (Be om brukernavn) ---
                     showAlertModal(
                         "Gratulerer!", 
-                        `Du vant på ${finalTime} sekunder! Poeng: ${score}`, // NYTT: Viser poeng
+                        `Du vant på ${finalTime} sekunder! Poeng: ${score}`,
                         () => { 
-                            saveHighScore(finalTime, gameMode); // Sender nå 'score' globalt
-                            startWinAnimation();
+                            startWinAnimation(); // Start animasjonen FØRST
+                            // Vis en ny modal for å be om navn
+                            showPromptModal(
+                                "Highscore!",
+                                "Skriv inn navnet ditt for å lagre:",
+                                (username) => {
+                                    // 'username' kommer fra modal-callbacken
+                                    saveHighScore(finalTime, gameMode, username); 
+                                }
+                            );
                         } 
                     );
+                    // --- SLUTT PÅ FIKS ---
                 } else {
-                    alert(`Gratulerer! Du vant på ${finalTime} sekunder! Poeng: ${score}`);
-                    saveHighScore(finalTime, gameMode);
-                    startWinAnimation();
+                    // Fallback for eldre nettlesere (mindre pen)
+                    const username = prompt(`Gratulerer! Du vant på ${finalTime} sekunder! Poeng: ${score}\n\nSkriv inn navnet ditt:`, "Gjestespiller");
+                    if (username) {
+                        saveHighScore(finalTime, gameMode, username);
+                        startWinAnimation();
+                    }
                 }
             }, 500); 
         }
@@ -1390,6 +1412,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function getHighScores(mode) {
         const modeId = mode === 1 ? 'draw_1' : 'draw_3';
         try {
+            // MERK: Bruker din nye API-sti
             const response = await fetch(`api/get_solitaire_scores.php?mode=${modeId}`);
             if (!response.ok) {
                 console.error("Klarte ikke hente highscores fra server.");
@@ -1403,21 +1426,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function saveHighScore(time, mode) {
+    async function saveHighScore(time, mode, username) { // <-- Mottar 'username'
         const currentScore = score;
         const modeId = mode === 1 ? 'draw_1' : 'draw_3';
         
-        // TODO: Erstatt "Gjestespiller" med ekte brukernavn
-        const username = "Gjestespiller"; 
+        // Sikrer at vi har et brukernavn
+        const finalUsername = username || "Gjestespiller"; 
 
         try {
-            const response = await fetch('api/add_solitaire_score.php', {
+            const response = await fetch('save-score.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    username: username,
+                    username: finalUsername, // Bruker parameteret
                     score: currentScore,
                     time: time,
                     mode: modeId
@@ -1466,33 +1489,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MODAL-HJELPEFUNKSJONER ---
     
+    // --- START PÅ FIKS (Robust modal) ---
+    // La til 'if (element)' sjekker for å unngå feil
     function showConfirmModal(title, text, callback) {
         if (!modalOverlay) return; 
         modalOverlay.classList.remove('hidden');
         modalOverlay.style.display = 'flex';
-        modalTitle.textContent = title;
-        modalText.textContent = text;
-        modalConfirmBtn.textContent = "Ja";
-        modalCancelBtn.style.display = 'inline-block';
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalText) modalText.textContent = text;
+        
+        if (modalInputContainer) modalInputContainer.style.display = 'none'; // Skjul input
+        
+        if (modalConfirmBtn) modalConfirmBtn.textContent = "Ja";
+        if (modalCancelBtn) modalCancelBtn.style.display = 'inline-block';
         onConfirmCallback = callback; 
     }
 
 
     function showAlertModal(title, text, callback = null) {
         if (!modalOverlay) return; 
-        modalTitle.textContent = title;
-        modalText.textContent = text;
-        modalConfirmBtn.textContent = "OK";
-        modalCancelBtn.style.display = 'none'; 
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalText) modalText.textContent = text;
+        
+        if (modalInputContainer) modalInputContainer.style.display = 'none'; // Skjul input
+        
+        if (modalConfirmBtn) modalConfirmBtn.textContent = "OK";
+        if (modalCancelBtn) modalCancelBtn.style.display = 'none'; 
         modalOverlay.style.display = 'flex'; 
         onConfirmCallback = callback; 
+    }
+    
+    // NY FUNKSJON for å be om navn
+    function showPromptModal(title, text, callback) {
+        if (!modalOverlay) return; 
+        modalOverlay.classList.remove('hidden');
+        modalOverlay.style.display = 'flex';
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalText) modalText.textContent = text;
+        
+        // Vis input-feltet
+        if (modalInputContainer) modalInputContainer.style.display = 'block';
+        if (modalInput) {
+            modalInput.value = ''; // Tøm feltet
+            modalInput.focus(); // Sett fokus
+        }
+        
+        if (modalConfirmBtn) modalConfirmBtn.textContent = "Lagre";
+        if (modalCancelBtn) modalCancelBtn.style.display = 'inline-block'; // Vis Avbryt
+        
+        // Oppdater callback for å hente verdien fra input
+        onConfirmCallback = () => {
+            const username = modalInput ? modalInput.value.trim() : "Gjest";
+            if (username && username.length > 0) {
+                callback(username); // Send navnet til den som kalte
+            } else {
+                // Hvis de ikke skrev noe, lagre som "Gjest"
+                callback("Gjest");
+            }
+        }; 
     }
 
     function hideModal() {
         if (!modalOverlay) return; 
         modalOverlay.style.display = 'none'; 
         onConfirmCallback = null;
+        if (modalInputContainer) modalInputContainer.style.display = 'none'; // Skjul input
     }
+    // --- SLUTT PÅ FIKS ---
 
     // --- Tema-funksjoner ---
     

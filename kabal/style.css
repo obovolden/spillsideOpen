@@ -378,6 +378,7 @@ h1 {
 }
 
 
+
 /* Animasjon for modalen */
 @keyframes modalPopIn {
     from {
@@ -405,6 +406,26 @@ h1 {
     /* Animasjonen settes av JavaScript */
 }
 
+/* NYTT: Styling for input-felt i modal */
+#modal-input-container {
+    margin-bottom: 25px;
+    text-align: left;
+}
+#modal-input-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+}
+#modal-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box; /* Veldig viktig */
+}
 
 /* --- START PÅ RESPONSIV KODE (MOBIL) --- */
 
