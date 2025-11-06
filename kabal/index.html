@@ -76,16 +76,21 @@
     </div>
 </div>
 
-    <div id="modal-overlay" class="hidden">
+<div id="modal-overlay" class="hidden">
         <div class="modal-content">
             <h2 id="modal-title">Starte nytt spill?</h2>
             <p id="modal-text">Er du sikker på at du vil avslutte?</p>
+            
+            <div id="modal-input-container" style="display: none;">
+                <label for="modal-input">Skriv inn navnet ditt:</label>
+                <input type="text" id="modal-input" maxlength="50">
+            </div>
+            
             <div class="modal-buttons">
                 <button id="modal-confirm">Ja</button>
-                <button id="modal-cancel">Nei</button>
-            </div>
+                <button id="modal-cancel">Nei</button> </div>
         </div>
     </div>
-    
+
     <script src="script.js?v=4"></script> </body>
 </html>
