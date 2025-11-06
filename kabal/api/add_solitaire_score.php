@@ -6,25 +6,40 @@ $password = "W0XG7txn2uy6";
 $dbname = "gzaemhva_highscore";
 // ---------------------------------------------
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) { die("Tilkobling feilet: " . $conn->connect_error); }
+// Motta JSON-data sendt fra spillet
+$data = json_decode(file_get_contents('php://input'));
 
-// Hent data fra JavaScript
-$spiller_navn = $_POST['spiller_navn'];
-$score = $_POST['score'];
-$time_seconds = $_POST['time_seconds'];
-$game_mode = $_POST['game_mode'];
-
-// Bruk den nye tabellen 'solitaire_scores'
-$stmt = $conn->prepare("INSERT INTO solitaire_scores (spiller_navn, score, time_seconds, game_mode) VALUES (?, ?, ?, ?)");
-// 'siii' = string, integer, integer, integer
-$stmt->bind_param("siii", $spiller_navn, $score, $time_seconds, $game_mode);
-
-if ($stmt->execute()) {
-  echo json_encode(["status" => "success", "message" => "Highscore lagret!"]);
-} else {
-  echo json_encode(["status" => "error", "message" => "Noe gikk galt."]);
+// Valider at vi har mottatt all nødvendig data
+if (!isset($data->username) || !isset($data->score) || !isset($data->time) || !isset($data->mode)) {
+    http_response_code(400); // Bad Request
+    echo json_encode(['error' => 'Mangler data']);
+    exit;
 }
+
+// 1. Koble til databasen
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    http_response_code(500); // Server Error
+    echo json_encode(['error' => 'Database-tilkobling feilet']);
+    exit;
+}
+
+// 2. Forbered en SIKKER spørring
+$stmt = $conn->prepare(
+    "INSERT INTO kabal_scores (username, score, time_seconds, game_mode) 
+     VALUES (?, ?, ?, ?)"
+);
+$stmt->bind_param("siis", $data->username, $data->score, $data->time, $data->mode);
+
+// 3. Kjør spørring
+if ($stmt->execute()) {
+    echo json_encode(['success' => true, 'message' => 'Score lagret!']);
+} else {
+    http_response_code(500);
+    echo json_encode(['error' => 'Klarte ikke å lagre score']);
+}
+
+// 4. Lukk tilkoblinger
 $stmt->close();
 $conn->close();
 ?>
