@@ -17,6 +17,12 @@ const FARG_SOPP = '#f1c40f';
 const FARG_BAKKE = '#27ae60';
 const FARG_TEKST = '#000000';
 
+// --- NYTT --- Bakgrunnsfarger for parallakse
+const FARG_HIMMEL = '#87CEEB'; // Lys blå himmel
+const FARG_SOL_MÅNE = '#FFD700'; // Gullfarget sol/måne
+const FARG_FJERN_FJELL = '#708090'; // Gråblå fjell langt unna
+const FARG_NÆRE_FJELL = '#696969'; // Mørkere grå fjell nærmere
+
 // --- Spill-variabler ---
 let poeng = 0;
 const bakkeNiva = HOYDE - 50;
@@ -28,12 +34,17 @@ let currentPlayerName = 'Anonym';
 let spiller = {
     x: BREDDE / 4,
     y: bakkeNiva - 20,
-    radius: 20,
-    dy: 0,
+    radius: 20, // Dette er nå kollisjonsradius
+    dy: 0,  // Vertikal hastighet
+    dx: 0,  // Horisontal hastighet (for akselerasjon)
     hoppStyrke: -17,
     gravitasjon: 0.8,
     erILuften: false,
-    hastighet: 5
+    maksHastighet: 6,
+    akselerasjon: 0.2,
+    friksjon: 0.1,
+    visualRadiusX: 20,
+    visualRadiusY: 20
 };
 
 // --- Jageren (Fienden) ---
@@ -47,13 +58,26 @@ let jager = {
 let hindring = { x: BREDDE - 200, y: bakkeNiva - 40, bredde: 50, hoyde: 40 };
 let sopp = { x: BREDDE - 50, y: bakkeNiva - 80, radius: 10, samlet: false };
 
+// --- NYTT --- Partikkel-arrays
+let landingsPartikler = [];
+let soppPartikler = [];
+
+// --- NYTT --- Parallaksebakgrunn variabler
+let backgroundOffset = 0; // Global offset for bakgrunnen
+const PARALLAX_LAYERS = [
+    { type: 'skyObject', x: BREDDE * 0.8, y: HOYDE * 0.2, radius: 40, color: FARG_SOL_MÅNE, scrollSpeedFactor: 0.05 }, // Sol/måne
+    { type: 'mountain', x: 0, y: bakkeNiva, width: BREDDE * 1.5, height: HOYDE * 0.4, color: FARG_FJERN_FJELL, scrollSpeedFactor: 0.2 }, // Fjerne fjell
+    { type: 'mountain', x: 0, y: bakkeNiva, width: BREDDE * 1.3, height: HOYDE * 0.3, color: FARG_NÆRE_FJELL, scrollSpeedFactor: 0.4 } // Nære fjell
+];
+
+
 // --- Input-kontroll ---
 let keys = { ArrowRight: false, Space: false };
 
 // 2. Håndter Input (Tastetrykk)
 document.addEventListener('keydown', function(e) {
     if (gameState !== 'PLAYING') {
-        if (e.code === 'KeyR' && gameState === 'GAME_OVER') {
+        if (e.code === 'Space' && gameState === 'GAME_OVER') {
             gaaTilMeny();
         }
         return;
@@ -62,6 +86,10 @@ document.addEventListener('keydown', function(e) {
     if (e.code === 'Space' && !spiller.erILuften) {
         spiller.dy = spiller.hoppStyrke;
         spiller.erILuften = true;
+        keys.Space = true;
+
+        spiller.visualRadiusX = 15;
+        spiller.visualRadiusY = 25;
     }
     if (e.code === 'ArrowRight') {
         keys.ArrowRight = true;
@@ -71,6 +99,9 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('keyup', function(e) {
     if (e.code === 'ArrowRight') {
         keys.ArrowRight = false;
+    }
+    if (e.code === 'Space') {
+        keys.Space = false;
     }
 });
 
@@ -99,6 +130,7 @@ function gaaTilMeny() {
 function resetSpillerOgObjekter() {
     spiller.y = bakkeNiva - 20;
     spiller.dy = 0;
+    spiller.dx = 0;
     spiller.erILuften = false;
     jager.x = -40;
     hindring.x = BREDDE - 200;
@@ -107,18 +139,51 @@ function resetSpillerOgObjekter() {
     sopp.y = bakkeNiva - 80;
     sopp.samlet = false;
     keys.ArrowRight = false;
+    keys.Space = false;
+    landingsPartikler = []; // --- NYTT --- Nullstill partikler ved reset
+    soppPartikler = [];   // --- NYTT --- Nullstill partikler ved reset
+    backgroundOffset = 0; // --- NYTT --- Nullstill bakgrunn
 }
 
 function oppdaterLogikk() {
+
+    // --- NYTT --- Oppdater partikler
+    oppdaterLandingsPartikler();
+    oppdaterSoppPartikler();
+
+    // --- NYTT --- Oppdater parallakse-offset
+    backgroundOffset = (backgroundOffset - scrollHastighet) % BREDDE;
+
+    spiller.visualRadiusX += (spiller.radius - spiller.visualRadiusX) * 0.1;
+    spiller.visualRadiusY += (spiller.radius - spiller.visualRadiusY) * 0.1;
+
     if (keys.ArrowRight) {
-        scrollHastighet = spiller.hastighet;
+        spiller.dx += spiller.akselerasjon;
+        if (spiller.dx > spiller.maksHastighet) {
+            spiller.dx = spiller.maksHastighet;
+        }
     } else {
-        scrollHastighet = 0;
+        spiller.dx -= spiller.friksjon;
+        if (spiller.dx < 0) {
+            spiller.dx = 0;
+        }
     }
+    scrollHastighet = spiller.dx;
 
     spiller.y += spiller.dy;
     spiller.dy += spiller.gravitasjon;
+
+    if (spiller.dy < 0 && !keys.Space) {
+        spiller.dy += spiller.gravitasjon * 1.5;
+    }
+
     if (spiller.y + spiller.radius > bakkeNiva) {
+        // --- NYTT --- Generer landingspartikler hvis spilleren nettopp landet
+        if (spiller.erILuften) {
+            lagLandingsPartikler(spiller.x, bakkeNiva - spiller.radius / 2);
+            spiller.visualRadiusX = 25;
+            spiller.visualRadiusY = 15;
+        }
         spiller.y = bakkeNiva - spiller.radius;
         spiller.dy = 0;
         spiller.erILuften = false;
@@ -147,22 +212,16 @@ function oppdaterLogikk() {
     }
 
     // --- Kollisjonsdeteksjon ---
-
-    // A: Spiller mot Jager
     if (spiller.x + spiller.radius > jager.x && spiller.x - spiller.radius < jager.x + jager.bredde) {
-        console.log("KOLLISJON MED JAGER!"); // FEILSØKING
         settGameOver();
     }
 
-    // B: Spiller mot Hindring
     if (spiller.x + spiller.radius > hindring.x &&
         spiller.x - spiller.radius < hindring.x + hindring.bredde &&
         spiller.y + spiller.radius > hindring.y) {
-        console.log("KOLLISJON MED HINDRING!"); // FEILSØKING
         settGameOver();
     }
 
-    // C: Spiller mot Sopp
     let avstandX = spiller.x - sopp.x;
     let avstandY = spiller.y - sopp.y;
     let totalAvstand = Math.sqrt(avstandX * avstandX + avstandY * avstandY);
@@ -171,31 +230,126 @@ function oppdaterLogikk() {
         if (!sopp.samlet) {
             poeng += 1;
             sopp.samlet = true;
+            lagSoppPartikler(sopp.x, sopp.y); // --- NYTT --- Generer sopp-partikler
         }
     }
 }
 
 async function settGameOver() {
-    // Hvis spillet allerede er over, ikke gjør noe mer for å unngå flere kall
     if (gameState === 'GAME_OVER') {
         return;
     }
-    console.log("GAME OVER! Starter lagring til database..."); // For feilsøking
-    
-    gameState = 'GAME_OVER'; // Sett tilstanden FØRST
-
-    // Prøv å lagre scoren, og vent på at det er ferdig
+    gameState = 'GAME_OVER';
     await lagreHighscore(currentPlayerName, poeng);
-    
-    // Når lagringen er ferdig, oppdater listen som vises på skjermen
     await visHighscores();
 }
 
+// --- NYTT --- Partikkel funksjoner
+function lagLandingsPartikler(x, y) {
+    for (let i = 0; i < 5; i++) {
+        landingsPartikler.push({
+            x: x + (Math.random() - 0.5) * 10,
+            y: y,
+            radius: Math.random() * 3 + 1,
+            vx: (Math.random() - 0.5) * 4,
+            vy: Math.random() * -5 - 2,
+            alpha: 1,
+            gravity: 0.3
+        });
+    }
+}
+
+function oppdaterLandingsPartikler() {
+    for (let i = landingsPartikler.length - 1; i >= 0; i--) {
+        let p = landingsPartikler[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.alpha -= 0.03; // Fades out
+        if (p.alpha <= 0) {
+            landingsPartikler.splice(i, 1);
+        }
+    }
+}
+
+function lagSoppPartikler(x, y) {
+    for (let i = 0; i < 8; i++) {
+        soppPartikler.push({
+            x: x + (Math.random() - 0.5) * 5,
+            y: y + (Math.random() - 0.5) * 5,
+            radius: Math.random() * 2 + 1,
+            vx: (Math.random() - 0.5) * 3,
+            vy: Math.random() * -4 - 1,
+            alpha: 1,
+            color: FARG_SOPP // Samme farge som soppen
+        });
+    }
+}
+
+function oppdaterSoppPartikler() {
+    for (let i = soppPartikler.length - 1; i >= 0; i--) {
+        let p = soppPartikler[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.02; // Fades out
+        if (p.alpha <= 0) {
+            soppPartikler.splice(i, 1);
+        }
+    }
+}
+
+
+// --- NYTT --- Funksjon for å tegne et fjell
+function drawMountain(xOffset, layer) {
+    ctx.fillStyle = layer.color;
+    ctx.beginPath();
+    // Start litt under bakkenivå for å sikre at basen er "i" bakken
+    ctx.moveTo(xOffset, bakkeNiva);
+    // Bruker en serie med punkter for å lage en fjellform.
+    // Kan gjøres mer avansert med bezier-kurver for jevnere fjell.
+    ctx.lineTo(xOffset + layer.width * 0.1, bakkeNiva - layer.height * 0.2);
+    ctx.lineTo(xOffset + layer.width * 0.3, bakkeNiva - layer.height * 0.8);
+    ctx.lineTo(xOffset + layer.width * 0.5, bakkeNiva - layer.height * 0.3);
+    ctx.lineTo(xOffset + layer.width * 0.7, bakkeNiva - layer.height * 0.9);
+    ctx.lineTo(xOffset + layer.width * 0.9, bakkeNiva - layer.height * 0.4);
+    ctx.lineTo(xOffset + layer.width, bakkeNiva); // Slutt på bakkenivå
+    ctx.closePath();
+    ctx.fill();
+}
+
+
 function tegnSpill() {
-    ctx.fillStyle = '#FFFFFF';
+    // --- NYTT --- Tegn himmelbakgrunn
+    ctx.fillStyle = FARG_HIMMEL;
     ctx.fillRect(0, 0, BREDDE, HOYDE);
+
+    // --- NYTT --- Tegn parallakse-lag
+    for (const layer of PARALLAX_LAYERS) {
+        // Beregn lagets offset basert på global backgroundOffset og scrollSpeedFactor
+        let layerOffset = (backgroundOffset * layer.scrollSpeedFactor) % BREDDE;
+
+        // Sikre at offset er positivt
+        if (layerOffset > 0) layerOffset -= BREDDE;
+
+        // Tegn objektet to ganger for sømløs scrolling
+        if (layer.type === 'skyObject') {
+            // Sol/Måne (beveger seg mer fritt, ingen gjentakelse nødvendig om den er liten)
+            ctx.beginPath();
+            ctx.arc(layer.x + layerOffset, layer.y, layer.radius, 0, Math.PI * 2);
+            ctx.fillStyle = layer.color;
+            ctx.fill();
+            ctx.closePath();
+        } else if (layer.type === 'mountain') {
+            drawMountain(layer.x + layerOffset, layer);
+            drawMountain(layer.x + layerOffset + BREDDE, layer); // Tegn en kopi til høyre
+            drawMountain(layer.x + layerOffset - BREDDE, layer); // Tegn en kopi til venstre
+        }
+    }
+
+    // Bakke, Jager, Hindring, Sopp (samme som før, men nå *over* bakgrunnen)
     ctx.fillStyle = FARG_BAKKE;
     ctx.fillRect(0, bakkeNiva, BREDDE, 50);
+
     ctx.fillStyle = FARG_JAGER;
     ctx.fillRect(jager.x, 0, jager.bredde, HOYDE);
     ctx.fillStyle = FARG_HINDRING;
@@ -208,13 +362,33 @@ function tegnSpill() {
         ctx.fill();
         ctx.closePath();
     }
-    
+
+    // --- NYTT --- Tegn sopp-partikler
+    for (const p of soppPartikler) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${parseInt(p.color.slice(1,3), 16)}, ${parseInt(p.color.slice(3,5), 16)}, ${parseInt(p.color.slice(5,7), 16)}, ${p.alpha})`;
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    // Tegn spilleren
     ctx.beginPath();
-    ctx.arc(spiller.x, spiller.y, spiller.radius, 0, Math.PI * 2);
+    ctx.ellipse(spiller.x, spiller.y, spiller.visualRadiusX, spiller.visualRadiusY, 0, 0, Math.PI * 2);
     ctx.fillStyle = FARG_SPILLER;
     ctx.fill();
     ctx.closePath();
 
+    // --- NYTT --- Tegn landingspartikler
+    for (const p of landingsPartikler) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(150, 150, 150, ${p.alpha})`; // Grå partikler
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    // Tekst og Game Over
     ctx.fillStyle = FARG_TEKST;
     ctx.font = '30px Arial';
     ctx.fillText(`Poeng: ${poeng}`, 20, 40);
@@ -241,16 +415,14 @@ function gameLoop() {
         tegnSpill();
         requestAnimationFrame(gameLoop);
     } else {
-        // Hvis gameState ikke er 'PLAYING', tegn skjermen én gang og stopp løkken
         tegnSpill();
     }
 }
 
 // ===================================================================
-// 5. --- DATABASE-FUNKSJONER ---
+// 5. --- DATABASE-FUNKSJONER --- (Uendret)
 // ===================================================================
 
-// VIKTIG: Pass på at stien til PHP-filene er riktig!
 const addScoreURL = 'api/add_score.php';
 const getScoresURL = 'api/get_scores.php';
 
@@ -259,7 +431,6 @@ async function lagreHighscore(navn, poengsum) {
         console.log("Lagrer ikke 0 poeng.");
         return;
     }
-
     console.log(`Sender score til database: ${navn}, ${poengsum}`);
     const formData = new FormData();
     formData.append('spiller_navn', navn);
@@ -282,7 +453,7 @@ async function visHighscores() {
     try {
         const response = await fetch(getScoresURL);
         const scores = await response.json();
-        
+
         highscoreList.innerHTML = '';
 
         if (scores.length === 0) {
