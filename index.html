@@ -23,12 +23,33 @@
 
 
     <header>
-        <button><img src="img/MainLogo.png" alt="Spillkapsel logo"></button>
-        <h1>SPILLKAPSELEN</h1>
+        <div class="logo-container">
+            <button class="logo-button"><img src="img/MainLogo.png" alt="Spillkapsel logo"></button>
+            <h1>SPILLKAPSELEN</h1>
+        </div>
+        
+        <button class="hamburger" id="hamburger-button" aria-label="Åpne meny">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+
+        <nav class="nav-menu" id="nav-menu">
+            <ul>
+                <li><a href="/">Hjem</a></li>
+                <li><a href="#">Om Spillene</a></li>
+                <li><a href="#">Kontakt</a></li>
+            </ul>
+        </nav>
     </header>
+
+    <section class="intro-section">
+        <h2>Spillkapselen</h2>
+        <p>Spillkapselen er en nettside utviklet for casual gaming. Her er det bare å gønne på å få seg opp på top 5 lista for heder og ære.</p>
+    </section>
     
     <main class="container">
-        <section>
+        <section class="game-section">
             <h2>Spill:</h2>
             <div class="game-list">
                 <a href="/geminiPong/">
@@ -120,5 +141,7 @@
 
   gtag('config', 'G-3SQJX20D6W');
 </script>
+
+<script src="js/script.js"></script>
 </body>
 </html>
