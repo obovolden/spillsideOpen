@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         originalParent: null,
         initialX: 0,
         initialY: 0,
-        offsetX: 0,
-        offsetY: 0,
+        offsetX: 0, // <-- Blir ikke lenger brukt av ny logikk
+        offsetY: 0, // <-- Blir ikke lenger brukt av ny logikk
         isDragging: false,
         dragThreshold: 5 // Minste bevegelse (i px) før det telles som "drag"
     };
@@ -71,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startGameBtn) {
         startGameBtn.addEventListener('click', () => {
             if (timerInterval) {
+                
+                clearAllHints(); // <-- FIKS: Fjerner hint før modal vises
+                
                 if (modalOverlay) {
                     showConfirmModal(
                         "Starte nytt spill?", 
@@ -321,11 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${value}${suitLetter}.png`;
     }
 
-function turnCardFaceUp(cardEl, suit, value) {
+    function turnCardFaceUp(cardEl, suit, value) {
         if (!cardEl) return;
         
         // Fikser "Angre"-bugen: Sjekk om kortet *allerede er* face-up
-        // (f.eks. fra en 'undo' som feilet).
         const wasAlreadyFaceUp = cardEl.dataset.isFaceUp === 'true';
 
         const cardSuit = suit || cardEl.dataset.suit;
@@ -334,8 +336,6 @@ function turnCardFaceUp(cardEl, suit, value) {
         cardEl.dataset.isFaceUp = 'true';
         cardEl.classList.add('flipped');
         
-        // Sørger for at baksiden (inline-stil '') fjernes
-        // og erstattes med forsiden.
         const filename = getCardImageFilename(cardSuit, cardValue);
         cardEl.style.backgroundImage = `url('img/cards/${filename}')`;
         
@@ -361,8 +361,12 @@ function turnCardFaceUp(cardEl, suit, value) {
 
     // --- Touch-logikk (Mobil) ---
 
+    // ===============================================
+    // START PÅ FIKS FOR MOBIL-DRAG (VIDEO)
+    // ===============================================
+
     function onTouchStart(e) {
-        if (isAnimating) return; // NYTT
+        if (isAnimating) return;
         const cardEl = e.target.closest('.card');
         if (!cardEl || cardEl.dataset.isFaceUp === 'false') return;
 
@@ -391,14 +395,13 @@ function turnCardFaceUp(cardEl, suit, value) {
         }
 
         let z = 1000;
+        // Bruker nå en standard forEach i stedet for stack.forEach
+        // for å unngå forvirring.
         activeDrag.stack.forEach(card => {
             card.style.opacity = '0.8';
             card.style.zIndex = z++;
-            const rect = card.getBoundingClientRect();
-            card.dataset.originalTop = rect.top;
-            card.dataset.originalLeft = rect.left;
-            activeDrag.offsetX = activeDrag.initialX - rect.left;
-            activeDrag.offsetY = activeDrag.initialY - rect.top;
+            // Offset-kalkulering (offsetX/Y) er fjernet
+            // da den ikke lenger trengs for 'transform'-logikken.
         });
     }
 
@@ -416,19 +419,31 @@ function turnCardFaceUp(cardEl, suit, value) {
         }
 
         if (activeDrag.isDragging) {
-            const newX = touch.clientX - activeDrag.offsetX;
-            const newY = touch.clientY - activeDrag.offsetY;
             
             activeDrag.stack.forEach((card, index) => {
                 let yOffset = 0;
                 if (activeDrag.originalParent.classList.contains('tableau')) {
                     yOffset = index * TABLEAU_STACK_OFFSET_Y;
                 }
-                card.style.position = 'fixed'; 
-                card.style.transform = `translate(${newX}px, ${newY + yOffset}px)`;
+                
+                // --- FIKS: Bruker 'transform' i stedet for 'top/left' ---
+                // Dette flytter kortet relativt til sin startposisjon.
+                card.style.transform = `translate(${deltaX}px, ${deltaY + yOffset}px)`;
+                
+                // Vi endrer IKKE 'position' eller 'top'/'left' her
+                // card.style.position = 'fixed'; // FJernet
+                // card.style.left = newX + 'px'; // FJernet
+                // card.style.top = (newY + yOffset) + 'px'; // FJernet
+                // --- SLUTT PÅ FIKS ---
             });
         }
     }
+    
+    // ===============================================
+    // SLUTT PÅ FIKS FOR MOBIL-DRAG
+    // (onTouchEnd er uendret, da den allerede håndterer 'transform = none')
+    // ===============================================
+
 
     function onTouchEnd(e) {
         if (!activeDrag.card) return;
@@ -1121,10 +1136,17 @@ function turnCardFaceUp(cardEl, suit, value) {
             flippedCard.removeEventListener('drop', onDrop);
             flippedCard.removeEventListener('touchstart', onTouchStart); 
             flippedCard.removeEventListener('dblclick', onCardDoubleClick);
+            
+            // NYTT: Fjern hint-puls i tilfelle
+            flippedCard.classList.remove('hint-pulse');
+            flippedCard.classList.remove('hint-pulse-slot');
         }
 
         // 2. Flytt kortene tilbake til 'from'-bunken
         cards.forEach(card => {
+            // NYTT: Fjern hint-puls FØR flytting
+            card.classList.remove('hint-pulse');
+            card.classList.remove('hint-pulse-slot');
             from.appendChild(card);
         });
         
@@ -1215,6 +1237,9 @@ function turnCardFaceUp(cardEl, suit, value) {
         return null; // Ingen trekk funnet
     }
 
+    /**
+     * Viser hintet ved å "pulse" kortet og målet.
+     */
     function showHint(card, target) {
         if (isAnimating || !card || !target) return;
         
@@ -1247,6 +1272,22 @@ function turnCardFaceUp(cardEl, suit, value) {
             targetEl.classList.remove('hint-pulse-slot'); 
             isAnimating = false;
         }, 2400); // 1.2s animasjon * 2 runder
+    }
+    
+    /**
+     * NYTT: Fjerner alle aktive hint-animasjoner fra brettet.
+     */
+    function clearAllHints() {
+        const hintedCards = document.querySelectorAll('.hint-pulse');
+        const hintedSlots = document.querySelectorAll('.hint-pulse-slot');
+        
+        hintedCards.forEach(el => el.classList.remove('hint-pulse'));
+        hintedSlots.forEach(el => el.classList.remove('hint-pulse-slot'));
+        
+        // Nullstill animasjonslåsen, siden modalen tar over
+        if (isAnimating) {
+            isAnimating = false;
+        }
     }
     
     // --- SLUTT PÅ NY KODE ---
