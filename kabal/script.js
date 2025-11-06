@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         originalParent: null,
         initialX: 0,
         initialY: 0,
-        offsetX: 0, // <-- Blir ikke lenger brukt av ny logikk
-        offsetY: 0, // <-- Blir ikke lenger brukt av ny logikk
+        offsetX: 0, 
+        offsetY: 0, 
         isDragging: false,
         dragThreshold: 5 // Minste bevegelse (i px) før det telles som "drag"
     };
@@ -395,13 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let z = 1000;
-        // Bruker nå en standard forEach i stedet for stack.forEach
-        // for å unngå forvirring.
         activeDrag.stack.forEach(card => {
             card.style.opacity = '0.8';
             card.style.zIndex = z++;
-            // Offset-kalkulering (offsetX/Y) er fjernet
-            // da den ikke lenger trengs for 'transform'-logikken.
         });
     }
 
@@ -427,21 +423,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // --- FIKS: Bruker 'transform' i stedet for 'top/left' ---
-                // Dette flytter kortet relativt til sin startposisjon.
                 card.style.transform = `translate(${deltaX}px, ${deltaY + yOffset}px)`;
-                
-                // Vi endrer IKKE 'position' eller 'top'/'left' her
-                // card.style.position = 'fixed'; // FJernet
-                // card.style.left = newX + 'px'; // FJernet
-                // card.style.top = (newY + yOffset) + 'px'; // FJernet
-                // --- SLUTT PÅ FIKS ---
             });
         }
     }
     
     // ===============================================
     // SLUTT PÅ FIKS FOR MOBIL-DRAG
-    // (onTouchEnd er uendret, da den allerede håndterer 'transform = none')
     // ===============================================
 
 
@@ -460,22 +448,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isTopWasteCard || isBottomTableauCard) {
                 for (const slot of foundationSlots) {
                     if (isValidMove(draggedCard, slot)) {
-                        // --- NYTT: Lagre undo-state og poeng ---
-                        const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== draggedCard) 
-                                            ? originalParent.lastElementChild 
+                        
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        const flippedCard = (originalParent.classList.contains('tableau') && draggedCard.previousElementSibling)
+                                            ? draggedCard.previousElementSibling
                                             : null;
+                        
+                        const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
                         pushToHistory({
                             type: 'MOVE',
                             cards: [draggedCard],
                             from: originalParent,
                             to: slot,
-                            flippedCard: flippedCard
+                            flippedCard: willFlipCard ? flippedCard : null
                         });
                         moveCount++; 
-                        score += 10;
-                        if (flippedCard) score += 5;
+                        score += 10; // Poeng for å flytte til foundation
+                        if (willFlipCard) score += 5;
                         updateScoreAndMoves();
-                        // --- SLUTT PÅ NY KODE ---
+                        // --- SLUTT PÅ FIKS ---
                         
                         draggedCard.style.top = '0px';
                         draggedCard.style.left = '0px';
@@ -485,9 +477,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         slot.appendChild(draggedCard);
                         
-                        if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
-                            turnCardFaceUp(originalParent.lastElementChild);
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        if (flippedCard) {
+                            turnCardFaceUp(flippedCard);
                         }
+                        // --- SLUTT PÅ FIKS ---
+                        
                         if (originalParent === wastePile) {
                             updateWastePileVisuals();
                         }
@@ -517,23 +512,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (targetSlot.classList.contains('card-slot') && isValidMove(draggedCard, targetSlot)) {
                         // GYLDIG TREKK
                         
-                        // --- NYTT: Lagre undo-state og poeng ---
-                        const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== draggedCard) 
-                                            ? originalParent.lastElementChild 
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        const flippedCard = (originalParent.classList.contains('tableau') && draggedCard.previousElementSibling)
+                                            ? draggedCard.previousElementSibling
                                             : null;
+
+                        const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
                         pushToHistory({
                             type: 'MOVE',
                             cards: [...activeDrag.stack],
                             from: originalParent,
                             to: targetSlot,
-                            flippedCard: flippedCard
+                            flippedCard: willFlipCard ? flippedCard : null
                         });
+
                         moveCount++;
                         if (targetSlot.classList.contains('foundation')) score += 10;
                         else if (originalParent === wastePile) score += 5;
-                        if (flippedCard) score += 5;
+                        if (willFlipCard) score += 5;
                         updateScoreAndMoves();
-                        // --- SLUTT PÅ NY KODE ---
+                        // --- SLUTT PÅ FIKS ---
                         
                         const baseIndex = targetSlot.children.length;
                         
@@ -553,9 +552,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             targetSlot.appendChild(card);
                         });
 
-                        if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
-                            turnCardFaceUp(originalParent.lastElementChild);
+                        // --- START PÅ FIKS (Angre-bug) ---
+                        if (flippedCard) {
+                            turnCardFaceUp(flippedCard);
                         }
+                        // --- SLUTT PÅ FIKS ---
+
                         if (originalParent === wastePile) {
                             updateWastePileVisuals();
                         }
@@ -663,23 +665,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 else currentCard = currentCard.nextElementSibling;
             }
             
-            // --- NYTT: Lagre undo-state og poeng ---
-            const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== draggedCard) 
-                                ? originalParent.lastElementChild 
+            // --- START PÅ FIKS (Angre-bug) ---
+            const flippedCard = (originalParent.classList.contains('tableau') && draggedCard.previousElementSibling)
+                                ? draggedCard.previousElementSibling
                                 : null;
+            
+            const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
             pushToHistory({
                 type: 'MOVE',
                 cards: [...stackToMove],
                 from: originalParent,
                 to: targetSlot,
-                flippedCard: flippedCard
+                flippedCard: willFlipCard ? flippedCard : null // Bare lagre hvis det faktisk ble snudd
             });
+            
             moveCount++;
             if (targetSlot.classList.contains('foundation')) score += 10;
             else if (originalParent === wastePile) score += 5;
-            if (flippedCard) score += 5;
+            if (willFlipCard) score += 5; // Poeng for å snu
             updateScoreAndMoves();
-            // --- SLUTT PÅ NY KODE ---
+            // --- SLUTT PÅ FIKS ---
             
             const baseIndex = targetSlot.children.length; 
             stackToMove.forEach((card, index) => {
@@ -694,9 +700,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 targetSlot.appendChild(card); 
             });
-            if (originalParent.classList.contains('tableau') && originalParent.lastElementChild) {
-                turnCardFaceUp(originalParent.lastElementChild);
+
+            // --- START PÅ FIKS (Angre-bug) ---
+            if (flippedCard) {
+                turnCardFaceUp(flippedCard);
             }
+            // --- SLUTT PÅ FIKS ---
+
             if (originalParent === wastePile) {
                 updateWastePileVisuals();
             }
@@ -728,31 +738,38 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const slot of foundationSlots) {
             if (isValidMove(cardEl, slot)) {
                 
-                // --- NYTT: Lagre undo-state og poeng ---
-                const flippedCard = (originalParent.classList.contains('tableau') && originalParent.lastElementChild && originalParent.lastElementChild !== cardEl) 
-                                    ? originalParent.lastElementChild 
+                // --- START PÅ FIKS (Angre-bug) ---
+                // 'cardEl' is the 'draggedCard' in this context
+                const flippedCard = (originalParent.classList.contains('tableau') && cardEl.previousElementSibling)
+                                    ? cardEl.previousElementSibling
                                     : null;
+                
+                const willFlipCard = (flippedCard && flippedCard.dataset.isFaceUp === 'false');
+
                 pushToHistory({
                     type: 'MOVE',
                     cards: [cardEl],
                     from: originalParent,
                     to: slot,
-                    flippedCard: flippedCard
+                    flippedCard: willFlipCard ? flippedCard : null
                 });
                 moveCount++;
-                score += 10;
-                if (flippedCard) score += 5;
+                score += 10; // Poeng for å flytte til foundation
+                if (willFlipCard) score += 5;
                 updateScoreAndMoves();
-                // --- SLUTT PÅ NY KODE ---
+                // --- SLUTT PÅ FIKS ---
                 
                 cardEl.style.top = '0px';
                 cardEl.style.left = '0px';
                 cardEl.style.zIndex = getNumericValue(cardEl.dataset.value) + 1;
                 slot.appendChild(cardEl);
                 
-                if (isBottomTableauCard && originalParent.lastElementChild) {
-                    turnCardFaceUp(originalParent.lastElementChild);
+                // --- START PÅ FIKS (Angre-bug) ---
+                if (flippedCard) {
+                    turnCardFaceUp(flippedCard);
                 }
+                // --- SLUTT PÅ FIKS ---
+
                 if (isTopWasteCard) {
                     updateWastePileVisuals();
                 }
@@ -930,7 +947,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         "Gratulerer!", 
                         `Du vant på ${finalTime} sekunder! Poeng: ${score}`, // NYTT: Viser poeng
                         () => { 
-                            saveHighScore(finalTime, gameMode); // Bør utvides til å lagre poeng
+                            saveHighScore(finalTime, gameMode); // Sender nå 'score' globalt
                             startWinAnimation();
                         } 
                     );
@@ -945,11 +962,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Vinneranimasjon ---
     function startWinAnimation() {
-        isAnimating = true; // Sørg for at alt er låst
         const foundationRects = Array.from(foundationSlots).map(slot => slot.getBoundingClientRect());
-        const styleSheet = document.styleSheets[0] || document.head.appendChild(document.createElement('style')).sheet;
+        const styleSheet = document.head.appendChild(document.createElement('style')).sheet; // <--- FIKSET!
 
         for (let i = 0; i < 52; i++) {
+// ...
             const winCard = document.createElement('div');
             winCard.classList.add('win-card');
             
@@ -1056,19 +1073,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const lastMove = moveHistory.pop();
         moveCount++; // Å angre er også et "trekk"
-        score -= 2; // Liten straff for å angre
         
+        // --- START PÅ FIKS (Poeng-farming) ---
+        // Reverser poengsummen for trekket som angres
         switch (lastMove.type) {
             case 'DRAW':
+                // Ingen poengendring for å trekke
                 undoDraw(lastMove.cards);
                 break;
             case 'RECYCLE':
+                score += 50; // Gi tilbake straffepoengene
                 undoRecycle(lastMove.cards);
                 break;
             case 'MOVE':
+                // Reverser poengene som ble tjent
+                if (lastMove.to.classList.contains('foundation')) score -= 10;
+                if (lastMove.flippedCard) score -= 5;
+                if (lastMove.from === wastePile) score -= 5;
+                
+                // Legg til en liten straff for å bruke angre
+                score -= 2; 
+
                 undoMove(lastMove);
                 break;
         }
+        // --- SLUTT PÅ FIKS ---
         
         updateScoreAndMoves();
         checkAutocompleteCondition(); // Status kan ha endret seg
@@ -1293,18 +1322,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- SLUTT PÅ NY KODE ---
 
 
-    // --- Highscore-logikk ---
+    // --- Highscore-logikk (OMBYGGET FOR POENG) ---
     function getHighScores(mode) {
         const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
         const scoresJSON = localStorage.getItem(key);
-        return scoresJSON ? JSON.parse(scoresJSON) : [];
+        if (!scoresJSON) return []; // Tom
+
+        let scores;
+        try {
+            scores = JSON.parse(scoresJSON);
+        } catch (e) {
+            return []; // Korrupt JSON
+        }
+
+        if (scores.length === 0) return [];
+
+        // Sjekk formatet på det første elementet
+        if (typeof scores[0] === 'number') {
+            console.warn("Highscore-formatet er utdatert. Starter ny liste.");
+            localStorage.removeItem(key); // Fjern den gamle listen
+            return []; // Returner en tom liste
+        }
+
+        return scores; // Formatet er { score, time }
     }
 
     function saveHighScore(time, mode) {
-        // TODO: Bør utvides til å lagre { time: time, score: score }
+        const currentScore = score; // Hent global poengsum
         const scores = getHighScores(mode);
-        scores.push(time); // Lagrer kun tid foreløpig
-        scores.sort((a, b) => a - b); 
+
+        scores.push({ score: currentScore, time: time }); 
+
+        // Sorter: Høyeste poengsum først. Ved lik poengsum, lavest tid.
+        scores.sort((a, b) => {
+            if (a.score !== b.score) {
+                return b.score - a.score; // Høyeste poengsum (b - a)
+            } else {
+                return a.time - b.time; // Lavest tid (a - b)
+            }
+        });
+
         const topScores = scores.slice(0, 5); 
         const key = mode === 1 ? 'highscore_draw1' : 'highscore_draw3';
         localStorage.setItem(key, JSON.stringify(topScores));
@@ -1323,10 +1380,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scores.length === 0) {
             listElement.innerHTML = '<li>Ingen score ennå</li>';
         } else {
-            scores.forEach(score => {
+            scores.forEach(scoreData => { // scoreData er nå et objekt
                 const li = document.createElement('li');
-                // TODO: Oppdater dette når score lagres
-                li.textContent = `${score} sekunder`; 
+                // Viser poeng først, deretter tid
+                li.textContent = `${scoreData.score} poeng (${scoreData.time}s)`; 
                 listElement.appendChild(li);
             });
         }
