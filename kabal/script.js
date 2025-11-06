@@ -1434,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const finalUsername = username || "Gjestespiller"; 
 
         try {
-            const response = await fetch('save-score.php', {
+            const response = await fetch('api/add_solitaire_score.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
