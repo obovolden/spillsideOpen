@@ -1,0 +1,366 @@
+/* ========== NYTT: Fargevariabler (Lys modus) ========== */
+:root {
+    --color-bakgrunn: #f8f9fa;
+    --color-tekst: #212529;
+    --color-container-bakgrunn: #ffffff;
+    --color-primær: #007bff;
+    --color-primær-tekst: #ffffff;
+    --color-primær-hover: #0056b3;
+    --color-border: #ced4da;
+    --color-skygge: rgba(0, 0, 0, 0.08);
+    --color-suksess: #28a745;
+    --color-suksess-hover: #218838;
+    --color-feil: #dc3545;
+    --color-feil-border: #c82333;
+    --color-alfabet-knapp: #f8f9fa;
+    --color-alfabet-knapp-tekst: #212529;
+    --color-alfabet-knapp-hover: #e2e6ea;
+    --color-tabell-border: #dee2e6;
+    --color-galge: #495057;
+    --color-kroppsdel: #dc3545;
+}
+
+/* ========== NYTT: Fargevariabler (Mørk modus) ========== */
+body[data-theme="dark"] {
+    --color-bakgrunn: #212529;
+    --color-tekst: #f8f9fa;
+    --color-container-bakgrunn: #343a40;
+    --color-primær: #4dabf7; /* Lysere blå for mørk bakgrunn */
+    --color-primær-tekst: #ffffff;
+    --color-primær-hover: #1c7ed6;
+    --color-border: #495057;
+    --color-skygge: rgba(255, 255, 255, 0.05);
+    --color-suksess: #37b24d;
+    --color-suksess-hover: #2f9e44;
+    --color-feil: #f03e3e;
+    --color-feil-border: #f03e3e;
+    --color-alfabet-knapp: #495057;
+    --color-alfabet-knapp-tekst: #f8f9fa;
+    --color-alfabet-knapp-hover: #5c6770;
+    --color-tabell-border: #495057;
+    --color-galge: #ced4da;
+    --color-kroppsdel: #f03e3e;
+}
+
+/* ========== NYTT: Myk overgang for farger ========== */
+body, .container, .knapp, .alfabet-knapp,
+#highscore-kolonne, #hangman-grafikk .galge, 
+#hangman-grafikk .kroppsdel {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, stroke 0.3s ease;
+}
+
+/* --- Stil for bytteknappen (i highscore-kolonnen) --- */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem; /* Luft under bryteren, før tabellen */
+}
+.theme-switch-wrapper label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-tekst);
+}
+.theme-switch-wrapper input[type="checkbox"] {
+    height: 0;
+    width: 0;
+    visibility: hidden;
+}
+
+/* ========== ENDRING HER: ".slider" er nå "label.slider" ========== */
+.theme-switch-wrapper label.slider {
+    cursor: pointer;
+    width: 44px;
+    height: 24px;
+    background-color: var(--color-border);
+    border-radius: 34px;
+    position: relative;
+    transition: background-color 0.2s;
+}
+
+/* ========== ENDRING HER: ".slider::before" er nå "label.slider::before" ========== */
+.theme-switch-wrapper label.slider::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+/* ========== ENDRING HER: "+ .slider" er nå "+ label.slider" ========== */
+.theme-switch-wrapper input:checked + label.slider {
+    background-color: var(--color-primær);
+}
+
+/* ========== ENDRING HER: "+ .slider::before" er nå "+ label.slider::before" ========== */
+.theme-switch-wrapper input:checked + label.slider::before {
+    transform: translateX(20px);
+}
+/* ------------------------------------- */
+
+/* ... (Resten av CSS-filen er uendret) ... */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--color-bakgrunn);
+    color: var(--color-tekst);
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+h1, h2, h3 {
+    color: var(--color-primær);
+    margin-top: 0;
+}
+
+/* --- LAYOUT MED TO KOLONNER --- */
+.side-ved-side-wrapper {
+    display: flex;
+    gap: 2rem;
+    width: 100%;
+    max-width: 1000px;
+}
+
+#spill-kolonne {
+    flex: 2; /* Spill-kolonnen tar 2/3 av plassen */
+}
+
+#highscore-kolonne {
+    flex: 1; /* Highscore-kolonnen tar 1/3 av plassen */
+    background: var(--color-container-bakgrunn);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px var(--color-skygge);
+    align-self: flex-start; /* Holder seg på toppen */
+}
+
+/* Generell stil for begge "skjermene" i spill-kolonnen */
+.container {
+    background: var(--color-container-bakgrunn);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px var(--color-skygge);
+    text-align: center;
+}
+
+/* Skjuler spill-seksjonen i starten */
+#spill-seksjon {
+    display: none;
+}
+
+/* --- 1. Oppsett-seksjon --- */
+#ord-input-seksjon div {
+    margin-bottom: 1rem;
+}
+#ord-input-seksjon label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+#ord-input-seksjon input[type="text"],
+#ord-input-seksjon input[type="password"] {
+    font-size: 1.1rem;
+    padding: 0.5rem;
+    border: 2px solid var(--color-border);
+    border-radius: 5px;
+    width: 80%;
+    background-color: var(--color-bakgrunn);
+    color: var(--color-tekst);
+}
+
+.knapp {
+    font-size: 1.2rem;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--color-primær);
+    color: var(--color-primær-tekst);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    /* Gitt tilbake sin egen margin-top */
+    margin-top: 1rem; 
+    transition: background-color 0.2s, transform 0.1s;
+}
+.knapp:hover {
+    background-color: var(--color-primær-hover);
+    transform: translateY(-2px); /* Liten "løft"-effekt */
+}
+
+/* --- 2. Spill-seksjon --- */
+#spiller-info {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+#spiller-info span {
+    color: var(--color-primær);
+    font-weight: bold;
+}
+
+/* --- STIL FOR SVG-HANGMAN --- */
+#hangman-grafikk {
+    width: 150px;
+    height: 180px;
+    margin: 1rem auto;
+}
+
+#hangman-grafikk .galge {
+    stroke: var(--color-galge);
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+#hangman-grafikk .kroppsdel {
+    stroke: var(--color-kroppsdel);
+    stroke-width: 3;
+    stroke-linecap: round;
+    fill: none;
+    display: none; 
+}
+
+#hangman-grafikk .kroppsdel.synlig {
+    display: block;
+}
+
+#ord-visning-seksjon {
+    margin: 2rem 0;
+}
+
+#ord-streker {
+    font-size: 2rem;
+    letter-spacing: 0.5rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    word-wrap: break-word;
+    overflow-wrap: break-word; 
+    line-height: 3rem;
+    /* FIKS: Tvinger linjeskift for lange ord */
+    word-break: break-all;
+}
+
+#alfabet-seksjon {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 1.5rem;
+}
+
+.alfabet-knapp {
+    font-size: 1.1rem;
+    font-weight: bold;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background-color: var(--color-alfabet-knapp);
+    color: var(--color-alfabet-knapp-tekst);
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+.alfabet-knapp:hover {
+    background-color: var(--color-alfabet-knapp-hover);
+    transform: scale(1.05);
+}
+
+.alfabet-knapp:disabled {
+    cursor: not-allowed;
+    opacity: 0.9;
+    transform: none;
+}
+.alfabet-knapp:disabled.riktig {
+    background-color: var(--color-suksess);
+    color: white;
+    border-color: var(--color-suksess-hover);
+}
+.alfabet-knapp:disabled.feil {
+    background-color: var(--color-feil);
+    color: white;
+    border-color: var(--color-feil-border);
+}
+
+#status-seksjon {
+    margin-top: 1.5rem;
+    font-size: 1.3rem;
+    font-weight: bold;
+    min-height: 2rem;
+}
+
+.vinn { color: var(--color-suksess); }
+.tap { color: var(--color-feil); }
+
+#nyttSpillKnapp {
+    display: none;
+    margin-top: 1rem;
+    background-color: var(--color-suksess);
+}
+#nyttSpillKnapp:hover {
+    background-color: var(--color-suksess-hover);
+}
+
+/* --- 3. Highscore-seksjon --- */
+#highscore-tabell {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+#highscore-tabell th, #highscore-tabell td {
+    padding: 0.6rem 0.4rem;
+    border-bottom: 1px solid var(--color-tabell-border);
+    text-align: left;
+}
+#highscore-tabell th {
+    background-color: var(--color-alfabet-knapp);
+}
+#highscore-tabell th:first-child,
+#highscore-tabell td:first-child {
+    width: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* --- RISTE-ANIMASJON --- */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake-animation {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ========== NYTT: Fremheving av ny highscore ========== */
+@keyframes fadeInnOgUt {
+  0%, 50% { background-color: var(--color-suksess); }
+  100% { background-color: transparent; }
+}
+
+#highscore-tbody tr.ny-score td {
+  /* Målretter mot 'td' for å sikre at bakgrunnen fyller cellen */
+  animation: fadeInnOgUt 3s ease-out;
+}
+
+/* --- MEDIA QUERY FOR MOBIL --- */
+@media (max-width: 800px) {
+    body {
+        padding: 1rem;
+    }
+    .side-ved-side-wrapper {
+        flex-direction: column; /* Stack kolonnene vertikalt */
+    }
+    
+    #spill-kolonne {
+        order: 1; /* Spillet først */
+    }
+    
+    #highscore-kolonne {
+        order: 2; /* Highscore sist */
+        align-self: stretch; /* Fyll bredden */
+    }
+}
+/* DEN EKSTRA KRØLLPARENTESEN ER FJERNET HER */
