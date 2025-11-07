@@ -1462,16 +1462,37 @@ document.addEventListener('DOMContentLoaded', () => {
         loadHighScores();
     }
 
-    async function loadHighScores() {
-        // Hent begge listene parallelt
-        const [scores1, scores3] = await Promise.all([
+// NY, FORBEDRET loadHighScores-funksjon
+async function loadHighScores() {
+    console.log("Laster highscores..."); // Nyttig for feilsøking
+    try {
+        // Bruker Promise.allSettled i stedet for Promise.all
+        // Dette lar én liste laste selv om den andre feiler.
+        const results = await Promise.allSettled([
             getHighScores(1),
             getHighScores(3)
         ]);
-        
-        displayScores(scores1, highscoreList1);
-        displayScores(scores3, highscoreList3);
+
+        // Håndter "Trekk 1"
+        if (results[0].status === 'fulfilled') {
+            displayScores(results[0].value, highscoreList1);
+        } else {
+            console.error("Klarte ikke laste Trekk 1 highscores:", results[0].reason);
+            highscoreList1.innerHTML = '<li>Kunne ikke laste</li>';
+        }
+
+        // Håndter "Trekk 3"
+        if (results[1].status === 'fulfilled') {
+            displayScores(results[1].value, highscoreList3);
+        } else {
+            console.error("Klarte ikke laste Trekk 3 highscores:", results[1].reason);
+            highscoreList3.innerHTML = '<li>Kunne ikke laste</li>';
+        }
+
+    } catch (e) {
+        console.error("Kritisk feil i loadHighScores:", e);
     }
+}
 
     function displayScores(scores, listElement) {
         listElement.innerHTML = '';
