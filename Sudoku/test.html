@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitt Første 3D-Spill</title>
+    <style>
+        /* Fjern all margin slik at canvaset fyller hele vinduet */
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // 1. Importer Three.js
+        import * as THREE from 'three';
+
+        // 2. Sett opp Scenen (verdenen)
+        // Scenen er en beholder for alle objekter, lys og kameraer.
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x222222); // Mørkegrå bakgrunn
+
+        // 3. Sett opp Kameraet (øyet)
+        // PerspectiveCamera (synsfelt, sideforhold, nær-grense, fjern-grense)
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5; // Flytt kameraet litt bakover så vi ser kuben
+
+        // 4. Sett opp "Renderer" (tegneren)
+        // Dette er motoren som tegner scenen på skjermen (et <canvas>-element).
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // Legg til canvas-elementet i HTML-kroppen
+        document.body.appendChild(renderer.domElement);
+
+        // 5. Lag et Objekt (Kuben)
+        // Et objekt (Mesh) trenger to ting: Geometri (form) og Materiale (utseende).
+        
+        // Geometri (formen)
+        const geometry = new THREE.BoxGeometry(1, 1, 1); // 1x1x1 kube
+        
+        // Materiale (utseendet)
+        // MeshBasicMaterial trenger ikke lyskilder.
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Knallgrønn
+        
+        // Lag selve objektet (Mesh)
+        const cube = new THREE.Mesh(geometry, material);
+        
+        // Legg kuben til i scenen
+        scene.add(cube);
+
+        // 6. Lag en Animasjons-løkke (Game Loop)
+        // Denne funksjonen kjører om og om igjen (ca. 60 ganger i sekundet).
+        function animate() {
+            // Be nettleseren om å kjøre denne funksjonen neste gang den skal tegne
+            requestAnimationFrame(animate);
+
+            // Roter kuben litt på X- og Y-aksen
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+
+            // Be rendereren om å tegne scenen sett fra kameraet
+            renderer.render(scene, camera);
+        }
+
+        // 7. Start animasjonen!
+        animate();
+
+        // Bonus: Håndter vindus-endring
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>

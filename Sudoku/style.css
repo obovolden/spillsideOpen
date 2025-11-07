@@ -1,0 +1,287 @@
+/* --- Globale Variabler (Fargetemaer) --- */
+:root {
+    --bg-color: #FFFBF5;
+    --grid-bg: #FFFFFF;
+    --text-color: #3D352E;
+    --border-color: #DCD0C0;
+    --accent-color: #E67A7A;
+    --given-cell-bg: #F7F3E8;
+    --given-cell-color: #D9534F;
+    --draft-color: #7A7A7A; /* Farge for kladdetall */
+    --hint-color: #007BFF;
+    --error-color: #D9534F;
+    
+    /* NYE FARGER FOR UTHEVING */
+    --highlight-active-bg: #FFF2F2; /* Den valgte ruten */
+    --highlight-area-bg: #F9F7F3;   /* Rad/kolonne/boks */
+    --highlight-num-bg: #FEE8E8;    /* Samme tall */
+
+    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body.dark-mode {
+    --bg-color: #2B2B2B;
+    --grid-bg: #3C3C3C;
+    --text-color: #EAEAEA;
+    --border-color: #5A5A5A;
+    --given-cell-bg: #333333;
+    --given-cell-color: #E67A7A;
+    --draft-color: #9A9A9A;
+    --hint-color: #58a6ff;
+    --error-color: #E67A7A;
+    
+    /* NYE FARGER FOR UTHEVING (MØRK) */
+    --highlight-active-bg: #4D3C3C;
+    --highlight-area-bg: #444444;
+    --highlight-num-bg: #5A4A4A;
+}
+/* --- --- */
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-stack);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 10px 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.sudoku-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 15px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+/* --- Overskrift og Timer --- */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+}
+h1 { color: var(--accent-color); font-weight: 600; margin: 0; }
+#timer {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+    background-color: var(--grid-bg);
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+}
+
+/* --- Kontroller --- */
+.controls-container, .action-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+.difficulty-controls {
+    display: flex;
+    flex-grow: 1;
+}
+.difficulty-controls button, #btn-draft, .action-controls button, #theme-toggle {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-family: var(--font-stack);
+    color: var(--accent-color);
+    background-color: var(--grid-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 5px;
+    flex-basis: auto;
+}
+.action-controls button { flex-grow: 1; }
+#btn-validate, #theme-toggle {
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+    border-color: var(--accent-color);
+    font-weight: 600;
+}
+#theme-toggle { width: 100%; box-sizing: border-box; }
+.difficulty-controls button.active, #btn-draft.active {
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+    border-color: var(--accent-color);
+}
+
+/* --- Sudoku-brettet --- */
+#sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 90vw; 
+    max-width: 450px;
+    margin: 20px auto;
+    aspect-ratio: 1 / 1;
+    background-color: var(--grid-bg);
+    border: 3px solid var(--accent-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+.grid-box {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border-color);
+}
+
+/* --- Celler --- */
+.cell { 
+    position: relative; 
+    border: 0.5px solid var(--border-color); 
+    box-sizing: border-box; 
+    transition: background-color 0.15s ease-out; /* Myk overgang for utheving */
+}
+
+/* 1. Hoved-input (Stort tall) */
+.cell-input {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: clamp(1.2rem, 5vw, 2rem);
+    font-weight: 600;
+    text-align: center;
+    color: var(--text-color);
+    background-color: transparent;
+    -moz-appearance: textfield;
+}
+.cell-input::-webkit-outer-spin-button,
+.cell-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* 2. Kladde-input (Små tall) */
+.draft-input {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
+    box-sizing: border-box;
+    font-size: clamp(0.6rem, 2vw, 0.8rem);
+    font-weight: 400;
+    color: var(--draft-color);
+    text-align: left;
+    padding: 4px; 
+    letter-spacing: 1px;
+    background-color: transparent;
+    visibility: visible; 
+}
+
+/* --- Kladde-modus Logikk --- */
+
+/* Når kladde-modus er AV (standard) */
+#sudoku-grid:not(.draft-mode-active) .cell-input {
+    pointer-events: all; 
+}
+#sudoku-grid:not(.draft-mode-active) .draft-input {
+    pointer-events: none; 
+}
+
+/* Når kladde-modus er PÅ */
+#sudoku-grid.draft-mode-active .cell-input {
+    pointer-events: none; 
+}
+#sudoku-grid.draft-mode-active .draft-input {
+    pointer-events: all; 
+}
+
+/* Gitte tall skal aldri kunne endres */
+.cell.given .cell-input,
+.cell.given .draft-input {
+    pointer-events: none !important;
+}
+
+
+/* --- Visuelle stiler --- */
+.cell.given { background-color: var(--given-cell-bg); }
+.cell.given .cell-input { color: var(--given-cell-color); background-color: var(--given-cell-bg); }
+.cell.hinted .cell-input { color: var(--hint-color); font-weight: 700; }
+.cell-input.incorrect { color: var(--error-color) !important; background-color: #FF00001a !important; }
+
+/* --- NYE UTHEVINGSSTILER --- */
+
+/* Rad/kolonne/boks */
+.cell.highlighted {
+    background-color: var(--highlight-area-bg);
+}
+
+/* Samme tall */
+.cell.highlighted-number {
+    background-color: var(--highlight-num-bg);
+}
+
+/* Den aktive cellen (sterkest) */
+.cell.active {
+    background-color: var(--highlight-active-bg);
+}
+
+/* Gitt-celle skal ikke miste fargen ved utheving */
+.cell.given.highlighted,
+.cell.given.highlighted-number,
+.cell.given.active {
+    background-color: var(--given-cell-bg);
+}
+
+
+/* --- Highscore --- */
+.highscore-container {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: var(--grid-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+}
+.highscore-container h3 { margin: 0 0 10px 0; color: var(--accent-color); }
+#highscore-list { list-style-type: decimal; margin: 0; padding-left: 30px; text-align: left; font-size: 1.1rem; font-weight: 500; }
+#highscore-list li { padding: 4px 0; }
+
+/* --- Modal-boks --- */
+#modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: none; 
+    justify-content: center;
+    align-items: center;
+}
+#modal-content {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 20px 30px;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    max-width: 300px;
+}
+#modal-content h2 { color: var(--accent-color); margin-top: 0; }
+#modal-content p { font-size: 1.1rem; line-height: 1.5; }
+#modal-close-btn {
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalistisk Sudoku</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <main class="sudoku-container">
+        <div class="header-bar">
+            <h1>Sudoku</h1>
+            <div id="timer">Tid: 00:00</div>
+        </div>
+
+        <div class="controls-container">
+            <div class="difficulty-controls">
+                <button id="btn-easy">Lett</button>
+                <button id="btn-medium">Middels</button>
+                <button id="btn-hard">Vanskelig</button>
+            </div>
+            <button id="btn-draft">Kladde-modus: Av</button>
+        </div>
+        
+        <div id="sudoku-grid">
+            
+            <div class="grid-box">
+                <div class="cell" data-row="0" data-col="0"><input type="number" class="cell-input" aria-label="Celle R1C1"><input type="text" class="draft-input" aria-label="Kladde R1C1"></div>
+                <div class="cell" data-row="0" data-col="1"><input type="number" class="cell-input" aria-label="Celle R1C2"><input type="text" class="draft-input" aria-label="Kladde R1C2"></div>
+                <div class="cell" data-row="0" data-col="2"><input type="number" class="cell-input" aria-label="Celle R1C3"><input type="text" class="draft-input" aria-label="Kladde R1C3"></div>
+                <div class="cell" data-row="1" data-col="0"><input type="number" class="cell-input" aria-label="Celle R2C1"><input type="text" class="draft-input" aria-label="Kladde R2C1"></div>
+                <div class="cell" data-row="1" data-col="1"><input type="number" class="cell-input" aria-label="Celle R2C2"><input type="text" class="draft-input" aria-label="Kladde R2C2"></div>
+                <div class="cell" data-row="1" data-col="2"><input type="number" class="cell-input" aria-label="Celle R2C3"><input type="text" class="draft-input" aria-label="Kladde R2C3"></div>
+                <div class="cell" data-row="2" data-col="0"><input type="number" class="cell-input" aria-label="Celle R3C1"><input type="text" class="draft-input" aria-label="Kladde R3C1"></div>
+                <div class="cell" data-row="2" data-col="1"><input type="number" class="cell-input" aria-label="Celle R3C2"><input type="text" class="draft-input" aria-label="Kladde R3C2"></div>
+                <div class="cell" data-row="2" data-col="2"><input type="number" class="cell-input" aria-label="Celle R3C3"><input type="text" class="draft-input" aria-label="Kladde R3C3"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="0" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="0" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="0" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="1" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="1" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="1" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="2" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="2" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="2" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="0" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="0" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="0" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="1" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="1" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="1" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="2" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="2" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="2" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="3" data-col="0"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="3" data-col="1"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="3" data-col="2"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="0"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="1"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="2"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="0"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="1"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="2"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="3" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="3" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="3" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="3" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="3" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="3" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="4" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="5" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="6" data-col="0"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="6" data-col="1"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="6" data-col="2"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="0"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="1"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="2"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="0"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="1"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="2"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="6" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="6" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="6" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="3"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="4"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="5"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+            <div class="grid-box">
+                <div class="cell" data-row="6" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="6" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="6" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="7" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="6"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="7"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+                <div class="cell" data-row="8" data-col="8"><input type="number" class="cell-input"><input type="text" class="draft-input"></div>
+            </div>
+
+        </div> <div class="action-controls">
+            <button id="btn-restart">Start nytt spill</button>
+            <button id="btn-hint">💡 Hint</button>
+            <button id="btn-validate">Sjekk Svar</button>
+        </div>
+
+        <button id="theme-toggle">Bytt til mørk modus</button>
+
+        <div class="highscore-container">
+            <h3>Highscore (Lett)</h3>
+            <ol id="highscore-list">
+                <li>--:--</li>
+                <li>--:--</li>
+                <li>--:--</li>
+                <li>--:--</li>
+                <li>--:--</li>
+            </ol>
+        </div>
+
+        <div id="modal-overlay">
+            <div id="modal-content">
+                <h2 id="modal-title"></h2>
+                <p id="modal-message"></p>
+                <button id="modal-close-btn">Lukk</button>
+            </div>
+        </div>
+
+    </main>
+    
+    <script src="script.js"></script>
+    
+</body>
+</html>
