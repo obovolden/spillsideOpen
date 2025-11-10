@@ -145,14 +145,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==========================================================
+    // ** STARTPUNKT FOR ENDRING 1 (MODAL-FIKS) **
+    // ==========================================================
     if (modalConfirmBtn) {
         modalConfirmBtn.addEventListener('click', () => {
+            
+            let keepModalOpen = false; // <-- NY LINJE
+            
             if (onConfirmCallback) {
-                onConfirmCallback(); 
+                // ENDRET: Lagre returverdien fra callbacken
+                keepModalOpen = onConfirmCallback(); 
             }
-            hideModal();
+            
+            // ENDRET: Bare lukk modalen hvis callbacken IKKE ba om å holde den åpen
+            if (keepModalOpen !== true) {
+                hideModal();
+            }
         });
     }
+    // ==========================================================
+    // ** SLUTTPUNKT FOR ENDRING 1 **
+    // ==========================================================
 
     if (modalCancelBtn) {
         modalCancelBtn.addEventListener('click', hideModal);
@@ -1016,6 +1030,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                     saveHighScore(finalTime, gameMode, username); 
                                 }
                             );
+                            
+                            // ==========================================================
+                            // ** STARTPUNKT FOR ENDRING 2 (MODAL-FIKS) **
+                            // ==========================================================
+                            return true; // <-- DENNE LINJEN HINDRER MODALEN I Å LUKKE SEG
+                            // ==========================================================
+                            // ** SLUTTPUNKT FOR ENDRING 2 **
+                            // ==========================================================
                         } 
                     );
                     // --- SLUTT PÅ FIKS ---
