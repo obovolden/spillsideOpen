@@ -114,6 +114,20 @@ h1 {
     min-width: 80px; /* Sikrer at de ikke hopper for mye */
     text-align: left;
 }
+
+/* --- NY STIL FOR VELKOMSTMELDING --- */
+#welcome-message {
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    padding: 0 10px;
+    text-align: center;
+    flex-shrink: 1; /* Lar den krympe hvis nødvendig */
+    white-space: nowrap; /* Forhindrer at den bryter linje */
+    overflow: hidden;
+    text-overflow: ellipsis; /* ... hvis navnet er for langt */
+    max-width: 200px; /* Setter en maksgrense */
+}
 /* --- SLUTT PÅ NY KODE --- */
 
 /* --- Spillbrettet --- */
@@ -448,17 +462,46 @@ h1 {
         flex-wrap: wrap; /* Lar elementene legge seg under hverandre */
         gap: 10px;
         padding: 10px;
+        justify-content: center; /* Sentrerer de innpakkede elementene */
     }
     
-    /* NYTT: Justeringer for nye elementer */
+    /* === START PÅ MOBILFIKS === */
+    
+    /* Rad 1: Velkomstmelding */
+    #welcome-message {
+        order: 1; /* Kommer først */
+        width: 100%; 
+        text-align: center;
+        margin-bottom: 5px;
+        font-size: 1.2rem;
+        max-width: 100%; /* Overstyrer desktop-grense */
+    }
+    
+    /* Rad 2: Stats (Trekk, Poeng, Tid) */
     .controls .timer, .controls .moves, .controls .score {
-        width: 30%; /* Prøver å få plass til 3 på en linje */
+        order: 2; /* Kommer som rad 2 */
+        width: 30%; 
         text-align: center;
         font-size: 1.1rem;
-        margin-top: 5px;
-        min-width: 60px; /* Mindre min-width */
+        min-width: 80px; /* Gir dem litt pusterom */
         padding: 0;
+        margin-top: 0; /* Fjerner gammel margin */
     }
+    
+    /* Rad 3: Resten av kontrollene */
+    .controls label,
+    .controls select,
+    .controls button {
+        order: 3; /* Kommer sist */
+    }
+
+    /* Valgfritt: Gjør "Start"-knappen mer fremtredende */
+    #start-game-btn {
+        width: 60%;
+        min-width: 200px;
+    }
+    
+    /* === SLUTT PÅ MOBILFIKS === */
     
     /* --- Spillbrettet --- */
     #game-board {

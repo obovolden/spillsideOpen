@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMediaQuery = window.matchMedia('(max-width: 800px)');
     // --- SLUTT PÅ FIKS ---
 
+    // --- START PÅ NY KODE: BRUKERNAVN ---
+    const USERNAME_KEY = 'solitaireUsername'; // Egen nøkkel for dette spillet
+    // --- SLUTT PÅ NY KODE ---
+
     // --- Globale variabler ---
     let deck = [];
     let gameMode = 1; // 1 eller 3
@@ -25,6 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let moveCount = 0;
     let score = 0;
     let isAnimating = false; // For å låse input under hint/animasjoner
+    
+    // --- START PÅ NY KODE: BRUKERNAVN ---
+    let currentUsername = null; // Lagrer navnet under økten
+    // --- SLUTT PÅ NY KODE ---
     
     // Ny global variabel for å håndtere "touch"-dragging
     let activeDrag = {
@@ -53,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const undoBtn = document.getElementById('undo-btn');
     const moveDisplay = document.getElementById('move-display');
     const scoreDisplay = document.getElementById('score-display');
+    
+    // --- START PÅ NY KODE: BRUKERNAVN ---
+    const welcomeMessage = document.getElementById('welcome-message');
+    // --- SLUTT PÅ NY KODE ---
     
     const stockPile = document.getElementById('stock-pile');
     const wastePile = document.getElementById('waste-pile');
@@ -139,7 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Separerte lytterne slik at om én knapp mangler, fungerer de andre.
     if (modalOverlay) {
         modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
+            // --- ENDRET: Sjekker om "avbryt" er skjult (for brukernavn-modal)
+            if (e.target === modalOverlay && modalCancelBtn.style.display !== 'none') {
                 hideModal();
             }
         });
@@ -1021,15 +1034,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         `Du vant på ${finalTime} sekunder! Poeng: ${score}`,
                         () => { 
                             startWinAnimation(); // Start animasjonen FØRST
-                            // Vis en ny modal for å be om navn
-                            showPromptModal(
-                                "Highscore!",
-                                "Skriv inn navnet ditt for å lagre:",
-                                (username) => {
-                                    // 'username' kommer fra modal-callbacken
-                                    saveHighScore(finalTime, gameMode, username); 
-                                }
-                            );
+                            
+                            // --- START PÅ NY KODE: BRUKERNAVN-SJEKK ---
+                            if (currentUsername) {
+                                // Bruker har allerede et navn, bare lagre
+                                saveHighScore(finalTime, gameMode, currentUsername);
+                            } else {
+                                // Bruker har ikke navn, be om det (som før)
+                                showPromptModal(
+                                    "Highscore!",
+                                    "Skriv inn navnet ditt for å lagre:",
+                                    (username) => { // 'username' er garantert "Gjest" eller bedre
+                                        // NY LOGIKK: Lagre dette som deres navn for fremtiden
+                                        currentUsername = username;
+                                        localStorage.setItem(USERNAME_KEY, currentUsername);
+                                        if (welcomeMessage) {
+                                            welcomeMessage.textContent = `Lykke til, ${currentUsername}!`;
+                                        }
+                                        
+                                        saveHighScore(finalTime, gameMode, username); 
+                                    }
+                                );
+                            }
+                            // --- SLUTT PÅ NY KODE ---
                             
                             // ==========================================================
                             // ** STARTPUNKT FOR ENDRING 2 (MODAL-FIKS) **
@@ -1043,9 +1070,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     // --- SLUTT PÅ FIKS ---
                 } else {
                     // Fallback for eldre nettlesere (mindre pen)
-                    const username = prompt(`Gratulerer! Du vant på ${finalTime} sekunder! Poeng: ${score}\n\nSkriv inn navnet ditt:`, "Gjestespiller");
-                    if (username) {
-                        saveHighScore(finalTime, gameMode, username);
+                    // --- START PÅ NY KODE: BRUKERNAVN-SJEKK ---
+                    let usernameToSave = currentUsername;
+                    if (!usernameToSave) {
+                         usernameToSave = prompt(`Gratulerer! Du vant på ${finalTime} sekunder! Poeng: ${score}\n\nSkriv inn navnet ditt:`, "Gjestespiller");
+                    }
+                    // --- SLUTT PÅ NY KODE ---
+                    
+                    if (usernameToSave) {
+                        // --- START PÅ NY KODE: BRUKERNAVN-SJEKK ---
+                        // Lagre navnet hvis det er nytt
+                        if (!currentUsername) {
+                            currentUsername = usernameToSave;
+                            localStorage.setItem(USERNAME_KEY, currentUsername);
+                             if (welcomeMessage) {
+                                welcomeMessage.textContent = `Lykke til, ${currentUsername}!`;
+                            }
+                        }
+                        // --- SLUTT PÅ NY KODE ---
+                        saveHighScore(finalTime, gameMode, usernameToSave);
                         startWinAnimation();
                     }
                 }
@@ -1428,6 +1471,91 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- SLUTT PÅ NY KODE ---
 
+    // --- START PÅ NY KODE: BRUKERNAVN VED OPSTART ---
+    
+    /**
+     * Sjekker om brukeren har et lagret navn.
+     * Kjøres én gang ved oppstart.
+     */
+    function checkUsernameOnLoad() {
+        try {
+            currentUsername = localStorage.getItem(USERNAME_KEY);
+            if (currentUsername) {
+                if (welcomeMessage) {
+                    welcomeMessage.textContent = `Lykke til, ${currentUsername}!`;
+                }
+            } else {
+                // Ingen navn funnet, vis den obligatoriske modalen
+                promptForUsernameOnLoad();
+            }
+        } catch (e) {
+            console.warn("Kunne ikke hente brukernavn fra localStorage:", e);
+            // Hvis localStorage feiler, bare fortsett uten navn
+        }
+    }
+
+    /**
+     * Viser en *obligatorisk* modal for å hente brukernavn.
+     * Gjenbruker den generiske modalen.
+     */
+    function promptForUsernameOnLoad() {
+        if (!modalOverlay) return; 
+        modalOverlay.classList.remove('hidden');
+        modalOverlay.style.display = 'flex';
+        
+        if (modalTitle) modalTitle.textContent = "Velkommen!";
+        if (modalText) modalText.textContent = "Skriv inn et brukernavn for highscore-listen:";
+        
+        if (modalInputContainer) modalInputContainer.style.display = 'block';
+        if (modalInput) {
+            modalInput.value = ''; 
+            modalInput.focus(); 
+        }
+        
+        if (modalConfirmBtn) modalConfirmBtn.textContent = "Lagre";
+        if (modalCancelBtn) modalCancelBtn.style.display = 'none'; // <-- GJØR DEN OBLIGATORISK
+        
+        onConfirmCallback = handleSaveUsernameOnLoad;
+    }
+
+    /**
+     * Callback for "Lagre" på den obligatoriske brukernavn-modalen.
+     * Validerer navnet og lagrer det.
+     * Returnerer 'true' for å holde modalen åpen hvis validering feiler.
+     */
+    function handleSaveUsernameOnLoad() {
+        const username = modalInput ? modalInput.value.trim() : "";
+        
+        // Bruker samme validering som input-feltet (maxlength=50)
+        if (username.length > 0 && username.length <= 50) {
+            currentUsername = username;
+            try {
+                localStorage.setItem(USERNAME_KEY, username);
+            } catch (e) {
+                console.warn("Kunne ikke lagre brukernavn:", e);
+            }
+            
+            if (welcomeMessage) {
+                welcomeMessage.textContent = `Lykke til, ${currentUsername}!`;
+            }
+            
+            // Vi er ferdige, modalen kan lukkes
+            return false; // hideModal() vil bli kalt
+        } else {
+            // Validering feilet
+            if (modalText) {
+                modalText.textContent = "Navnet må være mellom 1 og 50 tegn.";
+                modalText.style.color = 'red'; // Gjør feilmeldingen tydelig
+            }
+            if (modalInput) modalInput.focus();
+            
+            // Behold modalen åpen
+            return true; 
+        }
+    }
+
+    // --- SLUTT PÅ NY KODE ---
+
 
     // --- Highscore-logikk (OMBYGGET FOR DATABASE) ---
     
@@ -1539,7 +1667,10 @@ async function loadHighScores() {
         modalOverlay.classList.remove('hidden');
         modalOverlay.style.display = 'flex';
         if (modalTitle) modalTitle.textContent = title;
-        if (modalText) modalText.textContent = text;
+        if (modalText) {
+             modalText.textContent = text;
+             modalText.style.color = ''; // <-- NY LINJE: Nullstill farge
+        }
         
         if (modalInputContainer) modalInputContainer.style.display = 'none'; // Skjul input
         
@@ -1552,7 +1683,10 @@ async function loadHighScores() {
     function showAlertModal(title, text, callback = null) {
         if (!modalOverlay) return; 
         if (modalTitle) modalTitle.textContent = title;
-        if (modalText) modalText.textContent = text;
+        if (modalText) {
+            modalText.textContent = text;
+            modalText.style.color = ''; // <-- NY LINJE: Nullstill farge
+        }
         
         if (modalInputContainer) modalInputContainer.style.display = 'none'; // Skjul input
         
@@ -1568,7 +1702,10 @@ async function loadHighScores() {
         modalOverlay.classList.remove('hidden');
         modalOverlay.style.display = 'flex';
         if (modalTitle) modalTitle.textContent = title;
-        if (modalText) modalText.textContent = text;
+        if (modalText) {
+            modalText.textContent = text;
+            modalText.style.color = ''; // <-- NY LINJE: Nullstill farge
+        }
         
         // Vis input-feltet
         if (modalInputContainer) modalInputContainer.style.display = 'block';
@@ -1597,6 +1734,11 @@ async function loadHighScores() {
         modalOverlay.style.display = 'none'; 
         onConfirmCallback = null;
         if (modalInputContainer) modalInputContainer.style.display = 'none'; // Skjul input
+        
+        // --- START PÅ NY KODE: Nullstill modal ---
+        if (modalText) modalText.style.color = ''; // Nullstill feilfarge
+        if (modalCancelBtn) modalCancelBtn.style.display = 'inline-block'; // Vis alltid avbryt som standard
+        // --- SLUTT PÅ NY KODE ---
     }
     // --- SLUTT PÅ FIKS ---
 
@@ -1639,4 +1781,5 @@ async function loadHighScores() {
 // --- Initialiser spillet ---
     loadSavedTheme();
     loadHighScores();
+    checkUsernameOnLoad(); // <-- NY KALL: Sjekk etter brukernavn ved oppstart
 });
