@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- NYTT: Lydeffekter ---
@@ -97,6 +96,17 @@ document.addEventListener('DOMContentLoaded', () => {
         minesLeft = currentMineCount;
         updateMinesCount();
         drawBoard(board, boardElement);
+        
+        // --- ENDRING: Event Delegation ---
+        // Fjerner gamle lyttere (viktig ved reset)
+        boardElement.removeEventListener('click', handleLeftClick);
+        boardElement.removeEventListener('contextmenu', handleRightClick);
+        
+        // Legger til nye lyttere på HELE brettet
+        boardElement.addEventListener('click', handleLeftClick);
+        boardElement.addEventListener('contextmenu', handleRightClick);
+        // --- SLUTT PÅ ENDRING ---
+
         visHighscoresFraDatabase(); // Laster fra database
         resetButton.removeEventListener('click', initGame);
         resetButton.addEventListener('click', initGame);
@@ -168,8 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 cellElement.classList.add('cell');
                 cellElement.dataset.row = r;
                 cellElement.dataset.col = c;
-                cellElement.addEventListener('click', handleLeftClick);
-                cellElement.addEventListener('contextmenu', handleRightClick);
+                
+                // --- ENDRING: Fjernet lyttere herfra ---
+                // cellElement.addEventListener('click', handleLeftClick);
+                // cellElement.addEventListener('contextmenu', handleRightClick);
+                
                 element.appendChild(cellElement);
             }
         }
@@ -182,9 +195,14 @@ document.addEventListener('DOMContentLoaded', () => {
             startTimer();
             firstClick = false;
         }
-        const cellElement = e.target;
+        
+        // Finner cellen som ble klikket, selv om vi klikker på et ikon inni
+        const cellElement = e.target.closest('.cell');
+        if (!cellElement) return; // Klikket var utenfor en celle
+        
         const row = parseInt(cellElement.dataset.row);
         const col = parseInt(cellElement.dataset.col);
+        
         const cell = board[row][col];
         if (flagMode) {
             toggleFlag(cell, cellElement);
@@ -198,9 +216,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleRightClick(e) {
         e.preventDefault(); 
         if (gameOver) return;
-        const cellElement = e.target;
+        
+        // Finner cellen som ble klikket
+        const cellElement = e.target.closest('.cell');
+        if (!cellElement) return; 
+        
         const row = parseInt(cellElement.dataset.row);
         const col = parseInt(cellElement.dataset.col);
+        
         const cell = board[row][col];
         toggleFlag(cell, cellElement);
     }
