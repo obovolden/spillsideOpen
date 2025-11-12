@@ -1,9 +1,24 @@
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Roboto', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #1a1a1a;
     color: #ffffff;
     margin: 0;
     padding: 0;
+    
+    /* NYTT: For "sticky footer" layout */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, 
+header h1,
+.hero-content h2, 
+.game-section > h2, 
+.game-info h2,
+.list-game-info h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
 }
 
 header {
@@ -13,7 +28,10 @@ header {
     align-items: center;
     display: flex;
     justify-content: space-between; 
-    position: relative; 
+    
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .logo-container {
@@ -34,21 +52,18 @@ header button {
     margin-right: 1rem;
 }
 
-/* DESKTOP STANDARD: LOGO STØRRELSE */
 .logo-button img {
-    height: 4rem; /* Standard desktop størrelse (mindre enn 6rem du hadde) */
-    width: 4rem;  /* Standard desktop størrelse */
+    height: 4rem;
+    width: 4rem;
     display: block;
 }
 
-/* DESKTOP STANDARD: H1 TITTEL STØRRELSE */
 h1 {
-    font-size: 2.5rem; /* Standard desktop størrelse */
+    font-size: 2.5rem;
     color: #ff4500;
     margin: 0;
 }
 
-/* NAVIGASJONSMENY (Desktop standard) */
 .nav-menu ul {
     list-style: none;
     margin: 0;
@@ -63,7 +78,7 @@ h1 {
 .nav-menu a {
     color: #fff;
     text-decoration: none;
-    font-size: 1rem; /* Standard desktop meny lenke-størrelse */
+    font-size: 1rem;
     font-weight: bold;
     padding: 0.5rem;
     transition: color 0.3s ease;
@@ -73,9 +88,16 @@ h1 {
     color: #ff4500;
 }
 
-/* HAMBURGER KNAPP (Skjult på desktop som standard) */
+/* Stil for aktivt menypunkt */
+.hjem-side .nav-menu a[href="/"],
+.alle-spill-side .nav-menu a[href="alle-spill.html"],
+.kontakt-side .nav-menu a[href="kontakt.html"] {
+    color: #ff4500;
+}
+
+
 .hamburger {
-    display: none; /* Skjules som standard på desktop */
+    display: none;
     flex-direction: column;
     justify-content: space-around;
     width: 2rem;
@@ -92,27 +114,88 @@ h1 {
 }
 
 
-/* INTROSEKSJON */
-.intro-section {
-    text-align: center; 
-    margin: 4rem auto 2rem auto; 
-    max-width: 800px;
+/* -------------------------- */
+/* --- HERO SECTION (med video) --- */
+/* -------------------------- */
+.hero-section {
+    height: 50vh; 
+    max-height: 450px;
+    min-height: 300px;
+    position: relative;
+    overflow: hidden; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
     padding: 0 1rem;
+    border-bottom: 4px solid #ff4500;
 }
 
-.intro-section h2 {
-    font-size: 3rem; 
-    color: #ff4500;
-    margin-bottom: 1rem;
+.hero-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: 1;
+    object-fit: cover;
 }
 
-.intro-section p {
-    font-size: 1.2rem;
-    line-height: 1.6;
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); 
+    z-index: 2;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 3;
+}
+
+.hero-content h2 {
+    font-size: 2.5rem; 
+    color: #ffffff;
+    margin: 0 0 1rem 0;
+}
+
+.hero-content p {
+    font-size: 1.25rem;
     color: #cccccc;
+    margin-bottom: 2rem;
+    max-width: 600px;
 }
+
+.hero-button {
+    background-color: #ff4500;
+    color: #ffffff;
+    padding: 0.8rem 1.8rem;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.hero-button:hover {
+    background-color: #e03c00;
+    transform: scale(1.05);
+}
+
 
 /* CONTAINER OG SPILLSEKSJON */
+
+/* NY REGEL: Får <main> til å vokse */
+main.container {
+    flex-grow: 1;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto; 
@@ -130,11 +213,12 @@ h1 {
     text-align: left;
 }
 
+/* FORSIDE-RUTENETT (TOP 9) */
 .game-list {
     list-style: none;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
 }
 
@@ -143,23 +227,58 @@ h1 {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    transition: transform 0.3s ease;
-    min-height: 405px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative; 
+    height: 100%; 
+    display: flex; 
+    flex-direction: column;
 }
 
 .game-item:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.game-item::after {
+    content: 'Spill Nå!';
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 180px;
+    background-color: rgba(255, 69, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transform: scale(1.1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.game-item:hover::after {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .game-item img {
     width: 100%;
     height: 180px;
     object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.game-item:hover img {
+    transform: scale(1.05);
 }
 
 .game-info {
     padding: 1.5rem;
     text-align: center;
+    flex-grow: 1; 
 }
 
 .game-info h2 {
@@ -179,16 +298,81 @@ section a {
     text-decoration: none;
 }
 
+/* ---------------------------------- */
+/* --- STILER FOR "ALLE SPILL" SIDEN --- */
+/* ---------------------------------- */
+.game-list-alphabetical {
+    list-style: none;
+    padding: 0;
+    max-width: 1000px;
+    margin: 2rem auto;
+}
+
+.list-game-item {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.list-game-item:hover {
+    background-color: #3a3a3a;
+}
+
+.list-game-icon {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+}
+
+.list-game-info {
+    flex-grow: 1;
+}
+
+.list-game-info h3 {
+    color: #ff4500;
+    margin: 0 0 0.25rem 0;
+    font-size: 1.5rem;
+}
+
+.list-game-info p {
+    margin: 0;
+    color: #cccccc;
+    font-size: 0.9rem;
+}
+
+.list-game-button {
+    background-color: #ff4500;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-left: 1rem;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.list-game-button:hover {
+    background-color: #e03c00;
+}
+
+
 footer {
     text-align: center;
-    padding: 0;
-    margin-top: 15px;
-    border-top: 1px solid #000000;
+    padding: 2rem;
+    margin-top: 15px; /* Beholder denne i tilfelle innholdet fyller mer enn 100vh */
+    border-top: 4px solid #ff4500;
+    background-color: #0d0d0d;
     color: #8d8787;
     font-size: 1.5em;
-    background-color: #0d0d0d;
-    padding: 2rem;
-    border-top: 4px solid #ff4500;
 }
 
 
@@ -196,123 +380,164 @@ footer {
 /* --- RESPONSIV DESIGN --- */
 /* ------------------------------------- */
 
-/* Justeringer for nettbrett og mindre laptoper (mellom 601px og 900px) */
+/* NETTBRETT (mellom 601px og 900px) */
 @media (max-width: 900px) {
-    /* Mindre logo og tittel i header */
     .logo-button img {
         height: 3.5rem; 
         width: 3.5rem;
     }
-
-    h1 {
-        font-size: 2rem; 
-    }
-
-    /* Mindre tekst i menyen for å spare plass */
+    h1 { font-size: 2rem; }
     .nav-menu a {
         font-size: 0.9rem;
-        margin-left: 1.5rem; /* Litt mindre mellomrom mellom lenkene */
+        margin-left: 1.5rem;
     }
-
-    .intro-section h2 {
-        font-size: 2.5rem;
-    }
-    .intro-section p {
-        font-size: 1.1rem;
-    }
-    .game-section > h2 {
-        font-size: 2.2rem;
+    .hero-content h2 { font-size: 2.2rem; }
+    .hero-content p { font-size: 1.1rem; }
+    .game-section > h2 { font-size: 2.2rem; }
+    
+    .game-list {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 
-/* Justeringer for MOBIL (600px og mindre) */
+/* MOBIL (600px og mindre) */
 @media (max-width: 600px) {
+    header { padding: 0.5rem 1rem; }
+    .logo-button img { height: 3rem; width: 3rem; }
+    h1 { font-size: 1.5rem; }
 
-    header {
-        padding: 0.5rem 1rem;
-    }
-    
-    /* Logo-størrelse på mobil */
-    .logo-button img {
-        height: 3rem; /* Enda mindre på mobil */
-        width: 3rem;  /* Enda mindre på mobil */
-    }
-    
-    /* H1 tittel-størrelse på mobil */
-    h1 {
-        font-size: 1.5rem; 
-    }
-
-    /* Skjuler desktop-menyen og viser hamburger */
     .nav-menu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background-color: #0d0d0d;
+        display: none; position: absolute; top: 100%; left: 0;
+        width: 100%; background-color: #0d0d0d;
         border-bottom: 2px solid #ff4500;
     }
-
-    .nav-menu.open {
-        display: block;
+    .nav-menu.open { display: block; }
+    .nav-menu ul { flex-direction: column; width: 100%; }
+    .nav-menu li { margin: 0; text-align: center; }
+    .nav-menu a {
+        display: block; padding: 1.5rem;
+        border-top: 1px solid #2a2a2a; font-size: 1.1rem;
     }
 
-    .nav-menu ul {
-        flex-direction: column; 
+    .hamburger { display: flex; }
+    .hamburger.open .bar:nth-child(1) { transform: rotate(45deg) translate(0.5rem, 0.6rem); }
+    .hamburger.open .bar:nth-child(2) { opacity: 0; }
+    .hamburger.open .bar:nth-child(3) { transform: rotate(-45deg) translate(0.5rem, -0.6rem); }
+
+    .hero-content h2 { font-size: 2rem; }
+    .hero-content p { font-size: 1rem; }
+    .game-section > h2 { font-size: 1.8rem; }
+    .game-info h2 { font-size: 1.4rem; }
+    .game-info p { font-size: 0.9rem; }
+    footer { font-size: 0.9em; padding: 1.5rem; }
+
+    .game-list {
+        grid-template-columns: 1fr;
+    }
+
+    .list-game-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .list-game-icon {
+        width: 100%;
+        height: 180px;
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    .list-game-button {
+        margin-left: 0;
+        margin-top: 1rem;
         width: 100%;
     }
+}
 
-    .nav-menu li {
-        margin: 0;
-        text-align: center;
-    }
 
-    .nav-menu a {
-        display: block;
-        padding: 1.5rem;
-        border-top: 1px solid #2a2a2a; 
-        font-size: 1.1rem; /* Litt større lenker i mobilmenyen for enkel klikking */
-    }
+/* ---------------------------------- */
+/* --- STILER FOR KONTAKT-SIDEN --- */
+/* ---------------------------------- */
 
-    .hamburger {
-        display: flex; /* Viser hamburger-knappen */
-    }
+/* NYTT: Sentrerer innholdet i <main> KUN på kontaktsiden */
+.kontakt-side main.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Vertikal sentrering */
+    align-items: center; /* Horisontal sentrering */
+}
+
+.contact-section {
+    background-color: #2a2a2a;
+    padding: 2rem 3rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     
-    /* Hamburger "X" animasjon */
-    .hamburger.open .bar:nth-child(1) {
-        transform: rotate(45deg) translate(0.5rem, 0.6rem);
-    }
-    .hamburger.open .bar:nth-child(2) {
-        opacity: 0;
-    }
-    .hamburger.open .bar:nth-child(3) {
-        transform: rotate(-45deg) translate(0.5rem, -0.6rem);
-    }
+    /* ENDRET: margin og width for sentrering */
+    margin: 0; 
+    max-width: 800px;
+    width: 100%; /* Respekterer padding i .container */
+}
 
-    /* Andre innholdsjusteringer for mobil */
-    .intro-section h2 {
-        font-size: 2rem; /* Enda mindre på mobil */
+.contact-section h2 {
+    font-size: 2.5rem;
+    color: #ff4500;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.contact-section p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #cccccc;
+    margin-bottom: 1.5rem;
+}
+
+.contact-section .contact-email-link {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.contact-section .contact-email-link a {
+    color: #ff4500;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.contact-section .contact-email-link a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    .contact-section {
+        padding: 1.5rem;
     }
-    .intro-section p {
+    .contact-section h2 {
+        font-size: 2rem;
+    }
+    .contact-section p {
         font-size: 1rem;
     }
-    
-    .game-section > h2 {
-        font-size: 1.8rem; /* Enda mindre på mobil */
+    .contact-section .contact-email-link {
+        font-size: 1.1rem;
     }
+}
 
-    .game-info h2 {
-        font-size: 1.4rem;
-    }
-    
-    .game-info p {
-        font-size: 0.9rem;
-    }
 
-    footer {
-        font-size: 0.9em;
-        padding: 1.5rem;
-    }
+/* ---------------------------------- */
+/* --- EGENDESIGNET SCROLLBAR --- */
+/* ---------------------------------- */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #ff4500;
 }
