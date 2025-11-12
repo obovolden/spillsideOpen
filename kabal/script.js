@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let isAnimating = false; // For å låse input under hint/animasjoner
     
+    // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
+    let isGameWon = false; // Låser seiers-funksjonen
+    // --- SLUTT PÅ FIKS ---
+    
     // --- START PÅ NY KODE: BRUKERNAVN ---
     let currentUsername = null; // Lagrer navnet under økten
     // --- SLUTT PÅ NY KODE ---
@@ -215,6 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         moveHistory = [];
         isAnimating = false;
+        
+        // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
+        isGameWon = false; // Nullstill seiers-låsen
+        // --- SLUTT PÅ FIKS ---
         
         timeDisplay.textContent = '0s';
         updateScoreAndMoves(); // Oppdaterer til 0
@@ -1003,6 +1011,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Seier-sjekk ---
     function checkWinCondition() {
+        // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
+        if (isGameWon) return; // Ikke kjør seiers-logikk mer enn én gang
+        // --- SLUTT PÅ FIKS ---
+        
         if (timerInterval === null && autocompleteInterval === null) return; 
         
         let totalFoundationCards = 0;
@@ -1011,6 +1023,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (totalFoundationCards === 52) {
+            // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
+            isGameWon = true; // Lås funksjonen NÅ
+            // --- SLUTT PÅ FIKS ---
+            
             // Stopp alle intervaller
             if (autocompleteInterval) {
                 clearInterval(autocompleteInterval);
@@ -1061,7 +1077,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             // ==========================================================
                             // ** STARTPUNKT FOR ENDRING 2 (MODAL-FIKS) **
                             // ==========================================================
-                            return true; // <-- DENNE LINJEN HINDRER MODALEN I Å LUKKE SEG
+                            // return true; // <-- DENNE LINJEN HINDRET MODALEN I Å LUKKE SEG
+                            
+                            // --- START PÅ FIKS FOR MODAL ---
+                            // Linjen over er fjernet, så modalen lukkes automatisk.
+                            // --- SLUTT PÅ FIKS FOR MODAL ---
+                            
                             // ==========================================================
                             // ** SLUTTPUNKT FOR ENDRING 2 **
                             // ==========================================================
