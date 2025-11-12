@@ -1,0 +1,71 @@
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #222;
+    color: #eee;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+#score-board {
+    font-size: 24px;
+    color: #FFD700;
+    margin-bottom: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+}
+
+#game-container {
+    border: 5px solid #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    position: relative; /* VIKTIG */
+}
+
+canvas {
+    background-color: #000;
+    display: block;
+}
+
+/* --- Styling for "Game Over" --- */
+#game-over-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    text-align: center;
+}
+
+#game-over-screen h2 {
+    font-size: 80px;
+    color: red;
+    margin: 0;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#game-over-screen p {
+    font-size: 24px;
+    color: #eee;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/*
+ * DENNE ER LØSNINGEN.
+ * Denne regelen har manglet eller vært feil.
+ */
+.hidden {
+    display: none;
+}
