@@ -1,9 +1,9 @@
 <?php
 // --- 1. Konfigurasjon ---
 $servername = "localhost";
-$username = "din_database_bruker";
-$password = "ditt_database_passord";
-$dbname = "din_database_navn";
+$username = "gzaemhva_spillbr";
+$password = "W0XG7txn2uy6";
+$dbname = "gzaemhva_highscore";
 $tablename = "Endless_Knight_score"; // OPPDATERT TABELLNAVN
 
 // --- 2. Sett header ---
