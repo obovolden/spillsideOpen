@@ -16,7 +16,9 @@ header h1,
 .hero-content h2, 
 .game-section > h2, 
 .game-info h2,
-.list-game-info h3 {
+.list-game-info h3,
+.highscore-section h2 /* NYTT: La til tittel for toppliste */
+{
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
 }
@@ -162,6 +164,7 @@ h1 {
 .hero-content h2 {
     font-size: 2.5rem; 
     color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
     margin: 0 0 1rem 0;
 }
 
@@ -181,6 +184,7 @@ h1 {
     font-size: 1.1rem;
     font-weight: bold;
     transition: background-color 0.3s ease, transform 0.3s ease;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .hero-button:hover {
@@ -249,7 +253,7 @@ main.container {
     top: 0;
     left: 0;
     width: 100%;
-    height: 180px;
+    height: 188px; /* Matcher .game-item img */
     background-color: rgba(255, 69, 0, 0.8);
     display: flex;
     justify-content: center;
@@ -266,9 +270,10 @@ main.container {
 
 .game-item img {
     width: 100%;
-    height: 180px;
+    height: 180px; /* Matcher ::after */
     object-fit: cover;
     transition: transform 0.4s ease;
+    display: block; /* FIKS: Hindrer et potensielt lite mellomrom under bildet */
 }
 
 .game-item:hover img {
@@ -365,16 +370,91 @@ section a {
 }
 
 
-footer {
-    text-align: center;
+/* ---------------------------------- */
+/* --- NYTT: TOPPLISTE-SEKSJON --- */
+/* ---------------------------------- */
+.highscore-section {
+    background-color: #2a2a2a;
+    border-radius: 8px;
     padding: 2rem;
-    margin-top: 15px; /* Beholder denne i tilfelle innholdet fyller mer enn 100vh */
-    border-top: 4px solid #ff4500;
-    background-color: #0d0d0d;
-    color: #8d8787;
-    font-size: 1.5em;
+    margin: 3rem auto; /* Gir litt luft over og under */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
+.highscore-section h2 {
+    /* Font-familie og vekt er satt globalt */
+    font-size: 2.5rem;
+    color: #ff4500;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.highscore-section p {
+    text-align: center;
+    color: #cccccc;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.highscore-list {
+    list-style: none; /* Fjerner standard tall */
+    padding: 0;
+    margin: 0;
+    counter-reset: highscore-counter; /* Starter en teller */
+}
+
+.highscore-list li {
+    background-color: #3a3a3a;
+    border-radius: 5px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.highscore-list li:hover {
+    background-color: #4a4a4a;
+}
+
+/* Legger til egne tall for rangering */
+.highscore-list li::before {
+    counter-increment: highscore-counter;
+    content: counter(highscore-counter) ".";
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #ff4500;
+    margin-right: 1.5rem;
+    min-width: 2rem; /* Gir lik plassering */
+}
+
+.highscore-list .player-name {
+    font-weight: bold;
+    color: #ffffff;
+    flex-grow: 1;
+    text-align: left;
+}
+
+.highscore-list .game-name {
+    color: #cccccc;
+    margin: 0 1.5rem;
+    font-size: 0.95rem;
+    text-align: right;
+    flex-shrink: 0; /* Hindrer at den krymper */
+}
+
+.highscore-list .score {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    color: #ff4500;
+    font-size: 1.3rem;
+    min-width: 80px; /* Gir lik justering for poeng */
+    text-align: right;
+}
 
 /* ------------------------------------- */
 /* --- RESPONSIV DESIGN --- */
@@ -398,6 +478,11 @@ footer {
     .game-list {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    /* NYTT: Toppliste nettbrett */
+    .highscore-list .game-name {
+        margin: 0 1rem;
+    }
 }
 
 
@@ -413,12 +498,30 @@ footer {
         border-bottom: 2px solid #ff4500;
     }
     .nav-menu.open { display: block; }
-    .nav-menu ul { flex-direction: column; width: 100%; }
-    .nav-menu li { margin: 0; text-align: center; }
-    .nav-menu a {
-        display: block; padding: 1.5rem;
-        border-top: 1px solid #2a2a2a; font-size: 1.1rem;
+    .nav-menu ul { 
+        flex-direction: column; 
+        width: 100%; 
+        padding: 0; 
     }
+    
+    /* --- FIKS FOR MOBILMENY-LINJE --- */
+    .nav-menu li { 
+        margin: 0; 
+        text-align: center; 
+        border-top: 1px solid #2a2a2a; /* Flyttet borden hit */
+    }
+    /* Fjerner kantlinjen over det første elementet */
+    .nav-menu li:first-child {
+        border-top: none;
+    }
+    .nav-menu a {
+        display: block; 
+        padding: 1.5rem;
+        /* border-top: 1px solid #2a2a2a; <-- Fjernet herfra */
+        font-size: 1.1rem;
+    }
+    /* --- SLUTT PÅ FIKS --- */
+
 
     .hamburger { display: flex; }
     .hamburger.open .bar:nth-child(1) { transform: rotate(45deg) translate(0.5rem, 0.6rem); }
@@ -450,6 +553,43 @@ footer {
         margin-left: 0;
         margin-top: 1rem;
         width: 100%;
+    }
+
+    /* NYTT: Responsiv toppliste */
+    .highscore-section {
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    .highscore-section h2 {
+        font-size: 2rem;
+    }
+    .highscore-list li {
+        flex-wrap: wrap; /* Lar elementer bryte */
+        padding: 1rem;
+        justify-content: flex-start;
+    }
+    .highscore-list li::before {
+        font-size: 1.3rem;
+        margin-right: 1rem;
+        min-width: 1.5rem;
+    }
+    .highscore-list .player-name {
+        flex-basis: calc(100% - 3rem); /* Tar resten av plassen ved siden av tallet */
+        flex-grow: 0;
+    }
+    .highscore-list .game-name {
+        flex-basis: 100%; /* Bryter til ny linje */
+        margin: 0.25rem 0 0 2.5rem; /* Indenterer under navnet */
+        text-align: left;
+        color: #cccccc; 
+        font-size: 0.9rem;
+    }
+    .highscore-list .score {
+        flex-basis: 100%; /* Bryter til ny linje */
+        text-align: right;
+        margin-top: 0.5rem;
+        font-size: 1.5rem;
+        min-width: auto;
     }
 }
 
