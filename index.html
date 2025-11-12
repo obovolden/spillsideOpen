@@ -1,27 +1,19 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-5FMKQ5B8');</script>
-    <!-- End Google Tag Manager -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Et avbrekk fra hverdagen, gir motivasjon for fremtiden.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Roboto:wght@400&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <title>Spillkapsel - Forside</title>
     <link rel="icon" type="image/png" href="img/Logo_icon.png">
 </head>
-<body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5FMKQ5B8"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-
-
+<body class="hjem-side">
     <header>
         <div class="logo-container">
             <button class="logo-button"><img src="img/MainLogo.png" alt="Spillkapsel logo"></button>
@@ -37,20 +29,30 @@
         <nav class="nav-menu" id="nav-menu">
             <ul>
                 <li><a href="/">Hjem</a></li>
-                <li><a href="#">Om Spillene</a></li>
+                <li><a href="alle-spill.html">Alle Spill</a></li>
                 <li><a href="kontakt.html">Kontakt</a></li>
             </ul>
         </nav>
     </header>
 
-    <section class="intro-section">
-        <h2>Spillkapselen</h2>
-        <p>Spillkapselen er en nettside utviklet for casual gaming. Her er det bare å gønne på å få seg opp på top 5 lista for heder og ære.</p>
+    <section class="hero-section">
+        <video class="hero-video" autoplay loop muted playsinline>
+            <source src="img/hero.mp4" type="video/mp4">
+            Videoen din kunne ikke lastes inn.
+        </video>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <h2>SPILLKAPSELEN</h2> 
+            <p>Din destinasjon for casual gaming. Her er det bare å gønne på og kapre topplista!</p>
+            <a href="alle-spill.html" class="hero-button">Se alle spill</a>
+        </div>
     </section>
     
     <main class="container">
-        <section class="game-section">
-            <h2>Spill:</h2>
+        <section class="game-section" id="spill">
+            <h2>Mest Populære</h2>
+            
             <div class="game-list">
                 <a href="/geminiPong/">
                     <article class="game-item">
@@ -67,6 +69,17 @@
                         <div class="game-info">
                             <h2>Kabal</h2>
                             <p>Kortenes konge, dronningens dronning og knektenes knekt.</p>
+                        </div>
+                    </article>
+                </a>
+                <a href="/endlessrunner/">
+                    <article class="game-item">
+                        <img src="img/endlessknight.png" alt="Endless_Knight">
+                        <div class="game-info">
+                            <h2>Endless Knight</h2>
+                            <p>Gjør deg klar for Endless Knight! Ta kontroll over den gylne ridderen i et lynraskt, endeløst eventyr. 
+                                Hopp og dobbelthopp for å unngå farer, samle gull, og overleve så lenge du kan. 
+                                Et enkelt trykk for å hoppe - lett å lære, umulig å mestre! Hvor høy blir din poengsum?.</p>
                         </div>
                     </article>
                 </a>
@@ -133,24 +146,14 @@
                         </div>
                     </article>
                 </a>
-                
             </div>
-        </section>
+            </section>
     </main>
+    
     <footer>
         <p>&copy; Spillkapsel</p>
     </footer>
 
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3SQJX20D6W"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3SQJX20D6W');
-</script>
-
-<script src="js/script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>

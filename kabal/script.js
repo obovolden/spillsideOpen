@@ -30,9 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let isAnimating = false; // For å låse input under hint/animasjoner
     
-    // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
+    // ==========================================================
+    // ** STARTPUNKT FOR FIKS (FLERE HIGHSCORES) **
+    // ==========================================================
     let isGameWon = false; // Låser seiers-funksjonen
-    // --- SLUTT PÅ FIKS ---
+    // ==========================================================
+    // ** SLUTTPUNKT FOR FIKS **
+    // ==========================================================
     
     // --- START PÅ NY KODE: BRUKERNAVN ---
     let currentUsername = null; // Lagrer navnet under økten
@@ -220,9 +224,13 @@ document.addEventListener('DOMContentLoaded', () => {
         moveHistory = [];
         isAnimating = false;
         
-        // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
+        // ==========================================================
+        // ** STARTPUNKT FOR FIKS (FLERE HIGHSCORES) **
+        // ==========================================================
         isGameWon = false; // Nullstill seiers-låsen
-        // --- SLUTT PÅ FIKS ---
+        // ==========================================================
+        // ** SLUTTPUNKT FOR FIKS **
+        // ==========================================================
         
         timeDisplay.textContent = '0s';
         updateScoreAndMoves(); // Oppdaterer til 0
@@ -1011,11 +1019,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Seier-sjekk ---
     function checkWinCondition() {
-        // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
-        if (isGameWon) return; // Ikke kjør seiers-logikk mer enn én gang
-        // --- SLUTT PÅ FIKS ---
-        
         if (timerInterval === null && autocompleteInterval === null) return; 
+        
+        // ==========================================================
+        // ** STARTPUNKT FOR FIKS (FLERE HIGHSCORES) **
+        // ==========================================================
+        if (isGameWon) return; // Ikke kjør seiers-logikk mer enn én gang
+        // ==========================================================
+        // ** SLUTTPUNKT FOR FIKS **
+        // ==========================================================
         
         let totalFoundationCards = 0;
         foundationSlots.forEach(slot => {
@@ -1023,9 +1035,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (totalFoundationCards === 52) {
-            // --- START PÅ FIKS FOR FLERE HIGHSCORES ---
+            
+            // ==========================================================
+            // ** STARTPUNKT FOR FIKS (FLERE HIGHSCORES) **
+            // ==========================================================
             isGameWon = true; // Lås funksjonen NÅ
-            // --- SLUTT PÅ FIKS ---
+            // ==========================================================
+            // ** SLUTTPUNKT FOR FIKS **
+            // ==========================================================
             
             // Stopp alle intervaller
             if (autocompleteInterval) {
@@ -1075,16 +1092,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             // --- SLUTT PÅ NY KODE ---
                             
                             // ==========================================================
-                            // ** STARTPUNKT FOR ENDRING 2 (MODAL-FIKS) **
+                            // ** STARTPUNKT FOR FIKS (MODAL LUKKER SEG) **
                             // ==========================================================
-                            // return true; // <-- DENNE LINJEN HINDRET MODALEN I Å LUKKE SEG
                             
-                            // --- START PÅ FIKS FOR MODAL ---
-                            // Linjen over er fjernet, så modalen lukkes automatisk.
-                            // --- SLUTT PÅ FIKS FOR MODAL ---
+                            // DENNE LINJEN BLE FJERNEN:
+                            // return true; // <-- DENNE LINJEN HINDRER MODALEN I Å LUKKE SEG
                             
                             // ==========================================================
-                            // ** SLUTTPUNKT FOR ENDRING 2 **
+                            // ** SLUTTPUNKT FOR FIKS **
                             // ==========================================================
                         } 
                     );
