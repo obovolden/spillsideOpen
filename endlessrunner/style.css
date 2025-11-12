@@ -1,0 +1,38 @@
+/* Setter hele siden til en mørk modus */
+body {
+    background-color: #1a1a1a; /* Mørk bakgrunn */
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    
+    /* NYTT: Forhindrer scrolling og fyller hele høyden */
+    height: 100vh;
+    padding: 0;
+    overflow: hidden; 
+}
+
+/* NYTT: Tittel over spillet */
+h1 {
+    /* Vi kan skjule denne på mobil hvis vi vil, men la den være for nå */
+    margin: 10px 0;
+}
+
+/* Selve spill-lerretet */
+#gameCanvas {
+    background-color: #2b2b2b;
+    border: 2px solid white;
+
+    /* NYTT: Skalerer spillet pent */
+    max-width: 100%; /* Fyller aldri mer enn skjermbredden */
+    max-height: 100vh; /* Fyller aldri mer enn skjermhøyden */
+    
+    /* Tvinger 2:1-aspekt (basert på 1200x600) */
+    aspect-ratio: 1200 / 600; 
+    
+    /* Beholder pixel-looken når den skalerer */
+    image-rendering: pixelated; 
+}
