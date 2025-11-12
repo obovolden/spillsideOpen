@@ -304,7 +304,7 @@ function displayHighscores(scores) {
 async function loadHighscores() {
     try {
         // VIKTIG: Bytt ut 'get_highscores.php' hvis filen heter noe annet
-        const response = await fetch('get_highscores.php'); 
+        const response = await fetch('api/get_highscores.php'); 
         
         if (!response.ok) {
             throw new Error('Nettverksfeil ved henting av scores');
@@ -327,7 +327,7 @@ async function saveHighscore(name, score) {
     
     try {
         // VIKTIG: Bytt ut 'save_highscore.php' hvis filen heter noe annet
-        const response = await fetch('save_highscore.php', {
+        const response = await fetch('api/save_highscore.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
