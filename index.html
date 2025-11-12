@@ -72,6 +72,7 @@
                         </div>
                     </article>
                 </a>
+                
                 <a href="/endlessrunner/">
                     <article class="game-item">
                         <img src="img/endlessknight.png" alt="Endless_Knight">
@@ -83,15 +84,7 @@
                         </div>
                     </article>
                 </a>
-                <a href="/hangman/">
-                    <article class="game-item">
-                        <img src="img/hangman.png" alt="Hangman">
-                        <div class="game-info">
-                            <h2>Hangman</h2>
-                            <p>Et spill for å spille mellom slagene i en ellers tung studietid</p>
-                        </div>
-                    </article>
-                </a>
+
                 <a href="/sopp_spretten/">
                     <article class="game-item">
                         <img src="img/sopp_spretten.png" alt="Soppspretten">
@@ -147,13 +140,83 @@
                     </article>
                 </a>
             </div>
-            </section>
-    </main>
+        </section>
+
+        <section class="highscore-section">
+            <h2>Topplisten</h2>
+            <p>Klarer du å slå disse poengsummene?</p>
+            
+            <ol class="highscore-list" id="frontpage-highscore-list">
+                <li>Laster topplisten...</li>
+            </ol>
+            
+        </section>
+        </main>
     
     <footer>
         <p>&copy; Spillkapsel</p>
     </footer>
 
     <script src="js/script.js"></script>
-</body>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFrontPageHighscores();
+        });
+
+        async function loadFrontPageHighscores() {
+            const listElement = document.getElementById('frontpage-highscore-list');
+            if (!listElement) return; // Avbryt hvis elementet ikke finnes
+
+            try {
+                // 1. Hent data fra den nye API-en
+                const response = await fetch('api/get_frontpage_scores.php');
+                if (!response.ok) {
+                    throw new Error('Nettverksfeil ved henting av scores.');
+                }
+                
+                const scores = await response.json();
+
+                // 2. Tøm listen
+                listElement.innerHTML = '';
+
+                // 3. Sjekk om vi fikk resultater
+                if (scores && scores.length > 0) {
+                    // 4. Bygg listen på nytt med data fra databasen
+                    scores.forEach(scoreData => {
+                        const li = document.createElement('li');
+                        
+                        // Lager HTML-strukturen som var der fra før
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'player-name';
+                        nameSpan.textContent = scoreData.username;
+                        
+                        const gameSpan = document.createElement('span');
+                        gameSpan.className = 'game-name';
+                        gameSpan.textContent = scoreData.game_name;
+                        
+                        const scoreSpan = document.createElement('span');
+                        scoreSpan.className = 'score';
+                        scoreSpan.textContent = scoreData.score;
+                        
+                        li.appendChild(nameSpan);
+                        li.appendChild(gameSpan);
+                        li.appendChild(scoreSpan);
+                        
+                        listElement.appendChild(li);
+                    });
+                } else if (scores && scores.error) {
+                    // Viser feilmelding fra PHP (f.eks. "Feil i SQL-spørring")
+                    listElement.innerHTML = `<li>Klarte ikke laste: ${scores.error}</li>`;
+                } else {
+                    listElement.innerHTML = '<li>Ingen highscores å vise ennå!</li>';
+                }
+                
+            } catch (error) {
+                console.error('Feil ved lasting av frontpage highscores:', error);
+                listElement.innerHTML = '<li>Kunne ikke koble til topplisten.</li>';
+            }
+        }
+    </script>
+    </body>
 </html>
