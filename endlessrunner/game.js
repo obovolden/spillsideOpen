@@ -1,9 +1,15 @@
 // --- 1. Oppsett av lerret (Canvas) ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
 canvas.width = 1200;
 canvas.height = 600;
+
+// --- NYE HTML-elementer for Highscore ---
+const gameOverScreen = document.getElementById('game-over-screen');
+const finalGoldText = document.getElementById('final-gold');
+const usernameInput = document.getElementById('username-input');
+const saveScoreBtn = document.getElementById('save-score-btn');
+const highscoreList = document.getElementById('highscore-list');
 
 // --- 2. Spillvariabler ---
 const gravity = 0.7;
@@ -19,7 +25,7 @@ let bgX2 = canvas.width;
 // Poeng og tid
 let totalGameTime = 0;
 let goldCoins = 0;
-let lastFrameTime = Date.now();
+let lastFrameTime = 0; // Settes når spillet starter
 
 // Mynt-spawning
 let coins = [];
@@ -29,17 +35,14 @@ let coinSpawnInterval = 2 + (Math.random() * 3);
 // --- 3. Last inn bilder ---
 const playerImg = new Image();
 playerImg.src = 'ridder.png';
-
 const obstacleImg = new Image();
 obstacleImg.src = 'fiende.png';
-
 const backgroundImg = new Image();
 backgroundImg.src = 'bakgrunn.png';
-
 const goldCoinImg = new Image();
 goldCoinImg.src = 'gullmynt.png';
 
-// --- 4. Spilleren (Din gylne ridder) ---
+// --- 4. Spilleren ---
 const player = {
     x: 100,
     y: canvas.height - groundHeight,
@@ -51,15 +54,13 @@ const player = {
     maxJumps: 2
 };
 
-// --- 5. Hinderet (Din blå ridder) ---
+// --- 5. Hinderet og Plattformen ---
 const obstacle = {
     x: canvas.width + 50,
     y: canvas.height - groundHeight - 60,
     width: 40,
     height: 60,
 };
-
-// Plattformen
 const platform = {
     x: canvas.width + 300,
     y: canvas.height - 250,
@@ -85,7 +86,6 @@ function drawPlayer() {
 }
 
 function drawObstacle() {
-    // Dette er linjen jeg fikset i forrige runde (var 'obstacle.type')
     ctx.drawImage(obstacleImg, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
 }
 
@@ -113,12 +113,10 @@ function drawUI() {
     } else {
         formattedTime = `${seconds}s`;
     }
-
     const formattedGold = `${goldCoins}G`;
 
     ctx.font = 'bold 30px Arial';
     ctx.fillStyle = 'gold';
-
     ctx.textAlign = 'center';
     ctx.fillText(formattedGold, canvas.width / 2, 40);
 
@@ -127,33 +125,6 @@ function drawUI() {
     
     ctx.textAlign = 'left';
 }
-
-
-function drawGameOver() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
-    ctx.font = '50px Arial';
-    ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2 - 20);
-    
-    const totalSeconds = Math.floor(totalGameTime);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    
-    let formattedTime;
-    if (minutes > 0) {
-        formattedTime = `${minutes} minutter og ${seconds} sekunder`;
-    } else {
-        formattedTime = `${seconds} sekunder`;
-    }
-
-    ctx.font = '24px Arial';
-    ctx.fillText(`Tid: ${formattedTime}`, canvas.width / 2, canvas.height / 2 + 30);
-    ctx.fillText(`Gull: ${goldCoins} mynter`, canvas.width / 2, canvas.height / 2 + 60);
-    ctx.fillText('Trykk for å starte på nytt', canvas.width / 2, canvas.height / 2 + 100);
-}
-
 
 // --- 7. Oppdateringsfunksjoner (logikk) ---
 
@@ -236,6 +207,9 @@ function updateCoins() {
     }
 }
 
+
+// --- 8. Kollisjon og Game Over ---
+
 function checkCollision() {
     const playerBox = { x: player.x, y: player.y, width: player.width, height: player.height };
     const obstacleBox = { x: obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height };
@@ -244,7 +218,8 @@ function checkCollision() {
         playerBox.x + playerBox.width > obstacleBox.x &&
         playerBox.y < obstacleBox.y + obstacleBox.height &&
         playerBox.y + playerBox.height > obstacleBox.y) {
-        isGameOver = true;
+        
+        triggerGameOver(); // Kaller ny funksjon
     }
     
     const playerTop = player.y;
@@ -271,7 +246,15 @@ function checkCollision() {
     }
 }
 
-// --- 8. Håndtere spiller-input (Tastatur OG Touch) ---
+// NY FUNKSJON: Viser Game Over-skjermen
+function triggerGameOver() {
+    isGameOver = true;
+    finalGoldText.textContent = goldCoins; // Oppdater poengsum
+    gameOverScreen.style.display = 'flex'; // Vis skjermen
+}
+
+
+// --- 9. Håndtere spiller-input ---
 
 function doJump() {
     if (isGameOver) return;
@@ -290,34 +273,103 @@ function handleKeyJump(e) {
 }
 document.addEventListener('keydown', handleKeyJump);
 
-canvas.addEventListener('click', function(e) {
-    if (isGameOver) {
-        e.preventDefault();
-        document.location.reload();
-    }
-});
-
 canvas.addEventListener('touchstart', function(e) {
     e.preventDefault(); 
     
-    if (isGameOver) {
-        document.location.reload();
-    } else {
-        doJump();
+    if (!isGameOver) {
+        doJump(); // Hopp hvis spillet er i gang
     }
 }, { passive: false });
 
 
-// --- 9. Hovedspill-løkken (Game Loop) ---
+// --- 10. NYTT: Highscore-logikk (med 'fetch') ---
+
+// Viser listen som hentes fra serveren
+function displayHighscores(scores) {
+    highscoreList.innerHTML = ''; // Tøm listen
+    
+    if (scores.length === 0) {
+         highscoreList.innerHTML = '<li>Ingen scores ennå!</li>';
+         return;
+    }
+    
+    scores.forEach(score => {
+        const li = document.createElement('li');
+        li.textContent = `${score.name} - ${score.score}G`;
+        highscoreList.appendChild(li);
+    });
+}
+
+// Henter scores fra serveren din (GET request)
+async function loadHighscores() {
+    try {
+        // VIKTIG: Bytt ut 'get_highscores.php' hvis filen heter noe annet
+        const response = await fetch('get_highscores.php'); 
+        
+        if (!response.ok) {
+            throw new Error('Nettverksfeil ved henting av scores');
+        }
+        const scores = await response.json();
+        
+        // PHP-skriptet sorterer allerede, så vi trenger ikke .sort() her
+        
+        displayHighscores(scores);
+        
+    } catch (error) {
+        console.error('Kunne ikke laste highscores:', error);
+        highscoreList.innerHTML = '<li>Kunne ikke laste...</li>';
+    }
+}
+
+// Sender ny score til serveren din (POST request)
+async function saveHighscore(name, score) {
+    const newScore = { name: name, score: score };
+    
+    try {
+        // VIKTIG: Bytt ut 'save_highscore.php' hvis filen heter noe annet
+        const response = await fetch('save_highscore.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newScore),
+        });
+        
+        if (!response.ok) {
+            throw new Error('Kunne ikke lagre score');
+        }
+        
+    } catch (error) {
+        console.error('Feil ved lagring av highscore:', error);
+    }
+}
+
+// NY LYTTER: Håndterer lagring og omstart
+saveScoreBtn.addEventListener('click', async () => {
+    const username = usernameInput.value.trim() || 'Anonym Ridder';
+    
+    // Deaktiver knappen for å hindre doble klikk
+    saveScoreBtn.disabled = true;
+    saveScoreBtn.textContent = 'Lagrer...';
+    
+    // Vent til lagringen er fullført
+    await saveHighscore(username, goldCoins);
+    
+    // Når lagringen er ferdig, start spillet på nytt
+    document.location.reload();
+});
+
+
+// --- 11. Hovedspill-løkken (Game Loop) ---
 function gameLoop() {
+    // Stopp løkken hvis spillet er over
+    if (isGameOver) {
+        return; 
+    }
+    
     const now = Date.now();
     const deltaTime = (now - lastFrameTime) / 1000;
     lastFrameTime = now;
-
-    if (isGameOver) {
-        drawGameOver();
-        return;
-    }
     
     totalGameTime += deltaTime;
     
@@ -349,27 +401,28 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// --- 10. Start spillet! ---
+// --- 12. Start spillet! ---
 let imagesLoaded = 0;
 const totalImages = 4;
 
 function imageLoaded() {
     imagesLoaded++;
     if (imagesLoaded === totalImages) {
+        // Alt er lastet, start spillet
         lastFrameTime = Date.now();
         gameLoop();
+        
+        // NYTT: Last inn highscores med en gang
+        loadHighscores(); 
     }
 }
 
 playerImg.onload = imageLoaded;
 obstacleImg.onload = imageLoaded;
 backgroundImg.onload = imageLoaded;
-// FIKSET: 'imageL' er endret til 'imageLoaded'
 goldCoinImg.onload = imageLoaded;
 
-if (playerImg.complete && obstacleImg.complete && backgroundImg.complete && goldCoinImg.complete) {
-    if (lastFrameTime === 0) {
-        lastFrameTime = Date.now();
-        gameLoop();
-    }
+// Sikkerhetsnett hvis bilder allerede er i cache
+if (playerImg.complete && obstacleImg.complete && backgroundImg.complete && goldCoinImg.complete && lastFrameTime === 0) {
+    imageLoaded();
 }
