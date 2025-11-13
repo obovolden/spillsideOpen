@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassisk Tetris</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app-wrapper">
+        <div id="game-container">
+            <h1>Tetris</h1>
+            
+            <div id="score-display">
+                Poeng: <span id="score">0</span>
+            </div>
+            
+            <div id="canvas-wrapper">
+                <canvas id="tetris-board"></canvas>
+                
+                <div id="game-over">Spillet er over!</div>
+                <div id="pause-message">PAUSE</div>
+            </div>
+            
+            <p class="instructions">Piltaster: Flytte/Rotere. Mellomrom: Hard Drop. C: Hold. P: Pause.</p>
+        </div>
+
+        <div id="side-container">
+            
+            <div class="side-panel">
+                <h3>Neste</h3>
+                <canvas id="next-canvas" class="side-canvas" width="80" height="80"></canvas>
+            </div>
+
+            <div class="side-panel">
+                <h3>Hold</h3>
+                <canvas id="hold-canvas" class="side-canvas" width="80" height="80"></canvas>
+            </div>
+            
+            <div class="side-panel">
+                <h3>Nivå</h3>
+                <span id="level-display">1</span>
+                <span id="lines-display">Linjer: 0 / 10</span>
+            </div>
+
+            <button id="pause-button" class="side-button">Pause</button>
+
+            <button id="restart-button" class="side-button">Start på nytt</button>
+
+        </div>
+    </div> <script src="script.js" defer></script>
+</body>
+</html>

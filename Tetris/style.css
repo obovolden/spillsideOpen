@@ -1,0 +1,203 @@
+/* =================================================================== */
+/* SEKSJON 1: GENERELL STYLING OG LAYOUT                               */
+/* =================================================================== */
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #111827; /* Mørk blå-grå bakgrunn */
+    color: #d1d5db; /* Lys grå tekst */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    overflow: hidden; /* Forhindrer scrolling */
+}
+
+/* Ny wrapper for hele applikasjonen (spill + sidepaneler) */
+#app-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start; /* Juster toppen */
+    gap: 24px;
+}
+
+/* =================================================================== */
+/* SEKSJON 2: HOVEDSPILL-CONTAINER                                     */
+/* =================================================================== */
+
+/* Hovedcontainer for spillet */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    background-color: #1f2937; /* Mørk container-bakgrunn */
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Mørk skygge */
+    border: 1px solid #374151; /* Mørk kantlinje */
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #f9fafb; /* Hvit tittel */
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+/* Stil for poengsum og game over-melding */
+#score-display {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #9ca3af; /* Lysere tekst for "Poeng:" */
+    margin-bottom: 16px;
+    background-color: #374151; /* Mørkere boks */
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #4b5563; /* Kantlinje for poeng */
+    width: 300px; /* Oppdatert for å matche 12 kolonner (12 * 25px) */
+    text-align: center;
+    box-sizing: border-box; /* Sørger for at padding er inkludert i bredden */
+}
+
+#score {
+    color: #60a5fa; /* Lys blåfarge for selve tallet */
+}
+
+/* =================================================================== */
+/* SEKSJON 3: SPILLBRETT OG OVERLEGG (OVERLAYS)                        */
+/* =================================================================== */
+
+/* Enkel container for å posisjonere game over-teksten */
+#canvas-wrapper {
+    position: relative;
+}
+
+/* Stil for selve spillbrettet */
+canvas#tetris-board {
+    background-color: #111827; /* Samme som body, mørk bakgrunn */
+    border: 2px solid #4b5563; /* Mer markert kant */
+    border-radius: 4px; /* Litt avrundede hjørner */
+    display: block; /* Fjerner ekstra mellomrom under canvas */
+    position: relative; /* For game over-tekst */
+}
+
+/* Melding som vises når spillet er over */
+#game-over {
+    display: none; /* Skjult som standard */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f87171; /* Lys rød farge */
+    font-size: 2rem;
+    font-weight: 700;
+    background-color: rgba(31, 41, 55, 0.9); /* Mørk bakgrunn med gjennomsiktighet */
+    padding: 16px 24px;
+    border-radius: 8px;
+    border: 2px solid #f87171; /* Lys rød kant */
+    text-align: center;
+    z-index: 10;
+}
+
+/* Melding for Pause */
+#pause-message {
+    display: none; /* Skjult som standard */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #60a5fa; /* Lys blå farge */
+    font-size: 2.5rem;
+    font-weight: 700;
+    background-color: rgba(31, 41, 55, 0.9);
+    padding: 16px 24px;
+    border-radius: 8px;
+    border: 2px solid #60a5fa;
+    text-align: center;
+    z-index: 10;
+}
+
+/* Instruksjoner */
+p.instructions {
+    font-size: 0.9rem;
+    color: #9ca3af; /* Lysere instruksjonstekst */
+    margin-top: 16px;
+    text-align: center;
+    max-width: 300px; /* Oppdatert bredde */
+}
+
+/* =================================================================== */
+/* SEKSJON 4: SIDEPANELER (NESTE, HOLD, NIVÅ)                          */
+/* =================================================================== */
+
+#side-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 120px; /* Bredde for sidepaneler */
+}
+
+.side-panel {
+    background-color: #1f2937; /* Mørk container-bakgrunn */
+    border-radius: 12px;
+    border: 1px solid #374151; /* Mørk kantlinje */
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.side-panel h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #9ca3af;
+    margin: 0 0 12px 0;
+    text-transform: uppercase; /* Store bokstaver */
+    letter-spacing: 0.05em;
+}
+
+/* Stil for de små canvas-elementene */
+canvas.side-canvas {
+    background-color: #111827; /* Mørk bakgrunn */
+    border-radius: 4px;
+    border: 1px solid #4b5563;
+}
+
+/* =================================================================== */
+/* SEKSJON 5: SIDEPANEL-ELEMENTER (NIVÅ, KNAPPER)                      */
+/* =================================================================== */
+
+/* Stil for Nivå-visning */
+#level-display {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f9fafb;
+}
+
+/* NY STIL FOR LINJETELLER */
+#lines-display {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+/* Stil for knapper i sidepanelet */
+.side-button {
+    background-color: #374151;
+    color: #f9fafb;
+    border: 1px solid #4b5563;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 4px; /* Litt avstand */
+}
+
+.side-button:hover {
+    background-color: #4b5563;
+}

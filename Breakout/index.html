@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breakout Spill</title>
+    <!-- Laster inn den eksterne CSS-filen -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Breakout</h1>
+
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
+
+    <!-- HTML FOR MODAL (Game Over / Vunnet) -->
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Game Over</h2>
+            <p id="modalMessage"></p>
+            <button id="restartButton">Start på nytt</button>
+        </div>
+    </div>
+
+    <!-- Laster inn den eksterne JavaScript-filen -->
+    <!-- 'defer' sikrer at skriptet kjører først etter at HTML-en er lastet -->
+    <script src="script.js" defer></script>
+
+</body>
+</html>
