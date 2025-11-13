@@ -1,126 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="no">
 <head>
-    <title>Flappy Ugle</title>
-    <style>
-        body {
-            background-color: #70c5ce;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: 'Arial', sans-serif;
-        }
-        canvas {
-            border: 2px solid #000;
-            background-color: #87CEEB;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Ugle i Skogen 🌳🦉</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <canvas id="gameCanvas" width="288" height="512"></canvas>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // Spiller (Ugle)
-        let owlX = 50;
-        let owlY = 150;
-        let owlVelocityY = 0;
-        const gravity = 0.4;
-        const jumpStrength = -8;
-
-        // Rør
-        let pipe = [];
-        pipe[0] = {
-            x: canvas.width,
-            y: 0
-        };
-        const pipeWidth = 52;
-        const pipeGap = 100;
-
-        // Poeng
-        let score = 0;
-        let gameOver = false;
-
-        // Last inn bilder
-        const owlImg = new Image();
-        owlImg.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🦉%3C/text%3E%3C/svg%3E";
-
-        const pipeNorthImg = new Image();
-        pipeNorthImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAFACAYAAACKi1UgAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABTSURBVHhe7c4xEQAgDACC//+t3RAQoAnYBNoM2gzaDNoM2gzaDNoM2gzaDNoM2gzaDNoM2gzaDNoM2gzaDNoM2gzaDNoM2gzaDNoM2gzaDNoM2gzaDPYD4wABmCAX7wAAAABJRU5ErkJggg=="; // Enkel grønn farge
-
-        const pipeSouthImg = new Image();
-        pipeSouthImg.src = pipeNorthImg.src;
-
-        // Hopp-funksjon
-        document.addEventListener('keydown', function(event) {
-            if (event.code === 'Space' && !gameOver) {
-                owlVelocityY = jumpStrength;
-            }
-        });
+    <div id="ui-layer">
+        <div id="score">0</div>
         
-        canvas.addEventListener('click', function() {
-            if (!gameOver) {
-                owlVelocityY = jumpStrength;
-            }
-        });
+        <div id="message" class="hidden">
+            <h2>Flappy Ugle 🦉</h2>
+            <p>Trykk for å fly!</p>
+        </div>
 
-        function draw() {
-            // Bakgrunn
-            ctx.fillStyle = "#87CEEB";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        <div id="name-form" class="hidden">
+            <h2>Velkommen til skogen! 🌲</h2>
+            <p>Hva heter ugla?</p>
+            <input type="text" id="player-name-input" placeholder="Skriv navn her..." maxlength="12">
+            <button id="save-name-btn">Start spillet</button>
+        </div>
+    </div>
 
-            // Rør
-            for (let i = 0; i < pipe.length; i++) {
-                ctx.fillStyle = "#008000"; // Grønn farge for rør
-                ctx.fillRect(pipe[i].x, pipe[i].y, pipeWidth, 320); // Øvre rør
-                ctx.fillRect(pipe[i].x, pipe[i].y + 320 + pipeGap, pipeWidth, canvas.height - (pipe[i].y + 320 + pipeGap)); // Nedre rør
-                
+    <canvas id="gameCanvas"></canvas>
 
-                pipe[i].x--;
-
-                if (pipe[i].x == 125) {
-                    pipe.push({
-                        x: canvas.width,
-                        y: Math.floor(Math.random() * (0 - -150 + 1)) + -150
-                    });
-                }
-
-                // Kollisjonssjekk
-                if (owlX + 30 > pipe[i].x && owlX < pipe[i].x + pipeWidth &&
-                   (owlY < pipe[i].y + 320 || owlY + 30 > pipe[i].y + 320 + pipeGap) ||
-                    owlY + 30 > canvas.height) {
-                    gameOver = true;
-                }
-
-                if (pipe[i].x == 5) {
-                    score++;
-                }
-            }
-
-            // Ugle
-            ctx.drawImage(owlImg, owlX, owlY, 40, 40);
-            owlVelocityY += gravity;
-            owlY += owlVelocityY;
-
-            // Poeng
-            ctx.fillStyle = "#000";
-            ctx.font = "20px Arial";
-            ctx.fillText("Poeng: " + score, 10, canvas.height - 20);
-
-            if (gameOver) {
-                ctx.fillStyle = "#000";
-                ctx.font = "30px Arial";
-                ctx.fillText("Game Over", canvas.width / 2 - 80, canvas.height / 2);
-            } else {
-                requestAnimationFrame(draw);
-            }
-        }
-
-        draw();
-    </script>
+    <script src="js/script.js"></script>
 </body>
 </html>

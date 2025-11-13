@@ -1,0 +1,89 @@
+/* -- Moderne styling og reset -- */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #3d5e3f;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    touch-action: none;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* -- UI Overlay -- */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Lar klikk gå gjennom til canvas... */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* ...men vi må slå på museklikk igjen for skjemaet og knappen */
+#name-form, #save-name-btn, #player-name-input {
+    pointer-events: auto; 
+}
+
+#score {
+    position: absolute;
+    top: 10%;
+    font-size: 4rem;
+    font-weight: bold;
+    color: white;
+    z-index: 10;
+}
+
+#message, #name-form {
+    font-size: 1.5rem;
+    color: white;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 30px;
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+    max-width: 80%;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* -- Styling av input og knapp -- */
+input {
+    padding: 10px;
+    font-size: 1.2rem;
+    border-radius: 5px;
+    border: none;
+    margin-top: 10px;
+    width: 200px;
+    text-align: center;
+}
+
+button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 4px #2E7D32;
+    transition: transform 0.1s;
+}
+
+button:active {
+    box-shadow: 0 2px #2E7D32;
+    transform: translateY(2px);
+}
