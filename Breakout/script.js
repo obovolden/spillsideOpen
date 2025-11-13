@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // SEKSJON 4: KONTROLLERE (INPUT-HÅNDTERING)
     // ===================================================================
-
+    
     // --- Mus ---
     document.addEventListener("mousemove", mouseMoveHandler, false);
     function mouseMoveHandler(e) {
@@ -232,7 +232,13 @@ document.addEventListener('DOMContentLoaded', () => {
         usingKeys = false; 
 
         if (!usingKeys) {
-            let relativeX = e.clientX - canvas.offsetLeft;
+            // ==========================================================
+            // FIKS: Bruk getBoundingClientRect() for nøyaktig posisjon
+            // ==========================================================
+            const rect = canvas.getBoundingClientRect();
+            let relativeX = e.clientX - rect.left;
+            // ==========================================================
+
             if (relativeX > 0 && relativeX < canvas.width) {
                 paddle.x = relativeX - paddle.width / 2;
                 if (paddle.x < 0) {

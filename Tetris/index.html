@@ -10,6 +10,14 @@
 <body>
 
     <div id="app-wrapper">
+
+        <div id="highscore-container">
+            <div class="side-panel">
+                <h3>Topp 10</h3>
+                <ol id="highscore-list"></ol>
+            </div>
+        </div>
+
         <div id="game-container">
             <h1>Tetris</h1>
             
@@ -19,7 +27,6 @@
             
             <div id="canvas-wrapper">
                 <canvas id="tetris-board"></canvas>
-                
                 <div id="game-over">Spillet er over!</div>
                 <div id="pause-message">PAUSE</div>
             </div>
@@ -46,7 +53,6 @@
             </div>
 
             <button id="pause-button" class="side-button">Pause</button>
-
             <button id="restart-button" class="side-button">Start på nytt</button>
 
         </div>

@@ -4,17 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Breakout Spill</title>
-    <!-- Laster inn den eksterne CSS-filen -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>Breakout</h1>
+    <div class="game-wrapper">
 
-    <canvas id="gameCanvas" width="480" height="320"></canvas>
+        <div id="highscore-panel">
+            <h2>Topp 10</h2>
+            <ol id="highscore-list">
+                <li>Laster...</li>
+            </ol>
+        </div>
 
-    <!-- HTML FOR MODAL (Game Over / Vunnet) -->
-    <div id="gameOverModal" class="modal">
+        <div class="game-area">
+            <h1>Breakout</h1>
+            <canvas id="gameCanvas" width="480" height="320"></canvas>
+        </div>
+
+    </div> <div id="gameOverModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Game Over</h2>
             <p id="modalMessage"></p>
@@ -22,8 +30,6 @@
         </div>
     </div>
 
-    <!-- Laster inn den eksterne JavaScript-filen -->
-    <!-- 'defer' sikrer at skriptet kjører først etter at HTML-en er lastet -->
     <script src="script.js" defer></script>
 
 </body>

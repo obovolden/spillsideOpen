@@ -4,21 +4,20 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #111827; /* Mørk blå-grå bakgrunn */
-    color: #d1d5db; /* Lys grå tekst */
+    background-color: #111827;
+    color: #d1d5db;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    overflow: hidden; /* Forhindrer scrolling */
+    overflow: hidden;
 }
 
-/* Ny wrapper for hele applikasjonen (spill + sidepaneler) */
 #app-wrapper {
     display: flex;
     flex-direction: row;
-    align-items: flex-start; /* Juster toppen */
+    align-items: flex-start;
     gap: 24px;
 }
 
@@ -26,88 +25,82 @@ body {
 /* SEKSJON 2: HOVEDSPILL-CONTAINER                                     */
 /* =================================================================== */
 
-/* Hovedcontainer for spillet */
 #game-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 24px;
-    background-color: #1f2937; /* Mørk container-bakgrunn */
+    background-color: #1f2937;
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Mørk skygge */
-    border: 1px solid #374151; /* Mørk kantlinje */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid #374151;
 }
 
 h1 {
     font-size: 2.5rem;
-    color: #f9fafb; /* Hvit tittel */
+    color: #f9fafb;
     margin-top: 0;
     margin-bottom: 16px;
 }
 
-/* Stil for poengsum og game over-melding */
 #score-display {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #9ca3af; /* Lysere tekst for "Poeng:" */
+    color: #9ca3af;
     margin-bottom: 16px;
-    background-color: #374151; /* Mørkere boks */
+    background-color: #374151;
     padding: 8px 16px;
     border-radius: 8px;
-    border: 1px solid #4b5563; /* Kantlinje for poeng */
-    width: 300px; /* Oppdatert for å matche 12 kolonner (12 * 25px) */
+    border: 1px solid #4b5563;
+    width: 300px;
     text-align: center;
-    box-sizing: border-box; /* Sørger for at padding er inkludert i bredden */
+    box-sizing: border-box;
 }
 
 #score {
-    color: #60a5fa; /* Lys blåfarge for selve tallet */
+    color: #60a5fa;
 }
 
 /* =================================================================== */
 /* SEKSJON 3: SPILLBRETT OG OVERLEGG (OVERLAYS)                        */
 /* =================================================================== */
 
-/* Enkel container for å posisjonere game over-teksten */
 #canvas-wrapper {
     position: relative;
 }
 
-/* Stil for selve spillbrettet */
 canvas#tetris-board {
-    background-color: #111827; /* Samme som body, mørk bakgrunn */
-    border: 2px solid #4b5563; /* Mer markert kant */
-    border-radius: 4px; /* Litt avrundede hjørner */
-    display: block; /* Fjerner ekstra mellomrom under canvas */
-    position: relative; /* For game over-tekst */
+    background-color: #111827;
+    border: 2px solid #4b5563;
+    border-radius: 4px;
+    display: block;
+    position: relative;
 }
 
-/* Melding som vises når spillet er over */
 #game-over {
-    display: none; /* Skjult som standard */
+    display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #f87171; /* Lys rød farge */
+    color: #f87171;
     font-size: 2rem;
     font-weight: 700;
-    background-color: rgba(31, 41, 55, 0.9); /* Mørk bakgrunn med gjennomsiktighet */
+    background-color: rgba(31, 41, 55, 0.9);
     padding: 16px 24px;
     border-radius: 8px;
-    border: 2px solid #f87171; /* Lys rød kant */
+    border: 2px solid #f87171;
     text-align: center;
     z-index: 10;
 }
 
-/* Melding for Pause */
 #pause-message {
-    display: none; /* Skjult som standard */
+    display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #60a5fa; /* Lys blå farge */
+    color: #60a5fa;
     font-size: 2.5rem;
     font-weight: 700;
     background-color: rgba(31, 41, 55, 0.9);
@@ -118,30 +111,29 @@ canvas#tetris-board {
     z-index: 10;
 }
 
-/* Instruksjoner */
 p.instructions {
     font-size: 0.9rem;
-    color: #9ca3af; /* Lysere instruksjonstekst */
+    color: #9ca3af;
     margin-top: 16px;
     text-align: center;
-    max-width: 300px; /* Oppdatert bredde */
+    max-width: 300px;
 }
 
 /* =================================================================== */
-/* SEKSJON 4: SIDEPANELER (NESTE, HOLD, NIVÅ)                          */
+/* SEKSJON 4: SIDEPANELER (HØYRE)                                      */
 /* =================================================================== */
 
 #side-container {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    width: 120px; /* Bredde for sidepaneler */
+    width: 120px;
 }
 
 .side-panel {
-    background-color: #1f2937; /* Mørk container-bakgrunn */
+    background-color: #1f2937;
     border-radius: 12px;
-    border: 1px solid #374151; /* Mørk kantlinje */
+    border: 1px solid #374151;
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -154,13 +146,12 @@ p.instructions {
     font-weight: 700;
     color: #9ca3af;
     margin: 0 0 12px 0;
-    text-transform: uppercase; /* Store bokstaver */
+    text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-/* Stil for de små canvas-elementene */
 canvas.side-canvas {
-    background-color: #111827; /* Mørk bakgrunn */
+    background-color: #111827;
     border-radius: 4px;
     border: 1px solid #4b5563;
 }
@@ -169,21 +160,18 @@ canvas.side-canvas {
 /* SEKSJON 5: SIDEPANEL-ELEMENTER (NIVÅ, KNAPPER)                      */
 /* =================================================================== */
 
-/* Stil for Nivå-visning */
 #level-display {
     font-size: 1.75rem;
     font-weight: 700;
     color: #f9fafb;
 }
 
-/* NY STIL FOR LINJETELLER */
 #lines-display {
     font-size: 0.8rem;
     color: #9ca3af;
     margin-top: 4px;
 }
 
-/* Stil for knapper i sidepanelet */
 .side-button {
     background-color: #374151;
     color: #f9fafb;
@@ -195,9 +183,57 @@ canvas.side-canvas {
     font-weight: 700;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin-top: 4px; /* Litt avstand */
+    margin-top: 4px;
 }
 
 .side-button:hover {
     background-color: #4b5563;
+}
+
+/* =================================================================== */
+/* SEKSJON 6: HIGHSCORE-PANEL (VENSTRE) - (NY)                         */
+/* =================================================================== */
+
+#highscore-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 180px; /* Litt bredere for navn og poeng */
+}
+
+/* Vi gjenbruker .side-panel-stilen, men trenger spesifikk stil for listen */
+#highscore-list {
+    list-style: none; /* Fjerner tallene, vi lager egne */
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+#highscore-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #374151; /* Skillelinje */
+    color: #d1d5db;
+}
+
+#highscore-list li:last-child {
+    border-bottom: none;
+}
+
+/* Stil for navnet (f.eks. "1. AAA") */
+#highscore-list li span {
+    font-weight: 400;
+    color: #9ca3af;
+    margin-right: 8px; /* Mellomrom mellom navn og poeng */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Stil for selve poengsummen */
+#highscore-list li strong {
+    font-weight: 700;
+    color: #f9fafb;
 }

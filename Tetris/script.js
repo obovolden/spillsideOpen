@@ -15,18 +15,20 @@ const nextCtx = nextCanvas.getContext('2d');
 const holdCanvas = document.getElementById('hold-canvas');
 const holdCtx = holdCanvas.getContext('2d');
 const levelElement = document.getElementById('level-display');
-const linesElement = document.getElementById('lines-display'); // NYTT ELEMENT
+const linesElement = document.getElementById('lines-display');
 const pauseButton = document.getElementById('pause-button');
 const pauseMessage = document.getElementById('pause-message');
-const restartButton = document.getElementById('restart-button'); // NYTT ELEMENT
+const restartButton = document.getElementById('restart-button');
+
+// NYTT DOM-ELEMENT (VENSTRE PANEL)
+const highscoreListElement = document.getElementById('highscore-list');
 
 // --- Spill-konstanter ---
-const ROWS = 20; // Antall rader
-const COLS = 12; // Antall kolonner
-const BLOCK_SIZE = 25; // Størrelse på hver blokk i piksler
-const SIDE_CANVAS_BLOCK_SIZE = 20; // Mindre blokker for sidepaneler
+const ROWS = 20;
+const COLS = 12;
+const BLOCK_SIZE = 25;
+const SIDE_CANVAS_BLOCK_SIZE = 20;
 
-// Setter canvas-størrelsen basert på konstantene
 canvas.width = COLS * BLOCK_SIZE;
 canvas.height = ROWS * BLOCK_SIZE;
 
@@ -59,13 +61,13 @@ let gameInterval = null;
 let dropSpeed = 800;
 let isPaused = false;
 
+// NY GLOBAL VARIABEL
+let highscores = []; // Vil inneholde { name: '...', score: ... }
+
 // ===================================================================
 // SEKSJON 2: TEGNEFUNKSJONER (RENDERING)
 // ===================================================================
-
-/**
- * Tegner en enkelt blokk på hovedbrettet.
- */
+/* ... (Ingen endringer i Seksjon 2 - drawBlock, drawSideBlock, etc.) ... */
 function drawBlock(x, y, color) {
     ctx.fillStyle = color;
     ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
@@ -86,10 +88,6 @@ function drawBlock(x, y, color) {
     ctx.lineTo(x * BLOCK_SIZE + BLOCK_SIZE - 1, y * BLOCK_SIZE + 1);
     ctx.stroke();
 }
-
-/**
- * Tegner en enkelt blokk på et sidepanel-canvas.
- */
 function drawSideBlock(sideCtx, x, y, color) {
     sideCtx.fillStyle = color;
     sideCtx.fillRect(x * SIDE_CANVAS_BLOCK_SIZE, y * SIDE_CANVAS_BLOCK_SIZE, SIDE_CANVAS_BLOCK_SIZE, SIDE_CANVAS_BLOCK_SIZE);
@@ -98,10 +96,6 @@ function drawSideBlock(sideCtx, x, y, color) {
     sideCtx.lineWidth = 1;
     sideCtx.strokeRect(x * SIDE_CANVAS_BLOCK_SIZE, y * SIDE_CANVAS_BLOCK_SIZE, SIDE_CANVAS_BLOCK_SIZE, SIDE_CANVAS_BLOCK_SIZE);
 }
-
-/**
- * Tegner hele spillbrettet (de låste brikkene).
- */
 function drawBoard() {
     ctx.fillStyle = '#111827';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -113,10 +107,6 @@ function drawBoard() {
         }
     }
 }
-
-/**
- * Tegner den aktive brikken som faller.
- */
 function drawPiece() {
     if (!activePiece) return;
     activePiece.shape.forEach((row, y) => {
@@ -127,10 +117,6 @@ function drawPiece() {
         });
     });
 }
-
-/**
- * Tegner "spøkelsesbrikken" (hvor brikken vil lande).
- */
 function drawGhostPiece() {
     if (!activePiece) return;
     let ghostY = activePiece.y;
@@ -147,10 +133,6 @@ function drawGhostPiece() {
         });
     });
 }
-
-/**
- * Tegner brikken i "Neste" eller "Hold"-boksene.
- */
 function drawSidePiece(piece, canvasCtx, canvasElement) {
     canvasCtx.fillStyle = '#111827';
     canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
@@ -173,10 +155,6 @@ function drawSidePiece(piece, canvasCtx, canvasElement) {
         });
     });
 }
-
-/**
- * Hovedtegnefunksjon: Tømmer og tegner alt på nytt.
- */
 function draw() {
     if (gameOver || isPaused) return; 
     drawBoard();
@@ -190,17 +168,10 @@ function draw() {
 // ===================================================================
 // SEKSJON 3: SPILLOGIKK
 // ===================================================================
-
-/**
- * Oppretter et tomt, internt spillbrett (array).
- */
+/* ... (Mesteparten av Seksjon 3 er uendret) ... */
 function createEmptyBoard() {
     board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 }
-
-/**
- * Genererer en ny, tilfeldig Tetris-brikke.
- */
 function generateNewPiece() {
     const typeId = Math.floor(Math.random() * (SHAPES.length - 1)) + 1; // 1 til 7
     const shape = SHAPES[typeId];
@@ -211,10 +182,6 @@ function generateNewPiece() {
         y: 0
     };
 }
-
-/**
- * Tar "neste" brikke og gjør den aktiv. Sjekker for game over.
- */
 function spawnPiece() {
     activePiece = nextPiece; 
     nextPiece = generateNewPiece();
@@ -222,14 +189,10 @@ function spawnPiece() {
 
     if (!isValidMove(activePiece.x, activePiece.y, activePiece.shape)) {
         gameOver = true;
-        showGameOver();
+        showGameOver(); // Endret: Kaller nå den oppdaterte funksjonen
         clearInterval(gameInterval); 
     }
 }
-
-/**
- * Bytter den aktive brikken med brikken i "Hold".
- */
 function holdSwap() {
     if (!canSwap) return; 
 
@@ -249,10 +212,6 @@ function holdSwap() {
     }
     canSwap = false; 
 }
-
-/**
- * Sjekker om en brikke er på en gyldig posisjon (innenfor brettet, ikke kolliderer).
- */
 function isValidMove(x, y, shape) {
     for (let r = 0; r < shape.length; r++) {
         for (let c = 0; c < shape[r].length; c++) {
@@ -268,10 +227,6 @@ function isValidMove(x, y, shape) {
     }
     return true;
 }
-
-/**
- * Låser den aktive brikken til brettet.
- */
 function lockPiece() {
     activePiece.shape.forEach((row, y) => {
         row.forEach((value, x) => {
@@ -285,11 +240,6 @@ function lockPiece() {
         });
     });
 }
-
-/**
- * Roterer den aktive brikken 90 grader med klokken.
- * Inkluderer enkel "wall kick" (sidelengs flytt hvis rotasjon feiler).
- */
 function rotatePiece() {
     const N = activePiece.shape.length;
     let newShape = Array.from({ length: N }, () => Array(N).fill(0));
@@ -311,11 +261,6 @@ function rotatePiece() {
         activePiece.shape = newShape;
     }
 }
-
-/**
- * Sjekker etter, fjerner, og gir poeng for fulle linjer.
- * Håndterer også nivå-oppgang og økt hastighet.
- */
 function clearLines() {
     let linesCleared = 0;
     for (let r = ROWS - 1; r >= 0; r--) {
@@ -328,33 +273,24 @@ function clearLines() {
     }
 
     if (linesCleared > 0) {
-        // Poengsystem (enkelt)
-        let points = linesCleared * 100; // FIKS: Definerte 'points'
+        let points = linesCleared * 100;
         if (linesCleared === 4) points = 800; 
         
         score += points * level; 
         scoreElement.textContent = score;
 
-        // Oppdater nivå
         linesClearedTotal += linesCleared;
         
         const linesPerLevel = 10;
         let newLevel = Math.floor(linesClearedTotal / linesPerLevel) + 1;
-        
-        // Beregn linjer for denne level'en
         let currentLevelLines = linesClearedTotal % linesPerLevel;
         
-        // Oppdater UI
-        linesElement.textContent = `Linjer: ${currentLevelLines} / ${linesPerLevel}`; // FIKS: Brukte linesPerLevel
+        linesElement.textContent = `Linjer: ${currentLevelLines} / ${linesPerLevel}`;
 
         if (newLevel > level) {
             level = newLevel;
             levelElement.textContent = level;
-            
-            // Øk farten (minimum 100ms)
-            dropSpeed = Math.max(100, 800 - (level - 1) * 50); // FIKS: La til manglende logikk
-                
-            // Restart intervallet med ny hastighet
+            dropSpeed = Math.max(100, 800 - (level - 1) * 50);
             clearInterval(gameInterval);
             gameInterval = setInterval(gameLoop, dropSpeed);
         }
@@ -363,13 +299,16 @@ function clearLines() {
 
 /**
  * Viser Game Over-skjermen.
+ * MODIFISERT: Kaller nå checkAndSaveHighscore.
  */
 function showGameOver() {
     gameOverElement.style.display = 'block';
+    // Kaller highscore-sjekken når spillet er over
+    checkAndSaveHighscore(score);
 }
 
 /**
- * Hoved spill-loop funksjon (ett "tick").
+ * Hoved spill-loop funksjon.
  */
 function gameLoop() {
     if (gameOver || isPaused) return;
@@ -383,16 +322,14 @@ function gameLoop() {
             spawnPiece();
         }
     }
-    draw(); // FIKS: La til manglende draw()
+    draw();
 }
 
 // ===================================================================
 // SEKSJON 4: KONTROLLER OG SPILLSTYRING
 // ===================================================================
 
-/**
- * Pauser eller fortsetter spillet.
- */
+/* ... (togglePause og handleKeyDown er uendret) ... */
 function togglePause() {
     if (gameOver) return;
     isPaused = !isPaused; 
@@ -408,10 +345,6 @@ function togglePause() {
         draw(); 
     }
 }
-
-/**
- * Håndterer tastetrykk fra brukeren.
- */
 function handleKeyDown(event) {
     if (event.key === 'p' || event.key === 'P') {
         event.preventDefault();
@@ -458,6 +391,7 @@ function handleKeyDown(event) {
 
 /**
  * Starter (eller restarter) spillet.
+ * MODIFISERT: Kaller nå loadHighscores().
  */
 function startGame() {
     createEmptyBoard();
@@ -471,20 +405,22 @@ function startGame() {
     dropSpeed = 800;
     isPaused = false; 
 
-    // FIKS: Fjernet duplikat 'spawnPiece()'
-    nextPiece = generateNewPiece(); // Lag den FØRSTE neste brikken
-    spawnPiece(); // Flytter "next" til "active" og lager en ny "next"
+    nextPiece = generateNewPiece();
+    spawnPiece();
 
     // Oppdater UI
     scoreElement.textContent = '0';
     levelElement.textContent = '1';
-    linesElement.textContent = 'Linjer: 0 / 10'; // NY LINJE
+    linesElement.textContent = 'Linjer: 0 / 10';
     gameOverElement.style.display = 'none';
     pauseMessage.style.display = 'none'; 
     pauseButton.textContent = 'Pause'; 
     
     if (gameInterval) clearInterval(gameInterval);
     gameInterval = setInterval(gameLoop, dropSpeed);
+    
+    // NYTT KALL: Last inn highscores når spillet starter
+    loadHighscores();
     
     draw(); 
 }
@@ -495,7 +431,98 @@ function startGame() {
 
 document.addEventListener('keydown', handleKeyDown);
 pauseButton.addEventListener('click', togglePause);
-restartButton.addEventListener('click', startGame); // NY LINJE
+restartButton.addEventListener('click', startGame);
 
 // Start selve spillet
 startGame();
+
+
+// ===================================================================
+// SEKSJON 6: HIGHSCORE-LOGIKK (NY)
+// ===================================================================
+
+/**
+ * Laster highscores.
+ * (Stubbe: erstatt med databasekall)
+ */
+async function loadHighscores() {
+    console.log("Laster highscores...");
+    // --- DATABASE-STUBBE (START) ---
+    // Her ville du gjort et 'fetch' kall til din database, f.eks:
+    // const response = await fetch('/api/highscores');
+    // highscores = await response.json();
+    
+    // For nå bruker vi falsk data:
+    highscores = [
+        { name: 'TOP', score: 10000 },
+        { name: 'MID', score: 5000 },
+        { name: 'LOW', score: 1000 }
+    ];
+    // --- DATABASE-STUBBE (SLUTT) ---
+
+    displayHighscores();
+}
+
+/**
+ * Viser highscore-listen i HTML.
+ */
+function displayHighscores() {
+    // Tømmer listen først
+    highscoreListElement.innerHTML = '';
+
+    // Sorterer og tar de 10 beste
+    const top10 = highscores
+        .sort((a, b) => b.score - a.score) // Sorter synkende
+        .slice(0, 10); // Ta bare de 10 første
+
+    // Lager HTML for hver score
+    top10.forEach((scoreItem, index) => {
+        const li = document.createElement('li');
+        
+        // <span> for "1. AAA"
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = `${index + 1}. ${scoreItem.name}`;
+        
+        // <strong> for poengsummen
+        const scoreStrong = document.createElement('strong');
+        scoreStrong.textContent = scoreItem.score;
+        
+        li.appendChild(nameSpan);
+        li.appendChild(scoreStrong);
+        highscoreListElement.appendChild(li);
+    });
+}
+
+/**
+ * Sjekker om en ny score er en highscore og lagrer den.
+ * (Stubbe: erstatt med databasekall)
+ * @param {number} newScore Den nye poengsummen
+ */
+async function checkAndSaveHighscore(newScore) {
+    // Sjekk om listen er full (10) og om den nye scoren er lavere enn den laveste
+    const lowestScore = highscores.length < 10 ? 0 : highscores.sort((a, b) => a.score - b.score)[0].score;
+
+    if (newScore > lowestScore) {
+        // Ny highscore!
+        const name = prompt('Ny highscore! Skriv inn navnet ditt (3 bokstaver):', 'AAA');
+        
+        if (name && name.trim() !== '') {
+            const finalName = name.trim().substring(0, 3).toUpperCase();
+            
+            // --- DATABASE-STUBBE (START) ---
+            // Her ville du gjort et 'fetch' kall for å lagre:
+            // await fetch('/api/highscores', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ name: finalName, score: newScore })
+            // });
+            
+            // For demo: bare oppdater den lokale listen og last på nytt
+            highscores.push({ name: finalName, score: newScore });
+            // --- DATABASE-STUBBE (SLUTT) ---
+
+            // Last listen på nytt (som henter fra DB i en ekte app)
+            displayHighscores(); // I en ekte app, ville du kalt loadHighscores()
+        }
+    }
+}
