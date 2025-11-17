@@ -35,7 +35,6 @@
         </div>
 
         <div id="side-container">
-            
             <div class="side-panel">
                 <h3>Neste</h3>
                 <canvas id="next-canvas" class="side-canvas" width="80" height="80"></canvas>
@@ -54,8 +53,21 @@
 
             <button id="pause-button" class="side-button">Pause</button>
             <button id="restart-button" class="side-button">Start på nytt</button>
-
         </div>
-    </div> <script src="script.js" defer></script>
+    </div> 
+
+    <div id="highscore-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Ny Highscore!</h2>
+            <p>Gratulerer! Du kom på topplisten.</p>
+            <p>Skriv inn navnet ditt (maks 6 tegn):</p>
+            
+            <input type="text" id="player-name-input" maxlength="6" placeholder="NAVN" autocomplete="off">
+            
+            <button id="save-score-button" class="side-button highlight-btn">Lagre Score</button>
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
 </body>
 </html>
