@@ -258,11 +258,14 @@ function clearLines() {
     }
 
     if (linesCleared > 0) {
-        // ENDRET: Nytt poengsystem med bonus for flere linjer samtidig
-        // Indeks 1 = 1 linje (100p), Indeks 2 = 2 linjer (300p), osv.
-        const linePoints = [0, 100, 300, 500, 800];
+        // ENDRET: Oppdatert poengsystem
+        // Indeks 1 = 1 linje (100p)
+        // Indeks 2 = 2 linjer (300p)
+        // Indeks 3 = 3 linjer (600p)
+        // Indeks 4 = 4 linjer (1000p)
+        const linePoints = [0, 100, 300, 600, 1000];
         
-        // Hent poeng fra tabellen, eller bruk standard 100 pr linje hvis noe rart skjer
+        // Hent poeng fra tabellen
         let points = linePoints[linesCleared] || (linesCleared * 100);
         
         score += points * level; 
@@ -337,7 +340,6 @@ function handleKeyDown(event) {
     }
     if (gameOver || isPaused) return;
 
-    // ENDRET: Lagt til WASD-støtte i switch-casene
     switch (event.key) {
         case 'ArrowLeft':
         case 'a':
@@ -434,17 +436,20 @@ nameInput.addEventListener('keyup', function(event) {
 startGame();
 
 // ===================================================================
-// SEKSJON 6: HIGHSCORE-LOGIKK MED MODAL
+// SEKSJON 6: HIGHSCORE-LOGIKK (MED API-STI)
 // ===================================================================
 
 async function loadHighscores() {
-    // Falsk data for testing
-    highscores = [
-        { name: 'TETRIS', score: 10000 },
-        { name: 'PRO', score: 5000 },
-        { name: 'NOOB', score: 1000 }
-    ];
-    displayHighscores();
+    try {
+        // MERK: Bruker 'api/' foran filnavnet
+        const response = await fetch('api/get_scores.php'); 
+        highscores = await response.json();
+        displayHighscores();
+    } catch (error) {
+        console.error("Kunne ikke laste highscores:", error);
+        highscores = []; 
+        displayHighscores();
+    }
 }
 
 function displayHighscores() {
@@ -466,7 +471,7 @@ function displayHighscores() {
 function checkAndSaveHighscore(newScore) {
     let lowestScore = 0;
     if (highscores.length >= 10) {
-        lowestScore = highscores.sort((a, b) => a.score - b.score)[0].score;
+        lowestScore = highscores[highscores.length - 1].score;
     }
 
     if (highscores.length < 10 || newScore > lowestScore) {
@@ -477,15 +482,31 @@ function checkAndSaveHighscore(newScore) {
     }
 }
 
-function saveCurrentHighscore() {
+async function saveCurrentHighscore() {
     const name = nameInput.value.trim();
     
     if (name) {
         const finalName = name.substring(0, 6).toUpperCase();
-        highscores.push({ name: finalName, score: pendingScore });
-        displayHighscores();
-        modalElement.classList.add('hidden');
-        pendingScore = 0;
+        
+        try {
+            // MERK: Bruker 'api/' foran filnavnet
+            await fetch('api/save_score.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: finalName, score: pendingScore })
+            });
+
+            modalElement.classList.add('hidden');
+            pendingScore = 0;
+
+            loadHighscores();
+
+        } catch (error) {
+            console.error("Feil ved lagring:", error);
+            alert("Noe gikk galt ved lagring av score.");
+        }
     } else {
         alert("Skriv inn navnet ditt!");
     }
