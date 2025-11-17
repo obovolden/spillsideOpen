@@ -1,11 +1,11 @@
 <?php
 header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *"); // Tillat tilgang (kan fjernes hvis filene ligger på samme domene)
+header("Access-Control-Allow-Origin: *");
 
 require 'db_connect.php';
 
-// SQL for å hente topp 10 sortert etter score (høyest først)
-$sql = "SELECT name, score FROM scores ORDER BY score DESC LIMIT 10";
+// ENDRET HER: Bytter ut 'scores' med 'tetris_scores'
+$sql = "SELECT name, score FROM tetris_scores ORDER BY score DESC LIMIT 10";
 $result = $conn->query($sql);
 
 $scores = array();

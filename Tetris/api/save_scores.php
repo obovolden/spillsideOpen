@@ -4,16 +4,15 @@ header("Access-Control-Allow-Origin: *");
 
 require 'db_connect.php';
 
-// Hent JSON-data fra spillet
 $data = json_decode(file_get_contents("php://input"));
 
 if (isset($data->name) && isset($data->score)) {
     $name = $data->name;
     $score = $data->score;
 
-    // Bruk "Prepared Statements" for å hindre SQL-injection (sikkerhet)
-    $stmt = $conn->prepare("INSERT INTO scores (name, score) VALUES (?, ?)");
-    $stmt->bind_param("si", $name, $score); // "s" betyr string, "i" betyr integer
+    // ENDRET HER: Bytter ut 'scores' med 'tetris_scores'
+    $stmt = $conn->prepare("INSERT INTO tetris_scores (name, score) VALUES (?, ?)");
+    $stmt->bind_param("si", $name, $score);
 
     if ($stmt->execute()) {
         echo json_encode(["message" => "Score lagret suksessfullt"]);
