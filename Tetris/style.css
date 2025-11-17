@@ -237,3 +237,81 @@ canvas.side-canvas {
     font-weight: 700;
     color: #f9fafb;
 }
+
+/* ... (Resten av CSS-filen er lik som før) ... */
+
+/* =================================================================== */
+/* SEKSJON 7: HIGHSCORE MODAL (POPUP) - (NY)                           */
+/* =================================================================== */
+
+/* Bakgrunnen som dekker hele skjermen */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Mørk, gjennomsiktig bakgrunn */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; /* Sørger for at den ligger over ALT annet */
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* Klasse for å skjule modalen */
+.modal.hidden {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Selve boksen i midten */
+.modal-content {
+    background-color: #1f2937;
+    border: 2px solid #60a5fa; /* Blå kant */
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(96, 165, 250, 0.3); /* "Glow" effekt */
+    width: 300px;
+}
+
+.modal-content h2 {
+    color: #60a5fa;
+    margin-top: 0;
+}
+
+/* Input-feltet */
+#player-name-input {
+    background-color: #111827;
+    border: 1px solid #4b5563;
+    border-radius: 8px;
+    color: #f9fafb;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    text-align: center;
+    padding: 12px;
+    margin: 16px 0;
+    width: 100%;
+    box-sizing: border-box;
+    text-transform: uppercase; /* Tvinger store bokstaver visuelt */
+    letter-spacing: 2px;
+}
+
+#player-name-input:focus {
+    outline: none;
+    border-color: #60a5fa;
+}
+
+/* Spesifikk stil for Lagre-knappen */
+.highlight-btn {
+    background-color: #2563eb; /* Litt sterkere blå */
+    width: 100%;
+    margin-top: 8px;
+}
+
+.highlight-btn:hover {
+    background-color: #3b82f6;
+}
