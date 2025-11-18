@@ -2,8 +2,8 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Breakout Spill</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Breakout Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,22 +11,36 @@
     <div class="game-wrapper">
 
         <div id="highscore-panel">
-            <h2>Topp 10</h2>
+            <h2>Toppliste</h2>
             <ol id="highscore-list">
                 <li>Laster...</li>
             </ol>
         </div>
 
-        <div class="game-area">
+        <div class="game-area shaker">
             <h1>Breakout</h1>
-            <canvas id="gameCanvas" width="480" height="320"></canvas>
+            <div class="canvas-container">
+                <canvas id="gameCanvas"></canvas>
+                <div id="pauseOverlay">PAUSE</div>
+            </div>
+            <p class="instructions">Powerups: [W] Bredere | [M] Multiball | [L] Ekstra Liv</p>
         </div>
 
-    </div> <div id="gameOverModal" class="modal">
+    </div> 
+    
+    <div id="gameOverModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Game Over</h2>
             <p id="modalMessage"></p>
-            <button id="restartButton">Start på nytt</button>
+            
+            <div id="highscoreInputArea" style="display:none; margin: 15px 0;">
+                <input type="text" id="playerName" placeholder="Ditt navn" maxlength="10">
+                <button id="saveScoreBtn">Lagre Score</button>
+            </div>
+
+            <div class="modal-buttons">
+                <button id="restartButton">Start på nytt</button>
+            </div>
         </div>
     </div>
 

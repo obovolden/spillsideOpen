@@ -3,101 +3,209 @@
 /* =================================================================== */
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif;
-    background-color: #1a1a1a; /* Mørk bakgrunn */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+    /* Dyp, mørk bakgrunn */
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
     color: #f0f0f0;
     display: flex;
-    /* ENDRET: Senterer nå .game-wrapper, ikke spillet direkte */
     align-items: center; 
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
-    overflow: hidden; /* Skjul scrollbars */
+    overflow: hidden;
+    touch-action: none;
 }
-
-/* ENDRET: h1 er nå inni .game-area */
-.game-area h1 {
-    color: #0095DD;
-    margin-bottom: 16px;
-    margin-top: 0; /* Fjernet toppmargen */
-}
-
-/* =================================================================== */
-/* SEKSJON 2: NY LAYOUT (TOPPLISTE + SPILL)                          */
-/* =================================================================== */
 
 .game-wrapper {
     display: flex;
-    flex-direction: row; /* Kolonner side-om-side */
-    align-items: flex-start; /* Juster til toppen */
-    gap: 30px; /* Mellomrom mellom liste og spill */
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 30px;
+    padding: 20px;
+    max-width: 100%;
 }
 
 .game-area {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    max-width: 600px;
 }
+
+.game-area h1 {
+    color: #0095DD;
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    text-shadow: 0 0 10px rgba(0, 149, 221, 0.7);
+}
+
+.instructions {
+    font-size: 12px;
+    color: #888;
+    margin-top: 8px;
+    font-family: 'Courier New', monospace;
+}
+
+/* =================================================================== */
+/* SEKSJON 2: SCREEN SHAKE ANIMASJON                                 */
+/* =================================================================== */
+
+@keyframes shakeAnim {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.shaker.active {
+    animation: shakeAnim 0.5s;
+    animation-iteration-count: 1;
+}
+
+/* =================================================================== */
+/* SEKSJON 3: RESPONSIVT LERRET                                      */
+/* =================================================================== */
+
+.canvas-container {
+    position: relative;
+    width: 100%;
+}
+
+canvas {
+    background-color: #050505;
+    display: block;
+    border: 2px solid #0095DD;
+    border-radius: 8px;
+    box-shadow: 0 0 25px rgba(0, 149, 221, 0.4); /* Ytre glød */
+    width: 100%; 
+    height: auto; 
+}
+
+#pauseOverlay {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 0 10px #fff;
+    pointer-events: none;
+}
+
+/* =================================================================== */
+/* SEKSJON 4: TOPPLISTE & MODAL                                      */
+/* =================================================================== */
 
 #highscore-panel {
     width: 200px;
-    background-color: #000;
-    border: 3px solid #0095DD;
+    background-color: rgba(17, 17, 17, 0.9);
+    border: 1px solid #0095DD;
+    box-shadow: 0 0 15px rgba(0, 149, 221, 0.2);
     border-radius: 8px;
-    padding: 10px 15px 15px 15px;
-    box-shadow: 0 0 15px rgba(0, 149, 221, 0.5);
-    /* Sørger for at høyden matcher canvas + h1 */
-    height: 375px; 
-    overflow-y: auto; /* Scroll hvis listen blir for lang */
+    padding: 15px;
+    height: 400px; 
+    overflow-y: auto;
 }
 
 #highscore-panel h2 {
     color: #0095DD;
     text-align: center;
-    margin: 5px 0 15px 0;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #0095DD;
+    margin-top: 0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
 }
 
 #highscore-list {
-    list-style: decimal; /* 1. 2. 3. */
-    color: #f0f0f0;
-    padding-left: 30px; /* Plass til tallene */
+    padding-left: 25px;
     margin: 0;
 }
 
 #highscore-list li {
-    font-size: 16px;
     margin-bottom: 8px;
+    font-size: 14px;
+    color: #ccc;
 }
 
-/* =================================================================== */
-/* SEKSJON 3: SPILL-LERRET (CANVAS)                                  */
-/* =================================================================== */
-
-canvas {
-    background-color: #000; /* Svart bakgrunn for lerretet */
-    display: block;
-    border: 3px solid #0095DD; /* En tydelig kant */
-    border-radius: 8px; /* Avrundede hjørner */
-    box-shadow: 0 0 15px rgba(0, 149, 221, 0.5);
-}
-
-/* =================================================================== */
-/* SEKSJON 4: MODAL (GAME OVER / VUNNET)                             */
-/* =================================================================== */
-/* ... (Resten av modal-CSSen din er uendret) ... */
 .modal {
-    position: fixed; /* Bli på plass */
-    z-index: 10; /* Sitte på toppen */
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Svart med opasitet */
-    
+    position: fixed;
+    z-index: 20;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
     display: none; 
     align-items: center;
     justify-content: center;
 }
-/* ... (etc) ... */
+
+.modal-content {
+    background-color: #1a1a1a;
+    padding: 30px;
+    border: 2px solid #0095DD;
+    box-shadow: 0 0 30px rgba(0, 149, 221, 0.5);
+    border-radius: 10px;
+    text-align: center;
+    width: 80%;
+    max-width: 300px;
+}
+
+button {
+    background: linear-gradient(to bottom, #0095DD, #0077b3);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+button:hover {
+    background: linear-gradient(to bottom, #00AADD, #0088cc);
+}
+
+input[type="text"] {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #333;
+    color: white;
+    width: 70%;
+    text-align: center;
+}
+
+/* =================================================================== */
+/* SEKSJON 5: MOBIL                                                  */
+/* =================================================================== */
+
+@media (max-width: 768px) {
+    .game-wrapper {
+        flex-direction: column-reverse;
+        align-items: center;
+        padding: 10px;
+        gap: 20px;
+    }
+
+    #highscore-panel {
+        width: 100%;
+        max-width: 600px;
+        height: 150px;
+    }
+    
+    .game-area h1 {
+        font-size: 20px;
+    }
+}
