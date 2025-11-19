@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <title>Mini Monster Spill</title>
+    <link rel="stylesheet" type="css/text" href="css/style.css">
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <div id="battle-screen">
+        <div class="battle-ui">
+            <h3 id="enemy-name">Vill Monster</h3>
+            <p>HP: <span id="enemy-hp">20</span></p>
+        </div>
+        
+        <div style="text-align: center;">
+            <div style="width: 100px; height: 100px; background: red; margin: 0 auto;"></div>
+            <p>VS</p>
+            <div style="width: 100px; height: 100px; background: blue; margin: 0 auto;"></div>
+        </div>
+
+        <div class="battle-ui">
+            <h3 id="player-name">Deg</h3>
+            <button onclick="attack()">ANGRIPI (Tackle)</button>
+            <button onclick="runAway()">RØM</button>
+            <p id="battle-log">Et monster dukket opp!</p>
+        </div>
+    </div>
+</div>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>
