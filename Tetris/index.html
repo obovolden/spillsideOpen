@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Klassisk Tetris</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -11,7 +11,7 @@
 
     <div id="app-wrapper">
 
-        <div id="highscore-container">
+        <div id="highscore-container" class="desktop-only">
             <div class="side-panel">
                 <h3>Topp 10</h3>
                 <ol id="highscore-list"></ol>
@@ -31,7 +31,21 @@
                 <div id="pause-message">PAUSE</div>
             </div>
             
-            <p class="instructions">Piltaster: Flytte/Rotere. Mellomrom: Hard Drop. C: Hold. P: Pause.</p>
+            <div id="mobile-controls">
+                <div class="control-row">
+                    <button id="btn-rotate" class="control-btn round-btn">↻</button>
+                </div>
+                <div class="control-row">
+                    <button id="btn-left" class="control-btn">←</button>
+                    <button id="btn-down" class="control-btn">↓</button>
+                    <button id="btn-right" class="control-btn">→</button>
+                </div>
+                <div class="control-row">
+                    <button id="btn-drop" class="control-btn wide-btn">DROP</button>
+                </div>
+            </div>
+
+            <p class="instructions desktop-only">Piltaster: Flytte/Rotere. Mellomrom: Hard Drop. C: Hold. P: Pause.</p>
         </div>
 
         <div id="side-container">
@@ -60,7 +74,7 @@
         <div class="modal-content">
             <h2>Ny Highscore!</h2>
             <p>Gratulerer! Du kom på topplisten.</p>
-            <p>Skriv inn navnet ditt (maks 6 tegn):</p>
+            <p>Skriv inn navnet ditt (ingen mellomrom):</p>
             
             <input type="text" id="player-name-input" maxlength="6" placeholder="NAVN" autocomplete="off">
             
