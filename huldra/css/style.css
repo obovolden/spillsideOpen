@@ -1,50 +1,134 @@
-        body {
-            background-color: #222;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Courier New', Courier, monospace;
-            color: white;
-        }
+/* --- GENERELT UTSEENDE --- */
+body {
+    background-color: #202020;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Courier New', Courier, monospace;
+    color: white;
+}
 
-        #game-container {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            border: 4px solid #eee;
-        }
+#game-container {
+    position: relative;
+    width: 800px; 
+    height: 600px;
+    background-color: #92b88f; /* Matcher bakgrunnen på player.png */
+    border: 10px solid #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden; /* Sikrer at ingenting stikker utenfor rammen */
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
 
-        canvas {
-            background-color: #4CAF50; /* Grønt gress */
-            display: block;
-        }
+/* --- KART OG VERDEN --- */
+.tile { width: 40px; height: 40px; position: absolute; box-sizing: border-box; }
 
-        /* Kamp-skjermen (skjult som standard) */
-        #battle-screen {
-            display: none; 
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: white;
-            color: black;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+.tree { 
+    background-color: #2d6b28; 
+    border: 2px solid #1e4a1b; 
+    border-radius: 50%; 
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.2); 
+}
 
-        .battle-ui {
-            border: 2px solid black;
-            padding: 10px;
-            background: #f0f0f0;
-        }
+.tall-grass { 
+    background-color: #5ba353; 
+    opacity: 0.7; 
+    border-bottom: 2px solid #366b30; 
+}
 
-        button {
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+#player {
+    width: 36px; height: 36px; position: absolute; top: 0; left: 0; z-index: 10;
+    transition: top 0.2s, left 0.2s; image-rendering: pixelated;
+}
+
+/* --- KAMPSKJERM --- */
+#battle-screen {
+    display: none;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to bottom, #f8f8f8 50%, #404040 50%);
+    z-index: 100; color: black;
+    flex-direction: column;
+}
+
+/* Soner */
+.enemy-zone { 
+    height: 50%; 
+    position: relative; /* Viktig for plassering av elementer inni */
+}
+
+.player-zone { 
+    height: 50%; 
+    background-color: #dcdcdc; 
+    position: relative; /* Viktig for plassering av elementer inni */
+}
+
+/* Sprites (Pokemon bilder) */
+#enemy-sprite {
+    font-size: 100px;
+    position: absolute;
+    bottom: 40px;
+    right: 100px;
+}
+
+#player-sprite {
+    font-size: 100px;
+    position: absolute;
+    bottom: 0px; /* Pingvinen står på bunnen av skjermen */
+    left: 50px;
+    animation: bounce 2s infinite;
+    z-index: 2; /* Sørg for at den står foran bakgrunnen */
+}
+
+/* STATS BOKSER (HP) */
+.stats-box {
+    background: #f0f0d0;
+    border: 3px solid #555;
+    border-radius: 5px;
+    padding: 10px;
+    width: 240px;
+    box-shadow: 3px 3px 0px rgba(0,0,0,0.3);
+    position: absolute; /* Fast plassering */
+    z-index: 5;
+}
+
+/* Plassering av stats-bokser */
+.enemy-stats { top: 30px; left: 30px; }
+.player-stats { top: -40px; right: 30px; background-color: #fff; }
+
+/* HP Bar utseende */
+.hp-container {
+    display: flex; align-items: center; background: #555; padding: 2px;
+    border-radius: 10px; margin-top: 5px;
+}
+.hp-text { color: #ffcc00; font-weight: bold; font-size: 10px; margin-right: 5px; }
+.hp-bar { width: 100%; height: 10px; background-color: #333; border-radius: 5px; overflow: hidden; }
+.hp-fill { width: 100%; height: 100%; background-color: #4caf50; transition: width 0.5s ease-out; }
+#player-hp-numbers { font-size: 12px; text-align: right; margin: 5px 0 0 0; }
+
+/* MENY OG KNAPPER */
+#menu-box { 
+    background: white; 
+    border: 4px double #333; 
+    padding: 15px; 
+    border-radius: 10px; 
+    width: 45%; 
+    height: 130px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.moves-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.move-btn { padding: 8px; font-size: 12px; border: 2px solid #555; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+.move-btn:active { transform: scale(0.95); }
+
+/* Farger på knapper */
+.water { background-color: #6890F0; color: white; }
+.normal { background-color: #A8A878; color: black; }
+.flying { background-color: #A890F0; color: white; }
+.run-btn { background-color: #ffcc00; border: 2px solid #cca300; font-size: 12px; width: 100%; cursor: pointer; }
+
+/* Animasjon */
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
