@@ -3,31 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Endless Knight</title>
+    <title>Endless Knight - Fullscreen</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Endless Knight</h1>
 
-    <div id="main-container">
-        
-        <div id="game-container">
-            <canvas id="gameCanvas"></canvas>
+    <button id="fullscreen-btn">⛶ Fullskjerm</button>
 
-            <div id="game-over-screen" style="display: none;">
-                <h2>Game Over!</h2>
-                <p>Din poengsum: <strong id="final-gold">0</strong> gull</p>
-                <input type="text" id="username-input" placeholder="Skriv inn navn...">
-                <button id="save-score-btn">Lagre og start på nytt</button>
-            </div>
+    <div id="highscore-container">
+        <h3>🏆 Top 5 🏆</h3>
+        <ol id="highscore-list"></ol>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="game-over-screen" style="display: none;">
+            <h2>Game Over!</h2>
+            <p>Din poengsum: <strong id="final-gold">0</strong> gull</p>
+            <input type="text" id="username-input" placeholder="Skriv inn navn...">
+            <button id="save-score-btn">Lagre og start på nytt</button>
         </div>
-
-        <div id="highscore-container">
-            <h3>🏆 Highscore 🏆</h3>
-            <ol id="highscore-list">
-                </ol>
-        </div>
-
     </div>
     
     <script src="game.js"></script>
