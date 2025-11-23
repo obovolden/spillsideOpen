@@ -1,0 +1,181 @@
+body {
+    background-color: #121212;
+    color: white;
+    font-family: 'Arial Black', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden; /* Hindrer scrolling med piltastene */
+}
+
+.main-layout {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    margin: 0 0 10px 0;
+    text-shadow: 2px 2px #d62f2f;
+    font-size: 32px;
+}
+
+canvas {
+    background-color: #000;
+    display: block;
+}
+
+#tetris {
+    border: 5px solid #d62f2f; /* Red Bull Rød */
+    box-shadow: 0 0 30px rgba(214, 47, 47, 0.3);
+}
+
+.score-board {
+    margin-top: 5px;
+    background: #333;
+    width: 360px; /* Samme bredde som spillet */
+    text-align: center;
+    padding: 10px 0;
+    border-bottom: 5px solid #f0db4f; /* Red Bull Gul */
+}
+
+.score-board .label {
+    font-size: 12px;
+    color: #aaa;
+    letter-spacing: 2px;
+}
+
+#score {
+    font-size: 36px;
+    color: white;
+}
+
+/* --- SIDEPANEL --- */
+.side-panel {
+    width: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 60px; /* Juster for å treffe midten av spillet */
+}
+
+.info-box {
+    background: #1e1e1e;
+    border: 2px solid #444;
+    padding: 10px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.info-box canvas {
+    margin: 0 auto;
+    border: 1px solid #333;
+}
+
+.label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.stats-box {
+    background: #333;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: left;
+    border-left: 4px solid #0DC2FF; /* Cyan stripe */
+}
+
+/* --- COMBO STYLING --- */
+.combo-box {
+    background: #222; /* Mørk som standard */
+    border: 2px solid #444;
+    padding: 15px;
+    text-align: center;
+    border-radius: 10px;
+    transition: transform 0.1s, background 0.2s;
+}
+
+.combo-label {
+    font-size: 14px;
+    color: #666;
+}
+
+.combo-number {
+    font-size: 40px;
+    line-height: 40px;
+    color: #444; /* Mørkt tall når inaktiv */
+}
+
+/* Når combo er aktiv (JS legger til denne klassen) */
+.combo-box.active {
+    background: linear-gradient(45deg, #d62f2f, #ff0055);
+    border-color: white;
+    box-shadow: 0 0 20px rgba(214, 47, 47, 0.8);
+    transform: scale(1.1);
+}
+
+.combo-box.active .combo-label {
+    color: white;
+}
+
+.combo-box.active .combo-number {
+    color: white;
+    text-shadow: 3px 3px 0px black;
+}
+
+.instructions {
+    font-size: 11px;
+    color: #777;
+    font-family: monospace;
+    background: #111;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.instructions p { margin: 4px 0; }
+
+button {
+    padding: 15px;
+    background-color: #f0db4f;
+    border: none;
+    font-weight: 900;
+    cursor: pointer;
+    font-size: 14px;
+    text-transform: uppercase;
+    clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%);
+}
+
+button:hover {
+    background-color: #fff;
+    transform: scale(1.05);
+}
+
+/* Legg dette til i bunnen av CSS-filen eller ved siden av combo-reglene */
+
+.combo-bar-bg {
+    width: 100%;
+    height: 10px;
+    background-color: #111;
+    border-radius: 5px;
+    margin-top: 10px;
+    overflow: hidden;
+    border: 1px solid #444;
+}
+
+#combo-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f0db4f, #d62f2f); /* Gul til Rød */
+    width: 0%;
+    transition: width 0.1s linear; /* Jevn bevegelse */
+    box-shadow: 0 0 10px #d62f2f;
+}
