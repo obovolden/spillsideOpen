@@ -2,36 +2,62 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <title>Mini Monster Spill</title>
-    <link rel="stylesheet" type="css/text" href="css/style.css">
+    <title>Poké-klone JS</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<div id="game-container">
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-    <div id="battle-screen">
-        <div class="battle-ui">
-            <h3 id="enemy-name">Vill Monster</h3>
-            <p>HP: <span id="enemy-hp">20</span></p>
-        </div>
+    <div id="game-container">
+        <div id="world"></div>
         
-        <div style="text-align: center;">
-            <div style="width: 100px; height: 100px; background: red; margin: 0 auto;"></div>
-            <p>VS</p>
-            <div style="width: 100px; height: 100px; background: blue; margin: 0 auto;"></div>
-        </div>
+        <img id="player" src="player.png" alt="Spiller">
 
-        <div class="battle-ui">
-            <h3 id="player-name">Deg</h3>
-            <button onclick="attack()">ANGRIPI (Tackle)</button>
-            <button onclick="runAway()">RØM</button>
-            <p id="battle-log">Et monster dukket opp!</p>
+        <div id="battle-screen">
+            
+            <div class="enemy-zone">
+                <div class="stats-box enemy-stats">
+                    <h3>Pidgey <span style="font-size:12px; color:#555;">Lv.3</span></h3>
+                    <div class="hp-container">
+                        <div class="hp-text">HP</div>
+                        <div class="hp-bar">
+                            <div id="enemy-hp-fill" class="hp-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="enemy-sprite">🐦</div>
+            </div>
+
+            <div class="player-zone">
+                
+                <div class="stats-box player-stats">
+                    <h3>Piplup <span style="font-size:12px; color:#555;">Lv.5</span></h3>
+                    <div class="hp-container">
+                        <div class="hp-text">HP</div>
+                        <div class="hp-bar">
+                            <div id="player-hp-fill" class="hp-fill"></div>
+                        </div>
+                    </div>
+                    <p id="player-hp-numbers">100 / 100</p>
+                </div>
+
+                <div id="player-sprite">🐧</div>
+
+                <div id="menu-box">
+                    <p id="battle-text">Hva vil Piplup gjøre?</p>
+                    
+                    <div class="moves-grid" id="moves-div">
+                        <button class="move-btn water" onclick="playerTurn('Bubble')">Bubble</button>
+                        <button class="move-btn normal" onclick="playerTurn('Tackle')">Tackle</button>
+                        <button class="move-btn flying" onclick="playerTurn('Peck')">Peck</button>
+                        <button class="move-btn water" onclick="playerTurn('Hydro Pump')">Hydro Pump</button>
+                    </div>
+                    <button class="run-btn" onclick="runAway()">Løp vekk (Run)</button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="js/script.js"></script>
-
+    <script src="js/script.js"></script>
 </body>
 </html>

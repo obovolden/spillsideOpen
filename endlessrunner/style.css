@@ -1,128 +1,95 @@
-/* Setter hele siden til en mørk modus */
+/* Nullstill alt og fjern scrolling */
 body {
-    background-color: #1a1a1a; /* Mørk bakgrunn */
-    color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start; /* Justert til toppen */
     margin: 0;
-    height: 100vh;
     padding: 0;
-    overflow-y: auto; /* Tillat scrolling hvis listen er lang */
+    overflow: hidden; /* Fjerner scrollbars */
+    background-color: #1a1a1a;
+    font-family: Arial, sans-serif;
+    width: 100vw;
+    height: 100vh;
 }
 
-h1 {
-    margin: 10px 0;
-}
-
-/* NYTT: Hoved-container som holder spill og highscore */
-#main-container {
-    display: flex;
-    flex-wrap: wrap; /* Lar highscore hoppe under på små skjermer */
-    justify-content: center;
-    align-items: flex-start;
-    gap: 20px;
-    width: 100%;
-}
-
-/* NYTT: Container rundt spillet, VIKTIG for 'position' */
+/* Spillet dekker hele skjermen */
 #game-container {
-    position: relative; /* Lar oss plassere "Game Over" oppå */
-    width: 1200px;
-    max-width: 95%; /* Litt padding på sidene */
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
-/* Selve spill-lerretet */
+/* Lerretet fyller containeren */
 #gameCanvas {
-    background-color: #2b2b2b;
-    border: 2px solid white;
-    max-width: 100%;
-    height: auto; /* Beholder aspect ratio via bredden */
-    aspect-ratio: 1200 / 600; 
-    image-rendering: pixelated;
-    display: block; /* Fjerner rart mellomrom under */
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated; /* Beholder skarp piksel-look */
 }
 
-/* NYTT: Stil for "Game Over"-skjermen */
+/* Fullskjerm-knappen oppe til høyre */
+#fullscreen-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100; /* Ligger over alt annet */
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: 2px solid white;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
+#fullscreen-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Highscore oppe til venstre, semi-gjennomsiktig */
+#highscore-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 50;
+    background-color: rgba(0, 0, 0, 0.5); /* Gjennomsiktig bakgrunn */
+    color: gold;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.3);
+    pointer-events: none; /* Lar deg klikke "gjennom" boksen hvis nødvendig */
+}
+
+#highscore-container h3 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    text-align: left;
+}
+
+#highscore-list {
+    margin: 0;
+    padding-left: 20px;
+    color: white;
+    font-size: 14px;
+}
+
+/* Game Over skjermen - sentrert midt på skjermen */
 #game-over-screen {
-    position: absolute; /* Legger seg oppå canvas */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
     background-color: rgba(0, 0, 0, 0.85);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
-    text-align: center;
+    z-index: 200; /* Må være øverst */
 }
 
-#game-over-screen h2 {
-    font-size: 50px;
-    margin: 0;
-    color: #FF5555;
-}
-
-#game-over-screen p {
-    font-size: 24px;
-    margin: 15px 0;
-}
-
+#game-over-screen h2 { font-size: 60px; margin: 0; color: #FF5555; }
+#game-over-screen p { font-size: 30px; }
 #game-over-screen input {
-    font-size: 18px;
-    padding: 10px;
-    width: 80%;
-    max-width: 300px;
-    border: 2px solid #555;
-    border-radius: 5px;
-    background-color: #333;
-    color: white;
-    margin-bottom: 15px;
+    font-size: 20px; padding: 10px; margin-bottom: 20px;
+    border-radius: 5px; border: none;
 }
-
 #game-over-screen button {
-    font-size: 20px;
-    padding: 12px 25px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-#game-over-screen button:hover {
-    background-color: #45a049;
-}
-
-
-/* NYTT: Stil for Highscore-listen */
-#highscore-container {
-    background-color: #2b2b2b;
-    border: 2px solid white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    width: 300px;
-    max-width: 90%;
-    box-sizing: border-box; /* Sørger for at padding er inkludert i bredden */
-}
-
-#highscore-container h3 {
-    text-align: center;
-    color: #FFD700; /* Gullfarge */
-    margin-top: 5px;
-}
-
-#highscore-list {
-    list-style-type: decimal;
-    padding-left: 30px;
-}
-
-#highscore-list li {
-    font-size: 18px;
-    margin-bottom: 8px;
+    font-size: 24px; padding: 15px 30px;
+    background-color: #4CAF50; color: white;
+    border: none; border-radius: 5px; cursor: pointer;
 }
