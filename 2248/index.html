@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="2248 Puzzle Game Clone">
+    <title>2248 Clone</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <main class="app-container">
+        
+        <aside class="leaderboard-panel" aria-label="Toppliste">
+            <h3>Toppliste</h3>
+            <ul id="leaderboard-list">
+                <li>Laster...</li>
+            </ul>
+        </aside>
+
+        <section class="game-wrapper" aria-label="Spillområde">
+            <header>
+                <section class="scores-wrapper" aria-label="Poengtavle">
+                    <article class="score-container" aria-label="Nåværende poeng">
+                        <span class="score-label">SCORE</span>
+                        <output class="score-value" id="score-display">0</output>
+                    </article>
+                    
+                    <article class="score-container best-container" aria-label="Beste poengsum">
+                        <span class="score-label">BESTE</span>
+                        <output class="score-value" id="best-score-display">0</output>
+                    </article>
+                </section>
+
+                <aside id="preview-container" class="preview-hidden" aria-hidden="true">
+                    <span class="preview-label">SUM</span>
+                    <span id="preview-value"></span>
+                </aside>
+
+                <button class="restart-btn" type="button" onclick="game.restart()" aria-label="Start på nytt">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                </button>
+            </header>
+
+            <div id="game-container">
+                <svg id="connector-canvas" aria-hidden="true"></svg>
+                <div class="grid" id="grid-element" aria-label="Rutenett for brikker">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <dialog class="modal-overlay" id="highscore-modal" aria-modal="true" aria-labelledby="modal-title">
+        <article class="modal-content">
+            <h2 id="modal-title">Game Over!</h2>
+            <p>Din poengsum: <span id="final-score">0</span></p>
+            
+            <label for="player-name" class="visually-hidden">Ditt kallenavn</label>
+            <input type="text" id="player-name" placeholder="Ditt kallenavn" maxlength="15" autocomplete="off">
+            
+            <button type="button" onclick="game.submitHighscore()">Lagre Highscore</button>
+            <p id="api-status" aria-live="polite"></p>
+        </article>
+    </dialog>
+
+    <dialog class="modal-overlay" id="restart-modal" aria-modal="true" aria-labelledby="restart-title">
+        <article class="modal-content">
+            <h2 id="restart-title">Starte på nytt?</h2>
+            <p>Du har <span id="current-score-warning" style="color:var(--accent-color); font-weight:bold;">0</span> poeng. Vil du virkelig avslutte spillet?</p>
+            
+            <div class="modal-buttons">
+                <button class="btn-cancel" id="btn-cancel-restart">Gå tilbake</button>
+                <button class="btn-confirm" id="btn-confirm-restart">Start på nytt</button>
+            </div>
+        </article>
+    </dialog>
+
+</body>
+</html>
