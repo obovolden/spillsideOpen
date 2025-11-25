@@ -1,9 +1,9 @@
 <?php
 // db.php
-$host = 'localhost';      // Din database-host (ofte localhost)
-$db   = 'navn_paa_din_db'; // Navnet på databasen din
-$user = 'ditt_brukernavn'; // Ditt database-brukernavn
-$pass = 'ditt_passord';    // Ditt database-passord
+$host = "localhost";      // Din database-host (ofte localhost)
+$db   = "gzaemhva_highscore"; // Navnet på databasen din
+$user = "gzaemhva_spillbr"; // Ditt database-brukernavn
+$pass = "W0XG7txn2uy6";    // Ditt database-passord
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -20,3 +20,5 @@ try {
     die("Database-feil: " . $e->getMessage());
 }
 ?>
+
+

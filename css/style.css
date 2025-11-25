@@ -519,6 +519,7 @@ section a {
         padding: 1.5rem;
         /* border-top: 1px solid #2a2a2a; <-- Fjernet herfra */
         font-size: 1.1rem;
+        margin: 0;
     }
     /* --- SLUTT PÅ FIKS --- */
 
@@ -553,6 +554,7 @@ section a {
         margin-left: 0;
         margin-top: 1rem;
         width: 100%;
+        width: fit-content;
     }
 
     /* NYTT: Responsiv toppliste */

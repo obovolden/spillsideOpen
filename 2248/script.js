@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadLeaderboard() {
             leaderboardList.innerHTML = '<li>Laster toppliste...</li>';
 
-            fetch('get_leaderboard.php')
+            fetch('api/get_leaderboard.php')
                 .then(response => response.json())
                 .then(data => {
                     leaderboardList.innerHTML = '';
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 score: this.score
             };
 
-            fetch('save_score.php', {
+            fetch('api/save_score.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
