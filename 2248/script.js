@@ -1,13 +1,19 @@
 // ===================================================================
-// SEKSJON 1: KONSTANTER OG ELEMENTER
+// SEKSJON 1: KONSTANTER OG HJELPEFUNKSJONER
 // ===================================================================
 
 const COLS = 5;
-const ROWS = 7;
 const GAP = 6; 
+
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 10000) return (num / 1000).toFixed(1) + 'k';
+    return num;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     
+    // DOM Elementer
     const gridEl = document.getElementById('grid-element');
     const scoreEl = document.getElementById('score-display');
     const bestScoreEl = document.getElementById('best-score-display');
@@ -20,16 +26,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewValueEl = document.getElementById('preview-value');
     const leaderboardList = document.getElementById('leaderboard-list');
 
-    // Elementer for restart-modal
+    // Skjermer og Modaler
+    const startScreen = document.getElementById('start-screen');
     const restartModal = document.getElementById('restart-modal');
-    const btnConfirmRestart = document.getElementById('btn-confirm-restart');
+    const resumeModal = document.getElementById('resume-modal');
+
+    // Knapper
+    const btnSaveMenu = document.getElementById('btn-save-menu');
+    const btnResetCurrent = document.getElementById('btn-reset-current');
     const btnCancelRestart = document.getElementById('btn-cancel-restart');
-    const currentScoreWarning = document.getElementById('current-score-warning');
+    
+    const btnResumeGame = document.getElementById('btn-resume-game');
+    const btnNewGameOverride = document.getElementById('btn-new-game-override');
+    const btnCancelResume = document.getElementById('btn-cancel-resume');
 
     let containerRect = gridEl.getBoundingClientRect();
+    let currentRows = 7; 
 
     // ===================================================================
-    // SEKSJON 2: SPILL-LOGIKK OG TILSTAND
+    // SEKSJON 2: LOGIKK KLASSE
     // ===================================================================
 
     class Game2248 {
@@ -38,40 +53,74 @@ document.addEventListener('DOMContentLoaded', () => {
             this.tileElements = {}; 
             this.nextTileId = 1; 
             this.score = 0;
-            this.bestScore = parseInt(localStorage.getItem('2248_best_score')) || 0;
+            this.bestScore = parseInt(localStorage.getItem('2248_global_best')) || 0;
             this.path = [];
             this.isDragging = false;
-            
+            this.currentMode = 'medium'; 
+            this.pendingMode = null; 
+
+            document.documentElement.style.setProperty('--rows', currentRows);
             this.updateBestScoreUI();
-            this.loadLeaderboard(); // Laster nå fra PHP
-            this.init();
+            this.loadLeaderboard(); 
+        }
+        
+        startGame(mode) {
+            const savedJson = localStorage.getItem(`2248_save_${mode}`);
+            if (savedJson) {
+                this.pendingMode = mode;
+                resumeModal.style.display = 'flex';
+            } else {
+                this.startActualGame(mode, false);
+            }
         }
 
-        init() {
-            this.board = Array(COLS * ROWS).fill(null);
+        startActualGame(mode, shouldLoad) {
+            this.currentMode = mode;
+            
+            if (mode === 'easy') currentRows = 8;
+            else if (mode === 'medium') currentRows = 7;
+            else if (mode === 'hard') currentRows = 6;
+            
+            document.documentElement.style.setProperty('--rows', currentRows);
+            startScreen.classList.add('start-hidden');
+            
+            if (shouldLoad) {
+                const loaded = this.loadGame(mode);
+                if (!loaded) this.initNewGame();
+                else this.updateUI();
+            } else {
+                this.clearSave(mode);
+                this.initNewGame();
+            }
+        }
+
+        initNewGame() {
+            this.board = Array(COLS * currentRows).fill(null);
             gridEl.innerHTML = '';
             this.tileElements = {};
             this.score = 0;
+            this.nextTileId = 1;
             
             let initialValues = [];
             const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+            const totalSlots = COLS * currentRows;
+            
+            // Variert startoppsett
+            const numHigh = randInt(2, 4); 
+            const numMid = randInt(5, 8);  
+            
+            for(let i=0; i<numHigh; i++) initialValues.push(64); 
+            for(let i=0; i<randInt(3, 5); i++) initialValues.push(32);
+            for(let i=0; i<numMid; i++) initialValues.push(16);
+            for(let i=0; i<numMid; i++) initialValues.push(8);
 
-            const num128 = randInt(1, 3);
-            const num64  = randInt(2, 5);
-            const num32  = randInt(3, 8);
-            const num16  = randInt(4, 10);
-
-            for(let i=0; i<num128; i++) initialValues.push(128);
-            for(let i=0; i<num64; i++)  initialValues.push(64);
-            for(let i=0; i<num32; i++)  initialValues.push(32);
-            for(let i=0; i<num16; i++)  initialValues.push(16);
-
-            const slotsRemaining = (COLS * ROWS) - initialValues.length;
+            const slotsRemaining = totalSlots - initialValues.length;
+            
             for(let i=0; i<slotsRemaining; i++) {
                 const r = Math.random();
-                if (r < 0.45) initialValues.push(2);
-                else if (r < 0.75) initialValues.push(4);
-                else initialValues.push(8);
+                if (r < 0.30) initialValues.push(2);       
+                else if (r < 0.65) initialValues.push(4);  
+                else initialValues.push(8);                
             }
 
             for (let i = initialValues.length - 1; i > 0; i--) {
@@ -86,58 +135,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.path = [];
             this.isDragging = false;
+            this.saveGame();
             this.updateUI();
         }
 
-        // Ny restart metode som sjekker om vi trenger bekreftelse
-        restart() {
-            if (this.score === 0) {
-                this.performRestart();
-            } else {
-                currentScoreWarning.innerText = this.score;
-                restartModal.style.display = 'flex';
+        requestBackToMenu() { restartModal.style.display = 'flex'; }
+
+        goToMenu() {
+            this.saveGame(); 
+            restartModal.style.display = 'none';
+            modal.style.display = 'none'; 
+            startScreen.classList.remove('start-hidden'); 
+        }
+
+        createTileData(val) { return { id: this.nextTileId++, val: val, toRemove: false }; }
+        
+        saveGame() {
+            const state = {
+                board: this.board,
+                score: this.score,
+                nextTileId: this.nextTileId,
+                rows: currentRows
+            };
+            localStorage.setItem(`2248_save_${this.currentMode}`, JSON.stringify(state));
+            
+            if (this.score > this.bestScore) {
+                this.bestScore = this.score;
+                localStorage.setItem('2248_global_best', this.bestScore);
+                this.updateBestScoreUI();
             }
         }
 
-        // Utfører selve restartingen
-        performRestart() {
-            this.init();
-            modal.style.display = 'none';
-            restartModal.style.display = 'none';
-            apiStatus.innerText = "";
-            nameInput.value = "";
+        loadGame(mode) {
+            const savedJson = localStorage.getItem(`2248_save_${mode}`);
+            if (!savedJson) return false;
+            try {
+                const state = JSON.parse(savedJson);
+                if (state.rows !== currentRows) return false;
+                this.board = state.board;
+                this.score = state.score;
+                this.nextTileId = state.nextTileId;
+                gridEl.innerHTML = '';
+                this.tileElements = {};
+                return true;
+            } catch (e) { return false; }
+        }
+        
+        clearSave(modeInput) {
+            const mode = modeInput || this.currentMode;
+            localStorage.removeItem(`2248_save_${mode}`);
         }
 
-        createTileData(val) {
-            return { id: this.nextTileId++, val: val, toRemove: false };
-        }
-
+        // --- ENDRING: Mer aggressiv økning + bedre fordeling ---
         spawnRefillValue() {
             let maxOnBoard = 2;
             const activeTiles = this.board.filter(t => t !== null);
             if (activeTiles.length) maxOnBoard = Math.max(...activeTiles.map(t => t.val));
 
             let minVal = 2;
-            if (maxOnBoard >= 512) minVal = 4;
-            if (maxOnBoard >= 2048) minVal = 8;
+            // Øk minste verdi raskere enn før
+            if (maxOnBoard >= 256) minVal = 4;
+            if (maxOnBoard >= 2048) minVal = 8; 
             if (maxOnBoard >= 8192) minVal = 16;
-            if (maxOnBoard >= 32768) minVal = 32; 
-
-            let maxSpawnCap = Math.max(minVal * 4, maxOnBoard / 64);
-            const pool = [];
+            if (maxOnBoard >= 32768) minVal = 32;
             
-            for(let i=0; i<50; i++) pool.push(minVal); 
-            for(let i=0; i<30; i++) pool.push(minVal * 2);
-            for(let i=0; i<15; i++) pool.push(minVal * 4);
-            for(let i=0; i<8; i++) pool.push(minVal * 8);
-            for(let i=0; i<4; i++) pool.push(minVal * 16);
-
-            if ((minVal * 32) <= Math.max(maxOnBoard, 64)) {
-                for(let i=0; i<2; i++) pool.push(minVal * 32);
-            }
-            if ((minVal * 64) <= Math.max(maxOnBoard, 128)) {
-                pool.push(minVal * 64);
-            }
+            const pool = [];
+            // NY FORDELING:
+            // 20% sjanse for laveste verdi (F.eks 2)
+            // 40% sjanse for nivå 2 (F.eks 4) - Dette øker tempoet
+            // 30% sjanse for nivå 3 (F.eks 8)
+            // 10% sjanse for nivå 4 (F.eks 16)
+            
+            for(let i=0; i<20; i++) pool.push(minVal); 
+            for(let i=0; i<40; i++) pool.push(minVal * 2);
+            for(let i=0; i<30; i++) pool.push(minVal * 4);
+            for(let i=0; i<10; i++) pool.push(minVal * 8);
 
             return pool[Math.floor(Math.random() * pool.length)];
         }
@@ -145,9 +217,9 @@ document.addEventListener('DOMContentLoaded', () => {
         async checkAndExplodeLowNumbers(createdValue) {
             let targetToRemove = 0;
             if (createdValue === 1024) targetToRemove = 2;
-            else if (createdValue === 4096) targetToRemove = 4;
-            else if (createdValue === 16384) targetToRemove = 8;
-            else if (createdValue === 65536) targetToRemove = 16;
+            else if (createdValue === 2048) targetToRemove = 4;
+            else if (createdValue === 4096) targetToRemove = 8;
+            else if (createdValue >= 8192) targetToRemove = 16;
 
             if (targetToRemove === 0) return false;
 
@@ -166,11 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             await new Promise(resolve => setTimeout(resolve, 400));
-
-            tilesToRemove.forEach(item => {
-                this.board[item.idx] = null;
-            });
-
+            tilesToRemove.forEach(item => { this.board[item.idx] = null; });
             return true; 
         }
 
@@ -184,22 +252,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const c1 = this.getCoords(currentIndex);
             const c2 = this.getCoords(nextIndex);
-            
             const dx = Math.abs(c1.x - c2.x);
             const dy = Math.abs(c1.y - c2.y);
+            
             if (dx > 1 || dy > 1) return false;
 
             const nextVal = this.board[nextIndex].val;
             const currentVal = this.board[currentIndex].val;
             
             if (nextVal === currentVal) return true;
-
             if (nextVal === currentVal * 2) {
                 const totalSum = this.calculateTotalSum(this.path);
                 if (totalSum >= nextVal) return true;
             }
-
             return false; 
+        }
+
+        normalizeToPowerOf2(sum) {
+            if (sum < 2) return 2;
+            const power = Math.ceil(Math.log2(sum));
+            return Math.pow(2, power);
         }
 
         async finalizeMove() {
@@ -214,49 +286,37 @@ document.addEventListener('DOMContentLoaded', () => {
             const lastIndex = this.path[this.path.length - 1];
             const targetTile = this.board[lastIndex];
 
-            const turnScore = finalValue * this.path.length;
+            const turnScore = finalValue;
             this.score += turnScore;
             
-            if (this.score > this.bestScore) {
-                this.bestScore = this.score;
-                localStorage.setItem('2248_best_score', this.bestScore);
-                this.updateBestScoreUI();
-            }
-
             this.path.forEach(idx => {
                 if (idx !== lastIndex) this.board[idx] = null; 
             });
 
             targetTile.val = finalValue;
-            
             this.path = [];
             this.updateUI();
             canvas.innerHTML = ''; 
 
-            const didExplode = await this.checkAndExplodeLowNumbers(finalValue);
-
+            await this.checkAndExplodeLowNumbers(finalValue);
             this.applyGravityAndSpawn();
+            
+            this.saveGame(); 
             this.updateUI();
 
             setTimeout(() => {
                 if (this.isGameOver()) this.showGameOver();
             }, 300);
         }
-        
-        normalizeToPowerOf2(sum) {
-            if (sum < 2) return 2;
-            const power = Math.floor(Math.log2(sum));
-            return Math.pow(2, power);
-        }
 
         applyGravityAndSpawn() {
             for (let x = 0; x < COLS; x++) {
                 let columnTiles = [];
-                for (let y = 0; y < ROWS; y++) {
+                for (let y = 0; y < currentRows; y++) {
                     let idx = this.getIndex(x, y);
                     if (this.board[idx] !== null) columnTiles.push(this.board[idx]);
                 }
-                let missingCount = ROWS - columnTiles.length;
+                let missingCount = currentRows - columnTiles.length;
                 let newTiles = [];
                 for (let i = 0; i < missingCount; i++) {
                     let newVal = this.spawnRefillValue();
@@ -266,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     newTiles.push(tileData);
                 }
                 const newColumnStructure = [...newTiles, ...columnTiles];
-                for (let y = 0; y < ROWS; y++) {
+                for (let y = 0; y < currentRows; y++) {
                     let idx = this.getIndex(x, y);
                     this.board[idx] = newColumnStructure[y];
                 }
@@ -274,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         getCoords(index) { return { x: index % COLS, y: Math.floor(index / COLS) }; }
-        getIndex(x, y) { if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return -1; return y * COLS + x; }
+        getIndex(x, y) { if (x < 0 || x >= COLS || y < 0 || y >= currentRows) return -1; return y * COLS + x; }
         
         clearPath() {
             this.path = [];
@@ -293,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (dx === 0 && dy === 0) continue;
                         const nIdx = this.getIndex(c.x + dx, c.y + dy);
                         if (nIdx !== -1 && this.board[nIdx]) {
-                            if (this.board[nIdx].val === val) return false;
+                            if (this.board[nIdx].val === val || this.board[nIdx].val === val * 2) return false;
                         }
                     }
                 }
@@ -301,10 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         }
 
-        // EKTE LEADERBOARD HENTING
         loadLeaderboard() {
             leaderboardList.innerHTML = '<li>Laster toppliste...</li>';
-
             fetch('api/get_leaderboard.php')
                 .then(response => response.json())
                 .then(data => {
@@ -313,30 +371,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         leaderboardList.innerHTML = '<li>Ingen scores enda</li>';
                         return;
                     }
-                    
                     data.forEach(entry => {
                         const li = document.createElement('li');
-                        li.innerHTML = `<span class="name">${entry.player_name}</span> <span class="score">${entry.score}</span>`;
+                        li.innerHTML = `<span class="name">${entry.player_name}</span> <span class="score">${formatNumber(entry.score)}</span>`;
                         leaderboardList.appendChild(li);
                     });
                 })
                 .catch(error => {
-                    console.error('Feil ved lasting av leaderboard:', error);
                     leaderboardList.innerHTML = '<li>Feil ved lasting</li>';
                 });
         }
 
-        // EKTE HIGHSCORE LAGRING
         submitHighscore() {
             const name = nameInput.value.trim();
             if (!name) return;
             apiStatus.innerText = "Sender til server...";
-            
-            const payload = {
-                player_name: name,
-                score: this.score
-            };
-
+            const payload = { player_name: name, score: this.score };
             fetch('api/save_score.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -347,38 +397,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     apiStatus.innerText = "Score lagret!";
                     apiStatus.style.color = "#50e3c2";
+                    this.clearSave(); 
                     this.loadLeaderboard();
-                    setTimeout(() => { this.performRestart(); }, 1500);
+                    setTimeout(() => { this.goToMenu(); }, 1500);
                 } else {
-                    apiStatus.innerText = "Feil: " + (data.message || "Ukjent feil");
-                    apiStatus.style.color = "#ff4757";
+                    apiStatus.innerText = "Feil ved lagring";
                 }
             })
             .catch(error => {
-                console.error('API error:', error);
-                apiStatus.innerText = "Tilkoblingsfeil";
-                apiStatus.style.color = "#ff4757";
+                apiStatus.innerText = "Nettverksfeil";
             });
         }
 
-        updateBestScoreUI() {
-            bestScoreEl.innerText = this.bestScore;
-        }
+        updateBestScoreUI() { bestScoreEl.innerText = formatNumber(this.bestScore); }
 
         updateUI() {
-            scoreEl.innerText = this.score;
-            
+            scoreEl.innerText = formatNumber(this.score);
             if (this.path.length > 1) {
                 const rawSum = this.calculateTotalSum(this.path);
                 const finalVal = this.normalizeToPowerOf2(rawSum);
-                
-                previewValueEl.innerText = finalVal;
+                previewValueEl.innerText = formatNumber(finalVal);
                 previewValueEl.style.color = this.getColorForValue(finalVal);
                 previewContainer.classList.remove('preview-hidden');
             } else {
                 previewContainer.classList.add('preview-hidden');
             }
-
             this.renderTiles();
             this.renderPathLines();
         }
@@ -398,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTiles() {
             const activeIds = new Set();
             const tileW = (containerRect.width - (GAP * (COLS + 1))) / COLS;
-            const tileH = (containerRect.height - (GAP * (ROWS + 1))) / ROWS;
+            const tileH = (containerRect.height - (GAP * (currentRows + 1))) / currentRows;
 
             this.board.forEach((tile, idx) => {
                 if (!tile) return;
@@ -423,20 +466,26 @@ document.addEventListener('DOMContentLoaded', () => {
                          el.style.height = `${tileH}px`;
                          el.style.transform = `translate(${x}px, ${startY}px)`; 
                          el.style.backgroundColor = this.getColorForValue(tile.val);
-                         el.innerText = tile.val;
+                         el.innerText = formatNumber(tile.val); 
                          void el.offsetWidth; 
                          tile.isNew = false; 
                     }
                 }
 
-                if (el.innerText != tile.val) {
-                    el.innerText = tile.val;
+                // --- ENDRING: Dynamisk skriftstørrelse ---
+                let displayVal = formatNumber(tile.val);
+                if (el.innerText != displayVal) {
+                    el.innerText = displayVal;
                     el.style.backgroundColor = this.getColorForValue(tile.val);
-                    el.animate([
-                        { transform: el.style.transform + ' scale(1)' },
-                        { transform: el.style.transform + ' scale(1.2)' },
-                        { transform: el.style.transform + ' scale(1)' }
-                    ], { duration: 150 }); 
+                }
+
+                // Sett fontstørrelse basert på verdi
+                if (tile.val >= 1000 && tile.val < 10000) {
+                    el.style.fontSize = '1.5rem'; // Mindre for 1024-9999
+                } else if (tile.val >= 10000) {
+                    el.style.fontSize = '1.3rem'; // For sikkerhets skyld på 10k+
+                } else {
+                    el.style.fontSize = '2rem'; // Standard
                 }
 
                 el.style.width = `${tileW}px`;
@@ -464,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.path.length < 2) return;
             
             const tileW = (containerRect.width - (GAP * (COLS + 1))) / COLS;
-            const tileH = (containerRect.height - (GAP * (ROWS + 1))) / ROWS;
+            const tileH = (containerRect.height - (GAP * (currentRows + 1))) / currentRows;
             
             let points = "";
             this.path.forEach(idx => {
@@ -484,88 +533,86 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         showGameOver() {
-            finalScoreEl.innerText = this.score;
+            finalScoreEl.innerText = formatNumber(this.score);
             modal.style.display = 'flex';
         }
         
-        findBestNeighbor(currentIdx, touchX, touchY) {
-            const currentCoords = this.getCoords(currentIdx);
+        getBestCandidate(touchX, touchY, currentPathIdx) {
             const tileW = (containerRect.width - (GAP * (COLS + 1))) / COLS;
-            const tileH = (containerRect.height - (GAP * (ROWS + 1))) / ROWS;
+            const tileH = (containerRect.height - (GAP * (currentRows + 1))) / currentRows;
             
-            const centerX = containerRect.left + GAP + currentCoords.x * (tileW + GAP) + tileW / 2;
-            const centerY = containerRect.top + GAP + currentCoords.y * (tileH + GAP) + tileH / 2;
-            const distFromCenter = Math.hypot(touchX - centerX, touchY - centerY);
-            
-            if (distFromCenter < Math.min(tileW, tileH) * 0.15) {
-                return -1; 
-            }
+            // Beholder den strenge magnet-snapen (40%)
+            const snapDist = Math.max(tileW, tileH) * 0.40; 
 
             let bestIdx = -1;
-            let minDistance = Infinity;
+            let minDist = Infinity;
 
+            const c = this.getCoords(currentPathIdx);
+            
             for (let dx = -1; dx <= 1; dx++) {
                 for (let dy = -1; dy <= 1; dy++) {
                     if (dx === 0 && dy === 0) continue;
                     
-                    const nx = currentCoords.x + dx;
-                    const ny = currentCoords.y + dy;
-                    const nIdx = this.getIndex(nx, ny);
+                    const neighborIdx = this.getIndex(c.x + dx, c.y + dy);
                     
-                    if (nIdx !== -1 && this.board[nIdx]) {
-                        const nCenterX = containerRect.left + GAP + nx * (tileW + GAP) + tileW / 2;
-                        const nCenterY = containerRect.top + GAP + ny * (tileH + GAP) + tileH / 2;
-                        
-                        const dist = Math.hypot(touchX - nCenterX, touchY - nCenterY);
-                        
-                        if (dist < minDistance) {
-                            minDistance = dist;
-                            bestIdx = nIdx;
+                    if (neighborIdx !== -1 && this.board[neighborIdx]) {
+                        if (this.isValidMove(currentPathIdx, neighborIdx)) {
+                            
+                            const nc = this.getCoords(neighborIdx);
+                            const nCenterX = containerRect.left + GAP + nc.x * (tileW + GAP) + tileW / 2;
+                            const nCenterY = containerRect.top + GAP + nc.y * (tileH + GAP) + tileH / 2;
+                            const dist = Math.hypot(touchX - nCenterX, touchY - nCenterY);
+                            
+                            if (dist < minDist && dist < snapDist) {
+                                minDist = dist;
+                                bestIdx = neighborIdx;
+                            }
                         }
                     }
                 }
             }
             return bestIdx;
         }
+
+        getClosestTileGlobal(touchX, touchY) {
+            const tileW = (containerRect.width - (GAP * (COLS + 1))) / COLS;
+            const tileH = (containerRect.height - (GAP * (currentRows + 1))) / currentRows;
+            let bestIdx = -1;
+            let minDist = Infinity;
+            const snapDist = Math.max(tileW, tileH) * 0.5;
+
+            this.board.forEach((tile, idx) => {
+                if(!tile) return;
+                const c = this.getCoords(idx);
+                const cx = containerRect.left + GAP + c.x * (tileW + GAP) + tileW / 2;
+                const cy = containerRect.top + GAP + c.y * (tileH + GAP) + tileH / 2;
+                const dist = Math.hypot(touchX - cx, touchY - cy);
+                if (dist < minDist && dist < snapDist) {
+                    minDist = dist;
+                    bestIdx = idx;
+                }
+            });
+            return bestIdx;
+        }
     }
 
     // ===================================================================
-    // SEKSJON 3: BRUKERINTERAKSJON
+    // SEKSJON 3: INPUT OG EVENT HANDLERS
     // ===================================================================
     
     const game = new Game2248();
 
     function getPointerPos(e) {
-        if (e.touches && e.touches.length > 0) {
-            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.changedTouches && e.changedTouches.length > 0) {
-            return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-        } else {
-            return { x: e.clientX, y: e.clientY };
-        }
-    }
-
-    function getIndexFromTouch(clientX, clientY) {
-        if (clientX < containerRect.left || clientX > containerRect.right || 
-            clientY < containerRect.top || clientY > containerRect.bottom) return -1;
-        
-        const tileW = (containerRect.width - (GAP * (COLS + 1))) / COLS;
-        const tileH = (containerRect.height - (GAP * (ROWS + 1))) / ROWS;
-        const totalCellW = tileW + GAP;
-        const totalCellH = tileH + GAP;
-        
-        const x = Math.floor((clientX - containerRect.left - GAP) / totalCellW);
-        const y = Math.floor((clientY - containerRect.top - GAP) / totalCellH);
-        
-        if (x >= 0 && x < COLS && y >= 0 && y < ROWS) return y * COLS + x;
-        return -1;
+        if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        else if (e.changedTouches && e.changedTouches.length > 0) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+        else return { x: e.clientX, y: e.clientY };
     }
 
     const handleStart = (e) => {
         if(e.cancelable && e.target.closest('#game-container')) e.preventDefault();
         
         const pos = getPointerPos(e);
-        const idx = getIndexFromTouch(pos.x, pos.y);
+        const idx = game.getClosestTileGlobal(pos.x, pos.y);
         
         if (idx !== -1 && game.board[idx]) {
             game.isDragging = true;
@@ -581,20 +628,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const pos = getPointerPos(e);
         const lastIdx = game.path[game.path.length - 1];
 
-        const currentHoverIdx = getIndexFromTouch(pos.x, pos.y);
-        if (game.path.length > 1 && currentHoverIdx === game.path[game.path.length - 2]) {
-            game.path.pop();
-            game.updateUI();
-            return;
+        if (game.path.length > 1) {
+            const prevIdx = game.path[game.path.length - 2];
+            const c = game.getCoords(prevIdx);
+            const tileW = (containerRect.width - (GAP * (COLS + 1))) / COLS;
+            const tileH = (containerRect.height - (GAP * (currentRows + 1))) / currentRows;
+            const cx = containerRect.left + GAP + c.x * (tileW + GAP) + tileW / 2;
+            const cy = containerRect.top + GAP + c.y * (tileH + GAP) + tileH / 2;
+            const dist = Math.hypot(pos.x - cx, pos.y - cy);
+            
+            if (dist < Math.max(tileW, tileH) * 0.5) {
+                game.path.pop();
+                game.updateUI();
+                return;
+            }
         }
 
-        const bestNeighborIdx = game.findBestNeighbor(lastIdx, pos.x, pos.y);
+        const bestCandidate = game.getBestCandidate(pos.x, pos.y, lastIdx);
         
-        if (bestNeighborIdx !== -1) {
-            if (game.isValidMove(lastIdx, bestNeighborIdx)) {
-                game.path.push(bestNeighborIdx);
-                game.updateUI();
-            }
+        if (bestCandidate !== -1 && bestCandidate !== lastIdx) {
+            game.path.push(bestCandidate);
+            game.updateUI();
         }
     };
 
@@ -611,13 +665,25 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('mouseup', handleEnd);
     window.addEventListener('touchend', handleEnd);
 
-    // EVENT LISTENER FOR KNAPPER I RESTART MODAL
-    btnConfirmRestart.addEventListener('click', () => {
-        game.performRestart();
-    });
-
-    btnCancelRestart.addEventListener('click', () => {
+    btnSaveMenu.addEventListener('click', () => { game.goToMenu(); });
+    btnResetCurrent.addEventListener('click', () => {
         restartModal.style.display = 'none';
+        game.clearSave(); 
+        game.initNewGame(); 
+    });
+    btnCancelRestart.addEventListener('click', () => { restartModal.style.display = 'none'; });
+
+    btnResumeGame.addEventListener('click', () => {
+        resumeModal.style.display = 'none';
+        if (game.pendingMode) game.startActualGame(game.pendingMode, true);
+    });
+    btnNewGameOverride.addEventListener('click', () => {
+        resumeModal.style.display = 'none';
+        if (game.pendingMode) game.startActualGame(game.pendingMode, false);
+    });
+    btnCancelResume.addEventListener('click', () => {
+        resumeModal.style.display = 'none';
+        game.pendingMode = null;
     });
     
     window.addEventListener('resize', () => { 
