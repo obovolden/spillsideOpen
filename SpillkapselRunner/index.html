@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spillkapsel Runner - Viking Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="ui-container">
+        <div id="score-text">Antall Mjød: <span id="score">0</span></div>
+        <img id="combo-ui" src="" alt="Combo Multiplier">
+    </div>
+
+    <script type="module" src="game.js"></script>
+</body>
+</html>
