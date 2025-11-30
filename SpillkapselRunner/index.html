@@ -14,11 +14,26 @@
     </script>
 </head>
 <body>
+    <body>
+   <body>
     <div id="ui-container">
         <div id="score-text">Antall Mjød: <span id="score">0</span></div>
-        <img id="combo-ui" src="" alt="Combo Multiplier">
+        
+        <div id="combo-container">
+            <img id="combo-image" src="" alt="Multiplier">
+            <div id="timer-bar-bg">
+                <div id="timer-bar-fill"></div>
+            </div>
+        </div>
+
+        <div id="game-over-screen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; text-shadow: 2px 2px 4px #000;">
+            <h1>GAME OVER!</h1>
+            <p>Trykk F5 for å prøve igjen.</p>
+        </div>
     </div>
 
     <script type="module" src="game.js"></script>
+</body>
+</body>
 </body>
 </html>
