@@ -1,45 +1,71 @@
 body {
     margin: 0;
     overflow: hidden;
-    background-color: #87CEEB;
     font-family: 'Arial', sans-serif;
     user-select: none; 
+    
+    /* Bakgrunn */
+    background-image: url('assets/nordlys.png');
+    background-size: cover; 
+    background-position: center bottom; 
+    background-repeat: no-repeat;
+    background-color: #1a0b2e; 
 }
 
 #ui-container {
     position: absolute;
     width: 100%;
     height: 100%;
-    pointer-events: none; /* Så vi kan klikke gjennom UI */
+    pointer-events: none; 
 }
 
-#score-text {
+#game-logo {
     position: absolute;
     top: 20px;
     left: 20px;
-    color: white;
-    font-size: 24px;
+    width: 250px; 
+    height: auto;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+}
+
+/* NYTT: Container for poeng og tid øverst til høyre */
+#stats-container {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* Avstand mellom poeng og tid */
+}
+
+#score-text, #time-text {
+    color: #ffd700; /* Gullfarge */
+    font-size: 28px;
     font-weight: bold;
     text-shadow: 2px 2px 4px #000000;
 }
 
-/* NYTT: Combo midt på skjermen */
+#time-text {
+    font-size: 24px; /* Tiden er litt mindre enn poengsummen */
+    color: #ffd700; /* Hvit farge for å skille den litt ut, eller bruk #ffd700 for gull */
+}
+
 #combo-container {
     position: absolute;
-    top: 20px;
+    top: 60px; 
     left: 50%;
-    transform: translateX(-50%); /* Sentrerer perfekt */
-    display: none; /* Skjult til vi får en powerup */
+    transform: translateX(-50%); 
+    display: none; 
     text-align: center;
 }
 
 #combo-image {
     width: 120px;
     height: auto;
-    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Spretten animasjon */
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
 }
 
-/* Tidslinjen */
 #timer-bar-bg {
     width: 120px;
     height: 10px;
@@ -53,9 +79,8 @@ body {
 #timer-bar-fill {
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, #ffd700, #ff8c00); /* Gullfarge */
+    background: linear-gradient(90deg, #ffd700, #ff8c00); 
     border-radius: 3px;
-    /* Ingen overgang her, vi styrer den med JS for flyt */
 }
 
 @keyframes popIn {

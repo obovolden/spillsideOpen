@@ -14,10 +14,13 @@
     </script>
 </head>
 <body>
-    <body>
-   <body>
     <div id="ui-container">
-        <div id="score-text">Antall Mjød: <span id="score">0</span></div>
+        <img id="game-logo" src="assets/logo.png" alt="Viking Surfer Logo">
+
+        <div id="stats-container">
+            <div id="score-text">Mjød: <span id="score">0</span></div>
+            <div id="time-text">Tid: 00:00</div>
+        </div>
         
         <div id="combo-container">
             <img id="combo-image" src="" alt="Multiplier">
@@ -26,14 +29,17 @@
             </div>
         </div>
 
+        <div id="pause-screen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; text-shadow: 2px 2px 4px #000;">
+            <h1>PAUSE</h1>
+            <p>Trykk ENTER eller trykk på skjermen for å fortsette</p>
+        </div>
+
         <div id="game-over-screen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; text-shadow: 2px 2px 4px #000;">
-            <h1>GAME OVER!</h1>
-            <p>Trykk F5 for å prøve igjen.</p>
+            <h1 style="color: #ff4444; font-size: 40px;">GAME OVER!</h1>
+            <p style="font-size: 20px;">Trykk ENTER eller trykk på skjermen for å prøve igjen.</p>
         </div>
     </div>
 
     <script type="module" src="game.js"></script>
-</body>
-</body>
 </body>
 </html>

@@ -2,32 +2,34 @@ import * as THREE from 'three';
 
 // --- 1. OPPSETT ---
 const scene = new THREE.Scene();
-
-// Vi bruker en backup-farge hvis himmelen ikke laster med en gang
-scene.background = new THREE.Color(0x87CEEB); 
-scene.fog = new THREE.Fog(0x87CEEB, 30, 90); 
+// Ingen background i JS (CSS styrer nordlyset)
+const nightColor = 0x1a0b2e; 
+scene.fog = new THREE.Fog(nightColor, 30, 120); 
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true; 
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setClearColor(0x000000, 0); 
 document.body.appendChild(renderer.domElement);
 
 const textureLoader = new THREE.TextureLoader();
 
 // BILDER
-const skyTexture = textureLoader.load('assets/himmel.png'); // Sjekk filnavn!
 const avatarTexture = textureLoader.load('assets/vikingrygg.png'); 
 const shieldTexture = textureLoader.load('assets/vikingskjold.png');
 const mjodTexture = textureLoader.load('assets/mjod.png');
 const bakgrunnTexture = textureLoader.load('assets/vei.png'); 
+const landsbyTexture = textureLoader.load('assets/bakgrunn.png');
+const skipFrontTexture = textureLoader.load('assets/skip_front.png'); 
 
 // DEKORASJON
 const treTexture = textureLoader.load('assets/tre.png');
 const steinTexture = textureLoader.load('assets/stein.png');
 const husTexture = textureLoader.load('assets/hus.png'); 
 const tonneTexture = textureLoader.load('assets/tonne.png');
+const reklameTexture = textureLoader.load('assets/reklame.png');
 
 // UI & POWERUPS
 const powerup2xTexture = textureLoader.load('assets/combo2x.png');
@@ -45,37 +47,24 @@ shieldTexture.colorSpace = THREE.SRGBColorSpace;
 mjodTexture.colorSpace = THREE.SRGBColorSpace;
 treTexture.colorSpace = THREE.SRGBColorSpace;
 husTexture.colorSpace = THREE.SRGBColorSpace;
+reklameTexture.colorSpace = THREE.SRGBColorSpace;
 powerup2xTexture.colorSpace = THREE.SRGBColorSpace;
 powerup5xTexture.colorSpace = THREE.SRGBColorSpace;
 powerup10xTexture.colorSpace = THREE.SRGBColorSpace;
-skyTexture.colorSpace = THREE.SRGBColorSpace;
+skipFrontTexture.colorSpace = THREE.SRGBColorSpace;
 
-// --- 2. LYS & HIMMEL ---
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
+// --- 2. LYS ---
+const ambientLight = new THREE.AmbientLight(0xccccff, 0.4); 
 scene.add(ambientLight);
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.0); 
+const dirLight = new THREE.DirectionalLight(0xaaccff, 0.6); 
 dirLight.position.set(10, 50, 20);
 dirLight.castShadow = true; 
 scene.add(dirLight);
 
-// NYTT: SKYDOME (Himmelkule)
-// Vi lager en gigantisk ball rundt hele spillet og maler himmelen på innsiden
-const skyGeo = new THREE.SphereGeometry(500, 32, 32);
-const skyMat = new THREE.MeshBasicMaterial({ 
-    map: skyTexture, 
-    side: THREE.BackSide, // Viser bildet på innsiden av kulen
-    fog: false // Ignorerer tåke så himmelen er klar og tydelig
-});
-const skyDome = new THREE.Mesh(skyGeo, skyMat);
-scene.add(skyDome);
-
-
-// --- 3. SPILLER-GRUPPEN ---
+// --- 3. SPILLER ---
 const playerGroup = new THREE.Group();
-
-const playerLight = new THREE.PointLight(0xffaa00, 0.6, 10);
-playerLight.position.set(0, 2, 1);
+const playerLight = new THREE.PointLight(0xffaa00, 0.8, 20);
+playerLight.position.set(0, 3, 2);
 playerGroup.add(playerLight);
 
 const vikingGeo = new THREE.PlaneGeometry(2, 2); 
@@ -100,56 +89,43 @@ let currentLane = 0;
 const laneWidth = 3; 
 let targetX = 0; 
 
-playerGroup.position.y = 1.5; 
+// HOPPING
+let isJumping = false;
+let verticalVelocity = 0;
+const gravity = 0.018;     
+const jumpStrength = 0.4; 
+const groundLevel = 1.5;   
+
+playerGroup.position.y = groundLevel; 
 scene.add(playerGroup);
 
 
-// --- 4. VERDEN OG TERRENG ---
-
-// A. Veien
+// --- 4. VERDEN ---
 const roadGeometry = new THREE.PlaneGeometry(12, 1000);
-const roadMaterial = new THREE.MeshStandardMaterial({ 
-    map: bakgrunnTexture,
-    roughness: 0.8 
-});
+const roadMaterial = new THREE.MeshStandardMaterial({ map: bakgrunnTexture, roughness: 0.8 });
 const road = new THREE.Mesh(roadGeometry, roadMaterial);
 road.rotation.x = -Math.PI / 2; 
 road.position.z = -400; 
 road.receiveShadow = true;
 scene.add(road);
 
-// B. Snøkanter
 function createSnowBanks() {
     const bankGeo = new THREE.PlaneGeometry(100, 1000); 
-    const bankMat = new THREE.MeshStandardMaterial({ 
-        color: 0xffffff, 
-        roughness: 1.0 
-    }); 
-    
+    const bankMat = new THREE.MeshStandardMaterial({ color: 0xeeeeff, roughness: 1.0 }); 
     const leftBank = new THREE.Mesh(bankGeo, bankMat);
-    leftBank.rotation.x = -Math.PI / 2;
-    leftBank.position.set(-56, -0.05, -400); 
-    leftBank.receiveShadow = true;
+    leftBank.rotation.x = -Math.PI / 2; leftBank.position.set(-56, -0.05, -400); leftBank.receiveShadow = true;
     scene.add(leftBank);
-
     const rightBank = new THREE.Mesh(bankGeo, bankMat);
-    rightBank.rotation.x = -Math.PI / 2;
-    rightBank.position.set(56, -0.05, -400); 
-    rightBank.receiveShadow = true;
+    rightBank.rotation.x = -Math.PI / 2; rightBank.position.set(56, -0.05, -400); rightBank.receiveShadow = true;
     scene.add(rightBank);
 }
 createSnowBanks();
 
-// C. Havet
 const seaGeometry = new THREE.PlaneGeometry(1000, 1000);
-const seaMaterial = new THREE.MeshBasicMaterial({ color: 0x1a4d8c }); 
+const seaMaterial = new THREE.MeshBasicMaterial({ color: 0x0a0515 }); 
 const sea = new THREE.Mesh(seaGeometry, seaMaterial);
-sea.rotation.x = -Math.PI / 2;
-sea.position.y = -2; 
-sea.position.z = -450;
+sea.rotation.x = -Math.PI / 2; sea.position.y = -2; sea.position.z = -450;
 scene.add(sea);
-
-// D. Vegger (Fjernet landsby-bakveggen siden vi nå har SkyDome!)
 
 
 // --- 5. LOGIKK & UI ---
@@ -159,12 +135,22 @@ camera.lookAt(0, 2, -10);
 let speed = 0.6; 
 let score = 0;
 let gameOver = false; 
+let isPaused = false; 
+let gameTime = 0; 
 
 const scoreElement = document.getElementById('score');
+const timeElement = document.getElementById('time-text');
 const comboContainer = document.getElementById('combo-container');
 const comboImage = document.getElementById('combo-image');
 const timerBarFill = document.getElementById('timer-bar-fill');
-const gameOverScreen = document.getElementById('game-over-screen');
+// const gameOverScreen = document.getElementById('game-over-screen'); // Vi bruker leaderboard nå!
+const pauseScreen = document.getElementById('pause-screen');
+
+// Leaderboard elementer
+const leaderboardScreen = document.getElementById('leaderboard-screen');
+const leaderboardList = document.getElementById('leaderboard-list');
+const finalScoreSpan = document.getElementById('final-score');
+const saveContainer = document.getElementById('save-score-container');
 
 let currentMultiplier = 1; 
 let powerupTimer = 0;
@@ -172,8 +158,7 @@ const POWERUP_DURATION = 10.0;
 const clock = new THREE.Clock();
 
 function changeLane(direction) {
-    if (gameOver) return; 
-
+    if (gameOver || isPaused) return; 
     const targetLane = currentLane + direction;
     if (targetLane >= -1 && targetLane <= 1) {
         currentLane = targetLane;
@@ -183,10 +168,71 @@ function changeLane(direction) {
     }
 }
 
+function jump() {
+    if (gameOver || isPaused) return;
+    if (!isJumping && playerGroup.position.y <= groundLevel + 0.1) {
+        isJumping = true;
+        verticalVelocity = jumpStrength;
+    }
+}
+
+function togglePause() {
+    if (gameOver) return;
+    isPaused = !isPaused;
+    if (isPaused) {
+        pauseScreen.style.display = 'block';
+    } else {
+        pauseScreen.style.display = 'none';
+        clock.getDelta(); 
+    }
+}
+
+function restartGame() {
+    location.reload();
+}
+
 window.addEventListener('keydown', (event) => {
+    if (gameOver) {
+        // Vi lar ENTER håndtere restart hvis man er ferdig med å skrive navn,
+        // men selve lagre-knappen er det viktigste nå.
+        return;
+    }
     if (event.key === 'ArrowLeft' || event.key === 'a') changeLane(-1);
     if (event.key === 'ArrowRight' || event.key === 'd') changeLane(1);
+    if (event.key === ' ' || event.key === 'ArrowUp' || event.key === 'w') jump();
+    if (event.key === 'Enter') togglePause();
 });
+
+let touchStartX = 0;
+let touchStartY = 0;
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+    if (isPaused) togglePause();
+}, false);
+
+document.addEventListener('touchend', (e) => {
+    if (gameOver || isPaused) return;
+    let touchEndX = e.changedTouches[0].screenX;
+    let touchEndY = e.changedTouches[0].screenY;
+    handleSwipe(touchStartX, touchEndX, touchStartY, touchEndY);
+}, false);
+
+function handleSwipe(startX, endX, startY, endY) {
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+    const threshold = 30; 
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (Math.abs(diffX) > threshold) {
+            if (diffX > 0) changeLane(1); 
+            else changeLane(-1); 
+        }
+    } else {
+        if (Math.abs(diffY) > threshold) {
+            if (diffY < 0) jump(); 
+        }
+    }
+}
 
 function activateMultiplier(value) {
     currentMultiplier = value;
@@ -205,56 +251,116 @@ function deactivateMultiplier() {
     if (comboContainer) comboContainer.style.display = 'none';
 }
 
+// --- TOPPLISTE LOGIKK (DATABASE) ---
+
+// Funksjon som kalles når du dør
 function triggerGameOver() {
     gameOver = true;
     speed = 0; 
-    gameOverScreen.style.display = 'block'; 
+    
+    // Vis leaderboard i stedet for enkel game over tekst
+    leaderboardScreen.style.display = 'block';
+    finalScoreSpan.innerText = score;
+    
+    // Hent topplisten fra serveren
+    fetchLeaderboard();
 }
 
+async function fetchLeaderboard() {
+    try {
+        // MERK: Vi går inn i 'api'-mappen her!
+        const response = await fetch('api/api.php?action=get');
+        const data = await response.json();
+        
+        leaderboardList.innerHTML = ""; 
+        
+        data.forEach((entry, index) => {
+            const li = document.createElement('li');
+            li.style.padding = "5px 0";
+            li.style.borderBottom = "1px solid #444";
+            let color = "white";
+            if(index === 0) color = "#ffd700"; 
+            if(index === 1) color = "#c0c0c0"; 
+            if(index === 2) color = "#cd7f32"; 
+            
+            li.innerHTML = `<span style="color:${color}; font-weight:bold;">#${index+1}</span> ${entry.name} <span style="float:right; color:#ffd700;">${entry.score}</span>`;
+            leaderboardList.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Klarte ikke hente toppliste:", error);
+    }
+}
 
-// --- 6. OBJEKTER & DEKORASJON ---
+// Denne funksjonen gjøres tilgjengelig for HTML-knappen
+window.submitScore = async function() {
+    const nameInput = document.getElementById('player-name');
+    const name = nameInput.value;
+    
+    if (!name) {
+        alert("Skriv inn navnet ditt!");
+        return;
+    }
+
+    try {
+        // MERK: Vi går inn i 'api'-mappen her også!
+        await fetch('api/api.php?action=save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, score: score })
+        });
+        
+        // Skjul lagre-boksen etter suksess
+        saveContainer.style.display = 'none';
+        
+        // Oppdater listen med en gang
+        fetchLeaderboard();
+        
+    } catch (error) {
+        console.error("Feil ved lagring:", error);
+    }
+};
+
+
+// --- 6. OBJEKTER & SPAWNING ---
 let objects = []; 
 let scenery = []; 
 
 function spawnScenery() {
-    if (gameOver) return;
-    
+    if (gameOver || isPaused) return;
     const rand = Math.random();
     let mesh, texture, scale, yPos;
 
-    if (rand > 0.8) { 
-        texture = husTexture; scale = 12; yPos = 6; 
-    } else if (rand > 0.4) { 
-        texture = treTexture; scale = 9; yPos = 4.5; 
-    } else { 
-        texture = steinTexture; scale = 4; yPos = 2; 
-    }
+    // 5% sjanse for REKLAME
+    if (rand > 0.95) {
+        texture = reklameTexture; scale = 5; yPos = 3; 
+    } 
+    else if (rand > 0.8) { texture = husTexture; scale = 12; yPos = 6; } 
+    else if (rand > 0.4) { texture = treTexture; scale = 9; yPos = 4.5; } 
+    else { texture = steinTexture; scale = 4; yPos = 2; }
 
     const geometry = new THREE.PlaneGeometry(scale, scale);
-    const material = new THREE.MeshStandardMaterial({ 
-        map: texture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5
-    });
+    const material = new THREE.MeshStandardMaterial({ map: texture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 });
     mesh = new THREE.Mesh(geometry, material); 
-    
     const side = Math.random() > 0.5 ? 1 : -1;
-    const offset = (texture === husTexture) ? 16 : 10; 
-    const randomVariation = Math.random() * 10;
     
+    let offset = 10;
+    if (texture === husTexture) offset = 16;
+    if (texture === reklameTexture) offset = 11;
+
+    const randomVariation = Math.random() * 10;
     mesh.position.x = side * (offset + randomVariation);
     mesh.position.z = -200; 
     mesh.position.y = yPos;
-    
     scene.add(mesh);
     scenery.push(mesh);
 }
 
-// NYE VARIABLER FOR SPAWN LOGIKK
 let lastWasObstacle = false; 
-let meadStreak = 0; // Hvor mange mjød er igjen i rekken
-let streakLane = 0; // Hvilken bane rekken er i
+let meadStreak = 0; 
+let streakLane = 0; 
 
 function spawnObject() {
-    if (gameOver) return;
+    if (gameOver || isPaused) return;
 
     let texture, type, multiplierValue, scale = 1.0;
     let yPos = 1;
@@ -262,88 +368,64 @@ function spawnObject() {
     let emissiveIntensity = 0;
     let lane = 0;
 
-    // --- NY LOGIKK FOR REKKER ---
-    
-    // 1. Sjekk om vi er midt i en "streak" (rekke med mjød)
     if (meadStreak > 0) {
-        // Fortsett rekken!
-        type = 'mjod';
-        texture = mjodTexture;
-        scale = 1.5;
-        emissiveColor = 0xffaa00; 
-        emissiveIntensity = 0.8;
-        
-        lane = streakLane; // Bruk samme bane som sist
-        meadStreak--; // Tell ned
-        
-    } else {
-        // 2. Hvis ingen streak, bestem hva som skal skje tilfeldig
+        type = 'mjod'; texture = mjodTexture; scale = 1.5; emissiveColor = 0xffaa00; emissiveIntensity = 1.0;
+        lane = streakLane; meadStreak--; 
+    } 
+    else {
         const rand = Math.random();
-        
-        // Sikkerhet: Hvis forrige var tønne, må vi ha noe trygt
         let forceSafe = lastWasObstacle; 
         
         if (!forceSafe && rand > 0.85) { 
-            // HINDRING
-            type = 'obstacle';
-            texture = tonneTexture;
-            scale = 2.5; 
-            yPos = 1.2;
+            // 15% HINDRING
+            if (rand < 0.92) { 
+                type = 'ship_obstacle'; texture = skipFrontTexture; scale = 5.0; yPos = 2.5; lane = Math.floor(Math.random() * 3) - 1; 
+            } else {
+                type = 'obstacle'; texture = tonneTexture; scale = 2.5; yPos = 1.2; lane = Math.floor(Math.random() * 3) - 1; 
+            }
             lastWasObstacle = true;
-            lane = Math.floor(Math.random() * 3) - 1; // Tilfeldig bane
-            
-        } else {
-            // TRYGT (Mjød eller Powerup)
+        } 
+        else {
             lastWasObstacle = false;
-            
-            if (rand > 0.95) { 
-                // POWERUP
+            // 85% TRYGT (30% powerup sjanse)
+            if (Math.random() > 0.7) { 
                 type = 'powerup';
                 const rarity = Math.random();
                 if (rarity > 0.9) { texture = powerup10xTexture; multiplierValue = 10; } 
                 else if (rarity > 0.6) { texture = powerup5xTexture; multiplierValue = 5; } 
                 else { texture = powerup2xTexture; multiplierValue = 2; }
-                scale = 2.0; 
+                scale = 2.0; emissiveColor = 0x000000; emissiveIntensity = 0;
                 lane = Math.floor(Math.random() * 3) - 1;
-
             } else { 
-                // MJØD - START EN NY REKKE!
-                type = 'mjod';
-                texture = mjodTexture;
-                scale = 1.5; 
-                emissiveColor = 0xffaa00; 
-                emissiveIntensity = 0.8;
-                
-                // Bestem hvor lang rekken skal være (3 til 6 stk)
-                meadStreak = Math.floor(Math.random() * 4) + 2; 
-                
-                // Velg en tilfeldig bane for hele rekken
-                streakLane = Math.floor(Math.random() * 3) - 1;
-                lane = streakLane;
+                type = 'mjod'; texture = mjodTexture; scale = 1.5; emissiveColor = 0xffaa00; emissiveIntensity = 1.0;
+                meadStreak = Math.floor(Math.random() * 6) + 5; streakLane = Math.floor(Math.random() * 3) - 1; lane = streakLane;
             }
         }
     }
 
     const geometry = new THREE.PlaneGeometry(scale, scale);
     const material = new THREE.MeshStandardMaterial({ 
-        map: texture, 
-        transparent: true, 
-        side: THREE.DoubleSide, 
-        alphaTest: 0.5,
-        emissive: emissiveColor, 
-        emissiveIntensity: emissiveIntensity
+        map: texture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5,
+        emissive: emissiveColor, emissiveIntensity: emissiveIntensity
     }); 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.userData = { type: type, value: multiplierValue };
-
     mesh.position.x = lane * laneWidth;
     mesh.position.y = yPos; 
     mesh.position.z = -150; 
-    scene.add(mesh);
-    objects.push(mesh);
+    
+    let collision = false;
+    for (let obj of objects) {
+        if (Math.abs(obj.position.z - mesh.position.z) < 10 && obj.position.x === mesh.position.x) {
+            collision = true;
+        }
+    }
+    if (!collision) {
+        scene.add(mesh);
+        objects.push(mesh);
+    }
 }
 
-// Spawner litt oftere nå som vi har rekker (ca 400ms)
 setInterval(spawnObject, 400); 
 setInterval(spawnScenery, 80); 
 
@@ -351,12 +433,19 @@ setInterval(spawnScenery, 80);
 // --- 7. GAME LOOP ---
 function animate() {
     requestAnimationFrame(animate);
-    if (gameOver) return; 
-
     const delta = clock.getDelta(); 
+
+    if (gameOver || isPaused) return; 
+
+    gameTime += delta;
+    let minutes = Math.floor(gameTime / 60);
+    let seconds = Math.floor(gameTime % 60);
+    timeElement.innerText = "Tid: " + 
+        (minutes < 10 ? "0" : "") + minutes + ":" + 
+        (seconds < 10 ? "0" : "") + seconds;
+
     const elapsedTime = clock.getElapsedTime();
 
-    // UI
     if (powerupTimer > 0) {
         powerupTimer -= delta;
         if (timerBarFill) {
@@ -366,10 +455,18 @@ function animate() {
         if (powerupTimer <= 0) deactivateMultiplier();
     }
 
-    // ANIMASJON
     bakgrunnTexture.offset.y += (speed * 0.04); 
     
-    playerGroup.position.y = 1.5 + Math.sin(elapsedTime * 6) * 0.3; 
+    if (isJumping) {
+        playerGroup.position.y += verticalVelocity; 
+        verticalVelocity -= gravity; 
+        if (playerGroup.position.y <= groundLevel) {
+            playerGroup.position.y = groundLevel; 
+            isJumping = false; verticalVelocity = 0;
+        }
+    } else {
+        playerGroup.position.y = groundLevel + Math.sin(elapsedTime * 6) * 0.1; 
+    }
     playerGroup.position.x = THREE.MathUtils.lerp(playerGroup.position.x, targetX, delta * 10);
 
     const moveTowardsCamera = (arr) => {
@@ -390,10 +487,11 @@ function animate() {
             if (arr === objects) {
                 const distanceZ = Math.abs(playerGroup.position.z - obj.position.z);
                 const sameLane = Math.abs(playerGroup.position.x - obj.position.x) < 1.0; 
-        
-                if (distanceZ < 1.0 && sameLane) {
+                const notJumpingOver = playerGroup.position.y < 3.0; 
+
+                if (distanceZ < 1.5 && sameLane) {
                     if (obj.userData.type === 'mjod') {
-                        score += (1 * currentMultiplier);
+                        score += (10 * currentMultiplier);
                         scoreElement.innerText = score;
                         scene.remove(obj);
                         arr.splice(i, 1);
@@ -401,7 +499,9 @@ function animate() {
                         activateMultiplier(obj.userData.value);
                         scene.remove(obj);
                         arr.splice(i, 1);
-                    } else if (obj.userData.type === 'obstacle') {
+                    } else if (obj.userData.type === 'obstacle' && notJumpingOver) {
+                        triggerGameOver();
+                    } else if (obj.userData.type === 'ship_obstacle') {
                         triggerGameOver();
                     }
                 }
