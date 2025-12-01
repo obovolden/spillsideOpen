@@ -2,7 +2,6 @@ import * as THREE from 'three';
 
 // --- 1. OPPSETT ---
 const scene = new THREE.Scene();
-// Ingen background i JS (CSS styrer nordlyset)
 const nightColor = 0x1a0b2e; 
 scene.fog = new THREE.Fog(nightColor, 30, 120); 
 
@@ -17,7 +16,8 @@ document.body.appendChild(renderer.domElement);
 const textureLoader = new THREE.TextureLoader();
 
 // BILDER
-const avatarTexture = textureLoader.load('assets/vikingrygg.png'); 
+const avatarRunTexture = textureLoader.load('assets/viking_lop.png'); 
+const avatarSurfTexture = textureLoader.load('assets/vikingrygg.png'); 
 const shieldTexture = textureLoader.load('assets/vikingskjold.png');
 const mjodTexture = textureLoader.load('assets/mjod.png');
 const bakgrunnTexture = textureLoader.load('assets/vei.png'); 
@@ -42,7 +42,8 @@ bakgrunnTexture.wrapT = THREE.RepeatWrapping;
 bakgrunnTexture.repeat.set(1, 40); 
 bakgrunnTexture.colorSpace = THREE.SRGBColorSpace;
 
-avatarTexture.colorSpace = THREE.SRGBColorSpace;
+avatarRunTexture.colorSpace = THREE.SRGBColorSpace;
+avatarSurfTexture.colorSpace = THREE.SRGBColorSpace;
 shieldTexture.colorSpace = THREE.SRGBColorSpace;
 mjodTexture.colorSpace = THREE.SRGBColorSpace;
 treTexture.colorSpace = THREE.SRGBColorSpace;
@@ -69,7 +70,7 @@ playerGroup.add(playerLight);
 
 const vikingGeo = new THREE.PlaneGeometry(2, 2); 
 const vikingMat = new THREE.MeshStandardMaterial({ 
-    map: avatarTexture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 
+    map: avatarRunTexture, transparent: true, side: THREE.DoubleSide, alphaTest: 0.5 
 }); 
 const vikingMesh = new THREE.Mesh(vikingGeo, vikingMat);
 vikingMesh.position.y = 0.9; 
@@ -83,18 +84,26 @@ const shieldMat = new THREE.MeshStandardMaterial({
 const shieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
 shieldMesh.position.y = -0.1; 
 shieldMesh.rotation.x = -1.5; 
+shieldMesh.visible = false; 
 playerGroup.add(shieldMesh); 
 
 let currentLane = 0;
 const laneWidth = 3; 
 let targetX = 0; 
 
-// HOPPING
+// BEVEGELSE
 let isJumping = false;
 let verticalVelocity = 0;
 const gravity = 0.018;     
 const jumpStrength = 0.4; 
 const groundLevel = 1.5;   
+
+const RUN_SPEED = 0.4;
+const SURF_SPEED = 0.7;
+let currentSpeed = RUN_SPEED;
+let hasShield = false;
+let shieldTimer = 0;
+const SHIELD_DURATION = 7.0; 
 
 playerGroup.position.y = groundLevel; 
 scene.add(playerGroup);
@@ -132,7 +141,6 @@ scene.add(sea);
 camera.position.set(0, 5, 8); 
 camera.lookAt(0, 2, -10); 
 
-let speed = 0.6; 
 let score = 0;
 let gameOver = false; 
 let isPaused = false; 
@@ -143,7 +151,7 @@ const timeElement = document.getElementById('time-text');
 const comboContainer = document.getElementById('combo-container');
 const comboImage = document.getElementById('combo-image');
 const timerBarFill = document.getElementById('timer-bar-fill');
-// const gameOverScreen = document.getElementById('game-over-screen'); // Vi bruker leaderboard nå!
+const comboTextFallback = document.getElementById('combo-text-fallback');
 const pauseScreen = document.getElementById('pause-screen');
 
 // Leaderboard elementer
@@ -152,9 +160,14 @@ const leaderboardList = document.getElementById('leaderboard-list');
 const finalScoreSpan = document.getElementById('final-score');
 const saveContainer = document.getElementById('save-score-container');
 
+// SKJOLD UI
+const shieldContainer = document.getElementById('shield-container');
+const shieldBarFill = document.getElementById('shield-bar-fill');
+
 let currentMultiplier = 1; 
 let powerupTimer = 0;
 const POWERUP_DURATION = 10.0; 
+const MAX_MULTIPLIER = 25; 
 const clock = new THREE.Clock();
 
 function changeLane(direction) {
@@ -187,20 +200,23 @@ function togglePause() {
     }
 }
 
-function restartGame() {
+window.restartGame = function() {
     location.reload();
 }
 
 window.addEventListener('keydown', (event) => {
     if (gameOver) {
-        // Vi lar ENTER håndtere restart hvis man er ferdig med å skrive navn,
-        // men selve lagre-knappen er det viktigste nå.
+        const activeElement = document.activeElement;
+        const isTyping = activeElement && activeElement.tagName === 'INPUT';
+        if (!isTyping && (event.key === 'Enter' || event.key === ' ')) {
+            restartGame();
+        }
         return;
     }
     if (event.key === 'ArrowLeft' || event.key === 'a') changeLane(-1);
     if (event.key === 'ArrowRight' || event.key === 'd') changeLane(1);
     if (event.key === ' ' || event.key === 'ArrowUp' || event.key === 'w') jump();
-    if (event.key === 'Enter') togglePause();
+    if (event.key === 'Enter' || event.key === 'p') togglePause();
 });
 
 let touchStartX = 0;
@@ -234,15 +250,69 @@ function handleSwipe(startX, endX, startY, endY) {
     }
 }
 
+// --- SKJOLD LOGIKK ---
+function activateShield() {
+    hasShield = true;
+    shieldTimer = SHIELD_DURATION;
+    shieldMesh.visible = true;
+    vikingMat.map = avatarSurfTexture;
+    vikingMat.map.repeat.set(1, 1); 
+    vikingMat.map.offset.x = 0;
+    
+    currentSpeed = SURF_SPEED;
+    if(shieldContainer) {
+        shieldContainer.style.display = 'block';
+        const img = document.getElementById('shield-ui-img');
+        if(img) {
+            img.style.animation = 'none';
+            img.offsetHeight;
+            img.style.animation = 'popIn 0.3s ease-out';
+        }
+    }
+}
+
+function deactivateShield() {
+    hasShield = false;
+    shieldMesh.visible = false;
+    vikingMat.map = avatarRunTexture; 
+    currentSpeed = RUN_SPEED;
+    if(shieldContainer) shieldContainer.style.display = 'none';
+}
+
+// --- MULTIPLIER LOGIKK ---
 function activateMultiplier(value) {
-    currentMultiplier = value;
+    if (currentMultiplier > 1) {
+        currentMultiplier += value;
+    } else {
+        currentMultiplier = value;
+    }
+    if (currentMultiplier > MAX_MULTIPLIER) currentMultiplier = MAX_MULTIPLIER;
     powerupTimer = POWERUP_DURATION; 
+    updateComboUI();
+}
+
+function updateComboUI() {
     if (comboContainer) { 
-        comboImage.src = `assets/combo${value}x.png`;
         comboContainer.style.display = 'block';
-        comboImage.style.animation = 'none';
-        comboImage.offsetHeight; 
-        comboImage.style.animation = 'popIn 0.3s ease-out';
+        const validImages = [2, 5, 10];
+        
+        if (validImages.includes(currentMultiplier)) {
+            comboImage.style.display = 'block';
+            if(comboTextFallback) comboTextFallback.style.display = 'none';
+            comboImage.src = `assets/combo${currentMultiplier}x.png`;
+            comboImage.style.animation = 'none';
+            comboImage.offsetHeight; 
+            comboImage.style.animation = 'popIn 0.3s ease-out';
+        } else {
+            comboImage.style.display = 'none';
+            if(comboTextFallback) {
+                comboTextFallback.style.display = 'block';
+                comboTextFallback.innerText = currentMultiplier + "X";
+                comboTextFallback.style.animation = 'none';
+                comboTextFallback.offsetHeight; 
+                comboTextFallback.style.animation = 'popIn 0.3s ease-out';
+            }
+        }
     }
 }
 
@@ -251,29 +321,33 @@ function deactivateMultiplier() {
     if (comboContainer) comboContainer.style.display = 'none';
 }
 
-// --- TOPPLISTE LOGIKK (DATABASE) ---
-
-// Funksjon som kalles når du dør
 function triggerGameOver() {
+    if (hasShield) {
+        deactivateShield();
+        playerGroup.position.y = 4; 
+        verticalVelocity = 0.2; 
+        isJumping = true;
+        return; 
+    }
+
     gameOver = true;
-    speed = 0; 
+    currentSpeed = 0; 
     
-    // Vis leaderboard i stedet for enkel game over tekst
-    leaderboardScreen.style.display = 'block';
-    finalScoreSpan.innerText = score;
-    
-    // Hent topplisten fra serveren
-    fetchLeaderboard();
+    if (leaderboardScreen) {
+        leaderboardScreen.style.display = 'block';
+        finalScoreSpan.innerText = score.toLocaleString();
+        fetchLeaderboard();
+    } else {
+        alert("Game Over! Score: " + score);
+        location.reload();
+    }
 }
 
 async function fetchLeaderboard() {
     try {
-        // MERK: Vi går inn i 'api'-mappen her!
         const response = await fetch('api/api.php?action=get');
         const data = await response.json();
-        
         leaderboardList.innerHTML = ""; 
-        
         data.forEach((entry, index) => {
             const li = document.createElement('li');
             li.style.padding = "5px 0";
@@ -282,46 +356,30 @@ async function fetchLeaderboard() {
             if(index === 0) color = "#ffd700"; 
             if(index === 1) color = "#c0c0c0"; 
             if(index === 2) color = "#cd7f32"; 
-            
-            li.innerHTML = `<span style="color:${color}; font-weight:bold;">#${index+1}</span> ${entry.name} <span style="float:right; color:#ffd700;">${entry.score}</span>`;
+            let formattedScore = parseInt(entry.score).toLocaleString();
+            li.innerHTML = `<span style="color:${color}; font-weight:bold;">#${index+1}</span> ${entry.name} <span style="float:right; color:#ffd700;">${formattedScore}</span>`;
             leaderboardList.appendChild(li);
         });
-    } catch (error) {
-        console.error("Klarte ikke hente toppliste:", error);
-    }
+    } catch (error) { console.error("Klarte ikke hente toppliste:", error); }
 }
 
-// Denne funksjonen gjøres tilgjengelig for HTML-knappen
 window.submitScore = async function() {
     const nameInput = document.getElementById('player-name');
     const name = nameInput.value;
-    
-    if (!name) {
-        alert("Skriv inn navnet ditt!");
-        return;
-    }
-
+    if (!name) { alert("Skriv inn navnet ditt!"); return; }
     try {
-        // MERK: Vi går inn i 'api'-mappen her også!
         await fetch('api/api.php?action=save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, score: score })
         });
-        
-        // Skjul lagre-boksen etter suksess
         saveContainer.style.display = 'none';
-        
-        // Oppdater listen med en gang
         fetchLeaderboard();
-        
-    } catch (error) {
-        console.error("Feil ved lagring:", error);
-    }
+    } catch (error) { console.error("Feil ved lagring:", error); }
 };
 
 
-// --- 6. OBJEKTER & SPAWNING ---
+// --- 6. SPAWNING ---
 let objects = []; 
 let scenery = []; 
 
@@ -330,7 +388,6 @@ function spawnScenery() {
     const rand = Math.random();
     let mesh, texture, scale, yPos;
 
-    // 5% sjanse for REKLAME
     if (rand > 0.95) {
         texture = reklameTexture; scale = 5; yPos = 3; 
     } 
@@ -347,9 +404,10 @@ function spawnScenery() {
     if (texture === husTexture) offset = 16;
     if (texture === reklameTexture) offset = 11;
 
+    // NYTT: ENDA LENGER BAK (-450) SÅ DU REKKER Å SE DEM
     const randomVariation = Math.random() * 10;
     mesh.position.x = side * (offset + randomVariation);
-    mesh.position.z = -200; 
+    mesh.position.z = -450; 
     mesh.position.y = yPos;
     scene.add(mesh);
     scenery.push(mesh);
@@ -358,6 +416,7 @@ function spawnScenery() {
 let lastWasObstacle = false; 
 let meadStreak = 0; 
 let streakLane = 0; 
+let spawnsSinceLastPowerup = 0;
 
 function spawnObject() {
     if (gameOver || isPaused) return;
@@ -368,6 +427,8 @@ function spawnObject() {
     let emissiveIntensity = 0;
     let lane = 0;
 
+    spawnsSinceLastPowerup++;
+
     if (meadStreak > 0) {
         type = 'mjod'; texture = mjodTexture; scale = 1.5; emissiveColor = 0xffaa00; emissiveIntensity = 1.0;
         lane = streakLane; meadStreak--; 
@@ -375,8 +436,9 @@ function spawnObject() {
     else {
         const rand = Math.random();
         let forceSafe = lastWasObstacle; 
-        
-        if (!forceSafe && rand > 0.85) { 
+        let forcePowerup = (spawnsSinceLastPowerup > 12); 
+
+        if (!forcePowerup && !forceSafe && rand > 0.85) { 
             // 15% HINDRING
             if (rand < 0.92) { 
                 type = 'ship_obstacle'; texture = skipFrontTexture; scale = 5.0; yPos = 2.5; lane = Math.floor(Math.random() * 3) - 1; 
@@ -387,18 +449,23 @@ function spawnObject() {
         } 
         else {
             lastWasObstacle = false;
-            // 85% TRYGT (30% powerup sjanse)
-            if (Math.random() > 0.7) { 
-                type = 'powerup';
-                const rarity = Math.random();
-                if (rarity > 0.9) { texture = powerup10xTexture; multiplierValue = 10; } 
-                else if (rarity > 0.6) { texture = powerup5xTexture; multiplierValue = 5; } 
-                else { texture = powerup2xTexture; multiplierValue = 2; }
-                scale = 2.0; emissiveColor = 0x000000; emissiveIntensity = 0;
+            const itemRand = Math.random();
+            if (forcePowerup || itemRand > 0.7) { 
+                if (Math.random() > 0.9) {
+                    type = 'shield_powerup'; texture = shieldTexture; scale = 1.5; emissiveColor = 0x0000ff; emissiveIntensity = 0.8;
+                } else {
+                    type = 'powerup';
+                    const rarity = Math.random();
+                    if (rarity > 0.9) { texture = powerup10xTexture; multiplierValue = 10; } 
+                    else if (rarity > 0.6) { texture = powerup5xTexture; multiplierValue = 5; } 
+                    else { texture = powerup2xTexture; multiplierValue = 2; }
+                    scale = 2.0; emissiveColor = 0x000000; emissiveIntensity = 0;
+                }
                 lane = Math.floor(Math.random() * 3) - 1;
+                spawnsSinceLastPowerup = 0;
             } else { 
                 type = 'mjod'; texture = mjodTexture; scale = 1.5; emissiveColor = 0xffaa00; emissiveIntensity = 1.0;
-                meadStreak = Math.floor(Math.random() * 6) + 5; streakLane = Math.floor(Math.random() * 3) - 1; lane = streakLane;
+                meadStreak = Math.floor(Math.random() * 6) + 3; streakLane = Math.floor(Math.random() * 3) - 1; lane = streakLane;
             }
         }
     }
@@ -412,7 +479,7 @@ function spawnObject() {
     mesh.userData = { type: type, value: multiplierValue };
     mesh.position.x = lane * laneWidth;
     mesh.position.y = yPos; 
-    mesh.position.z = -150; 
+    mesh.position.z = -150; // Start mjød/hindringer nærmere enn landskap (raskere action)
     
     let collision = false;
     for (let obj of objects) {
@@ -426,7 +493,7 @@ function spawnObject() {
     }
 }
 
-setInterval(spawnObject, 400); 
+setInterval(spawnObject, 250); 
 setInterval(spawnScenery, 80); 
 
 
@@ -437,6 +504,7 @@ function animate() {
 
     if (gameOver || isPaused) return; 
 
+    // TID
     gameTime += delta;
     let minutes = Math.floor(gameTime / 60);
     let seconds = Math.floor(gameTime % 60);
@@ -444,7 +512,14 @@ function animate() {
         (minutes < 10 ? "0" : "") + minutes + ":" + 
         (seconds < 10 ? "0" : "") + seconds;
 
-    const elapsedTime = clock.getElapsedTime();
+    if (hasShield) {
+        shieldTimer -= delta;
+        if (shieldBarFill) {
+            const pct = (shieldTimer / SHIELD_DURATION) * 100;
+            shieldBarFill.style.width = pct + '%';
+        }
+        if (shieldTimer <= 0) deactivateShield();
+    }
 
     if (powerupTimer > 0) {
         powerupTimer -= delta;
@@ -455,8 +530,9 @@ function animate() {
         if (powerupTimer <= 0) deactivateMultiplier();
     }
 
-    bakgrunnTexture.offset.y += (speed * 0.04); 
+    bakgrunnTexture.offset.y += (currentSpeed * 0.06); 
     
+    // --- ANIMASJON: LØPE-BEVEGELSE (WADDLE) ---
     if (isJumping) {
         playerGroup.position.y += verticalVelocity; 
         verticalVelocity -= gravity; 
@@ -465,17 +541,40 @@ function animate() {
             isJumping = false; verticalVelocity = 0;
         }
     } else {
-        playerGroup.position.y = groundLevel + Math.sin(elapsedTime * 6) * 0.1; 
+        if (!hasShield) {
+            // LØPE: Rask, hakkete bobbing + vugging
+            const runCycle = gameTime * 20; 
+            playerGroup.position.y = groundLevel + Math.abs(Math.sin(runCycle)) * 0.3; // MER HOPPING!
+            playerGroup.rotation.z = Math.sin(runCycle * 0.5) * 0.15; // TYDELIGERE VUGGING!
+        } else {
+            // SURFE: Myk glidning
+            playerGroup.position.y = groundLevel + Math.sin(gameTime * 5) * 0.1;
+            playerGroup.rotation.z = THREE.MathUtils.lerp(playerGroup.rotation.z, 0, 0.1);
+        }
     }
+    
     playerGroup.position.x = THREE.MathUtils.lerp(playerGroup.position.x, targetX, delta * 10);
 
     const moveTowardsCamera = (arr) => {
         for (let i = arr.length - 1; i >= 0; i--) {
             const obj = arr[i];
-            obj.position.z += speed * 1.5; 
+            
+            // HER ER PARALLAX-EFFEKTEN!
+            // Hvis det er dekorasjon (scenery), beveg saktere (0.9 ganger farten)
+            let moveSpeed = currentSpeed * 2.0;
+            if (arr === scenery) {
+                moveSpeed = currentSpeed * 1.8; // Går bittelitt saktere enn bakken
+            }
+            
+            obj.position.z += moveSpeed; 
 
-            if (obj.userData.type === 'mjod' || obj.userData.type === 'powerup') { 
-                 obj.rotation.y += 0.03; 
+            if (obj.userData.type === 'mjod') {
+                 // Myk bølge
+                 obj.position.y = 1.3 + Math.abs(Math.sin((gameTime * 3) + (obj.position.z * 0.02))) * 0.3;
+                 obj.rotation.y = 0;
+            }
+            else if (obj.userData.type === 'powerup' || obj.userData.type === 'shield_powerup') {
+                obj.rotation.y += 0.03;
             }
 
             if(obj.position.z > 10) { 
@@ -492,16 +591,18 @@ function animate() {
                 if (distanceZ < 1.5 && sameLane) {
                     if (obj.userData.type === 'mjod') {
                         score += (10 * currentMultiplier);
-                        scoreElement.innerText = score;
+                        scoreElement.innerText = score.toLocaleString();
                         scene.remove(obj);
                         arr.splice(i, 1);
                     } else if (obj.userData.type === 'powerup') {
                         activateMultiplier(obj.userData.value);
                         scene.remove(obj);
                         arr.splice(i, 1);
-                    } else if (obj.userData.type === 'obstacle' && notJumpingOver) {
-                        triggerGameOver();
-                    } else if (obj.userData.type === 'ship_obstacle') {
+                    } else if (obj.userData.type === 'shield_powerup') {
+                        activateShield(); 
+                        scene.remove(obj);
+                        arr.splice(i, 1);
+                    } else if ((obj.userData.type === 'obstacle' && notJumpingOver) || obj.userData.type === 'ship_obstacle') {
                         triggerGameOver();
                     }
                 }
@@ -512,5 +613,12 @@ function animate() {
     moveTowardsCamera(scenery);
     renderer.render(scene, camera);
 }
+
+// 8. RESIZE
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
 animate();
