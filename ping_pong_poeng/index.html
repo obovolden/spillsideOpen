@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ping Pong Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <section id="setup-screen" class="screen active" aria-labelledby="setup-title">
+        <div class="glass-panel">
+            <header class="setup-header">
+                <h1 id="setup-title">PING PONG</h1>
+                <p class="subtitle">Match Setup</p>
+            </header>
+            
+            <form id="setup-form">
+                <div class="input-group">
+                    <label for="league-code">Ligakode <span class="opt">(valgfri)</span></label>
+                    <div class="input-with-icon">
+                        <i class="material-icons">vpn_key</i>
+                        <input type="text" id="league-code" placeholder="Eks: Kontoret">
+                    </div>
+                </div>
+                
+                <div class="players-row">
+                    <div class="input-group">
+                        <label for="p1-name-input">Spiller 1 (Blå)</label>
+                        <div class="input-with-icon">
+                            <i class="material-icons blue-text">person</i>
+                            <input type="text" id="p1-name-input" value="Spiller 1" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="p2-name-input">Spiller 2 (Rød)</label>
+                        <div class="input-with-icon">
+                            <i class="material-icons red-text">person</i>
+                            <input type="text" id="p2-name-input" value="Spiller 2" required>
+                        </div>
+                    </div>
+                </div>
+
+                <fieldset class="settings-group">
+                    <legend>Innstillinger</legend>
+                    
+                    <div class="setting-item">
+                        <span>Vinnerscore</span>
+                        <div class="stepper" role="group">
+                            <button type="button" onclick="adjustSetting('score', -1)">remove</button>
+                            <input type="number" id="winning-score-display" value="11" min="1" max="99" readonly>
+                            <button type="button" onclick="adjustSetting('score', 1)">add</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <span>Første Serve</span>
+                        <div class="select-wrapper">
+                            <i class="material-icons select-icon">sports_tennis</i>
+                            <select id="first-server">
+                                <option value="p1">Spiller 1</option>
+                                <option value="p2">Spiller 2</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="button-group">
+                    <button type="submit" class="start-btn">
+                        Start Kamp <i class="material-icons">play_arrow</i>
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="showLeaderboard()">
+                        Se Tabell
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section id="leaderboard-screen" class="screen" aria-labelledby="leaderboard-title">
+        <div class="glass-panel full-height">
+            <header class="leaderboard-header">
+                <h2 id="leaderboard-title">Tabell</h2>
+                <button onclick="closeLeaderboard()" class="material-icons close-btn">close</button>
+            </header>
+            
+            <div class="table-container">
+                <table id="league-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th class="align-left">Navn</th>
+                            <th>K</th>
+                            <th>V</th>
+                            <th>T</th>
+                            <th>Diff</th>
+                            <th>P</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <main id="game-screen" class="screen">
+        
+        <section id="p1-area" class="player-area blue" aria-label="Område for Spiller 1">
+            <header class="player-info">
+                <h2 id="p1-name">Spiller 1</h2>
+                <span class="material-icons serve-icon" id="p1-serve">sports_tennis</span>
+            </header>
+            
+            <output class="score" id="p1-score">0</output>
+            
+            <footer class="help-text"></footer>
+        </section>
+
+        <aside class="divider">
+            <button id="reset-btn" class="material-icons" aria-label="Nullstill kamp">refresh</button>
+        </aside>
+
+        <section id="p2-area" class="player-area red" aria-label="Område for Spiller 2">
+            <header class="player-info">
+                <h2 id="p2-name">Spiller 2</h2>
+                <span class="material-icons serve-icon" id="p2-serve">sports_tennis</span>
+            </header>
+            
+            <output class="score" id="p2-score">0</output>
+            
+            <footer class="help-text"></footer>
+        </section>
+
+        <dialog id="game-over-modal">
+            <article class="modal-content">
+                <h2>GAME OVER</h2>
+                <p id="winner-text"></p>
+                <p id="save-status" class="status-text">Lagrer resultat...</p>
+                <button onclick="location.reload()">Ny Kamp</button>
+            </article>
+        </dialog>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

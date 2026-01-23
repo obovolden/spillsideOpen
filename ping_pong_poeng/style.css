@@ -1,0 +1,440 @@
+/* --- RESET & BASE --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    overflow: hidden;
+    background: #121212; 
+    background-image: radial-gradient(circle at 50% 50%, #232526 0%, #000000 100%);
+    color: white;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* --- LAYOUT UTILS --- */
+.screen {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0; left: 0;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* --- GLASSMORPHISM UI (Oppdatert) --- */
+#setup-screen, #leaderboard-screen {
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    background: rgba(0,0,0,0.4); /* Dim bakgrunn */
+}
+
+.glass-panel {
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.15); /* Lysere topp for "lys-effekt" */
+    border-radius: 24px;
+    padding: 35px 30px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.glass-panel.full-height {
+    height: 90%;
+    padding: 0; 
+    overflow: hidden;
+}
+
+/* --- TYPOGRAPHY HEADER --- */
+.setup-header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+#setup-title {
+    font-family: 'Teko', sans-serif;
+    font-size: 52px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: linear-gradient(to right, #ffffff, #b0b0b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-weight: 500;
+}
+
+/* --- FORMS (Modernisert) --- */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.players-row {
+    display: flex;
+    gap: 15px;
+}
+.players-row .input-group {
+    flex: 1;
+}
+
+label {
+    font-size: 12px;
+    color: #aaa;
+    margin-left: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.opt { opacity: 0.5; font-weight: 400; text-transform: none; }
+
+/* Input Container med Ikon */
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon i {
+    position: absolute;
+    left: 15px;
+    font-size: 20px;
+    color: rgba(255,255,255,0.3);
+    pointer-events: none;
+    transition: color 0.3s;
+}
+
+.blue-text { color: #3498db !important; opacity: 0.8; }
+.red-text { color: #e74c3c !important; opacity: 0.8; }
+
+input, select {
+    width: 100%;
+    padding: 14px 14px 14px 45px; /* Plass til ikon */
+    font-size: 16px;
+    border-radius: 50px; /* Pill shape */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+input:focus, select:focus {
+    background: rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.3);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.05);
+}
+
+input:focus + i, .input-with-icon:focus-within i {
+    color: white;
+}
+
+/* Settings Group */
+.settings-group {
+    border: none;
+    background: rgba(255,255,255,0.03);
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    gap: 15px;
+    margin: 5px 0 20px 0;
+}
+
+.settings-group legend { font-size: 0; }
+.setting-item { flex: 1; display: flex; flex-direction: column; gap: 8px;}
+.setting-item span { font-size: 12px; color: #aaa; text-align: center; text-transform: uppercase; letter-spacing: 1px;}
+
+/* Stepper (Score) */
+.stepper {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.3);
+    border-radius: 50px;
+    padding: 2px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.stepper button {
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    border: none;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-family: 'Material Icons'; /* For ikonene */
+    font-size: 18px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.stepper button:hover { background: rgba(255,255,255,0.1); color: white; }
+
+.stepper input {
+    padding: 0;
+    text-align: center;
+    background: transparent;
+    border: none;
+    font-family: 'Teko', sans-serif;
+    font-size: 24px;
+    height: 40px;
+    letter-spacing: 1px;
+    margin-top: 4px; /* Justering for Teko font */
+}
+
+/* Select wrapper for first serve */
+.select-wrapper { position: relative; }
+.select-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #FFD700; pointer-events: none;} 
+#first-server { padding-left: 40px; }
+
+/* KNAPPER */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.start-btn {
+    padding: 16px;
+    background: linear-gradient(135deg, #00E676 0%, #00C853 100%);
+    color: #003300;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 6px 20px rgba(0, 230, 118, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.start-btn:active { transform: scale(0.98); }
+.start-btn:hover { 
+    box-shadow: 0 8px 25px rgba(0, 230, 118, 0.5);
+    transform: translateY(-2px);
+}
+
+.secondary-btn {
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+}
+.secondary-btn:hover { color: white; text-decoration: underline; }
+
+
+/* --- GAME SCREEN --- */
+#game-screen { flex-direction: column; }
+
+.player-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+    touch-action: none; 
+    transition: filter 0.1s;
+}
+
+.blue { background: radial-gradient(circle at center, #2980b9, #154360); }
+.red { background: radial-gradient(circle at center, #c0392b, #641e16); }
+
+.player-area:active { filter: brightness(1.2); }
+
+/* Score Typography & Animation */
+output.score {
+    font-family: 'Teko', sans-serif;
+    font-size: 160px;
+    font-weight: 600;
+    line-height: 1;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    pointer-events: none;
+    transition: transform 0.1s;
+}
+
+@keyframes popEffect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+.score-pop {
+    animation: popEffect 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 28px;
+    font-weight: 500;
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.serve-icon {
+    opacity: 0;
+    color: #FFD700;
+    font-size: 32px;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.serve-icon.active {
+    opacity: 1;
+    transform: scale(1.1);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+/* Divider & Reset */
+.divider {
+    height: 5px;
+    width: 100%;
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+}
+
+#reset-btn {
+    background: white;
+    border: none;
+    border-radius: 50%;
+    padding: 8px;
+    cursor: pointer;
+    color: #333;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* --- LEADERBOARD TABLE --- */
+.leaderboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.table-container {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th, td {
+    padding: 15px 10px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+th {
+    background: rgba(255,255,255,0.05);
+    color: #ccc;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.align-left { text-align: left; padding-left: 20px; }
+
+tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+tbody tr:first-child td { color: #FFD700; font-weight: bold; } 
+
+/* --- MODAL --- */
+dialog {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+dialog::backdrop { background: rgba(0,0,0,0.9); }
+
+.modal-content {
+    background: white;
+    color: black;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    min-width: 300px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+.modal-content h2 { font-family: 'Teko', sans-serif; font-size: 48px; margin-bottom: 5px; color: #111; text-transform: uppercase; line-height: 1;}
+.status-text { font-size: 14px; color: #666; margin-bottom: 20px; }
+
+.modal-content button {
+    margin-top: 10px;
+    padding: 12px 30px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* --- RESPONSIVE / LANDSCAPE --- */
+@media (orientation: landscape) {
+    #game-screen { flex-direction: row; }
+    .divider { height: 100vh; width: 4px; flex-direction: column; }
+    .player-area { height: 100vh; }
+}
+
+@media (max-width: 400px) {
+    output.score {
+        font-size: 120px;
+    }
+}
