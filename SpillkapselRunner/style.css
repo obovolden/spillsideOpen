@@ -1,10 +1,9 @@
+/* ... Behold body og #ui-container som før ... */
 body {
     margin: 0;
     overflow: hidden;
     font-family: 'Arial', sans-serif;
     user-select: none; 
-    
-    /* Bakgrunn */
     background-image: url('assets/nordlys.png');
     background-size: cover; 
     background-position: center bottom; 
@@ -12,71 +11,63 @@ body {
     background-color: #1a0b2e; 
 }
 
-#ui-container {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none; 
-}
+#ui-container { position: absolute; width: 100%; height: 100%; pointer-events: none; }
 
 #game-logo {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 250px; 
-    height: auto;
+    position: absolute; top: 20px; left: 20px; width: 250px; height: auto;
     filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
 }
 
-/* NYTT: Container for poeng og tid øverst til høyre */
 #stats-container {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    gap: 5px; /* Avstand mellom poeng og tid */
+    position: absolute; top: 20px; right: 30px; text-align: right;
+    display: flex; flex-direction: column; gap: 5px;
 }
 
 #score-text, #time-text {
-    color: #ffd700; /* Gullfarge */
-    font-size: 28px;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px #000000;
+    color: #ffd700; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px #000000;
 }
+#time-text { font-size: 24px; color: #ffffff; }
 
-#time-text {
-    font-size: 24px; /* Tiden er litt mindre enn poengsummen */
-    color: #ffd700; /* Hvit farge for å skille den litt ut, eller bruk #ffd700 for gull */
-}
-
-#combo-container {
+/* NYTT: Wrapper for å vise flere powerups ved siden av hverandre */
+#powerups-wrapper {
     position: absolute;
-    top: 60px; 
+    top: 80px;
     left: 50%;
-    transform: translateX(-50%); 
-    display: none; 
-    text-align: center;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px; /* Avstand mellom Skjold og Combo */
+    align-items: flex-start;
 }
 
-#combo-image {
-    width: 120px;
+/* Felles stil for begge boksene */
+#combo-container, #shield-container {
+    text-align: center;
+    width: 100px;
+}
+
+#combo-image, #shield-ui-img {
+    width: 80px; /* Litt mindre ikoner så det er plass til begge */
     height: auto;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
 }
 
-#timer-bar-bg {
-    width: 120px;
-    height: 10px;
+#combo-text-fallback {
+    margin: 0; color: #ffd700; font-size: 50px; 
+    text-shadow: 3px 3px 0 #000; font-family: Impact, sans-serif;
+}
+
+/* Felles stil for tidslinjene */
+.timer-bar-bg {
+    width: 100%;
+    height: 8px;
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: 5px;
     margin-top: 5px;
+    border: 1px solid white;
     overflow: hidden;
-    border: 2px solid white;
 }
 
-#timer-bar-fill {
+.timer-bar-fill {
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, #ffd700, #ff8c00); 

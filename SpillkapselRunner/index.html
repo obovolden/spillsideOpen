@@ -2,8 +2,8 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spillkapsel Runner - Viking Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Viking Surfer - Spillkapsel.no</title>
     <link rel="stylesheet" href="style.css">
     <script type="importmap">
         {
@@ -18,25 +18,45 @@
         <img id="game-logo" src="assets/logo.png" alt="Viking Surfer Logo">
 
         <div id="stats-container">
-            <div id="score-text">Mjød: <span id="score">0</span></div>
+            <div id="score-text">Antall Mjød: <span id="score">0</span></div>
             <div id="time-text">Tid: 00:00</div>
         </div>
         
-        <div id="combo-container">
-            <img id="combo-image" src="" alt="Multiplier">
-            <div id="timer-bar-bg">
-                <div id="timer-bar-fill"></div>
+        <div id="powerups-wrapper">
+            
+            <div id="shield-container" style="display: none;">
+                <img id="shield-ui-img" src="assets/vikingskjold.png" alt="Skjold">
+                <div class="timer-bar-bg">
+                    <div id="shield-bar-fill" class="timer-bar-fill" style="background: #00bfff;"></div>
+                </div>
             </div>
+
+            <div id="combo-container" style="display: none;">
+                <img id="combo-image" src="" alt="Multiplier">
+                <h1 id="combo-text-fallback" style="display:none;"></h1>
+                <div class="timer-bar-bg">
+                    <div id="timer-bar-fill" class="timer-bar-fill"></div>
+                </div>
+            </div>
+
         </div>
 
         <div id="pause-screen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; text-shadow: 2px 2px 4px #000;">
-            <h1>PAUSE</h1>
+            <h1 style="font-size: 40px;">PAUSE</h1>
             <p>Trykk ENTER eller trykk på skjermen for å fortsette</p>
         </div>
 
-        <div id="game-over-screen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; text-shadow: 2px 2px 4px #000;">
-            <h1 style="color: #ff4444; font-size: 40px;">GAME OVER!</h1>
-            <p style="font-size: 20px;">Trykk ENTER eller trykk på skjermen for å prøve igjen.</p>
+        <div id="leaderboard-screen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(26, 11, 46, 0.9); padding: 20px; border-radius: 15px; border: 3px solid #ffd700; width: 320px; color: white; box-shadow: 0 0 20px rgba(0,0,0,0.8);">
+            <h2 style="color: #ffd700; margin-top: 0; font-family: Impact, sans-serif; letter-spacing: 2px;">TOPP 10 VIKINGER</h2>
+            <ul id="leaderboard-list" style="list-style: none; padding: 0; text-align: left; font-size: 16px; margin-bottom: 20px; max-height: 200px; overflow-y: auto;"><li>Laster...</li></ul>
+            <div id="save-score-container">
+                <p style="margin: 5px 0;">Din score: <span id="final-score" style="color: #ffd700; font-weight: bold; font-size: 20px;">0</span></p>
+                <div style="display: flex; gap: 5px; justify-content: center;">
+                    <input type="text" id="player-name" placeholder="Ditt navn" maxlength="10" style="padding: 8px; width: 60%; border-radius: 5px; border: none;">
+                    <button onclick="submitScore()" style="padding: 8px 12px; background: #ffd700; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: #000;">LAGRE</button>
+                </div>
+            </div>
+            <button onclick="restartGame()" style="margin-top: 20px; padding: 12px 30px; font-size: 18px; cursor: pointer; background: transparent; border: 2px solid #ffd700; color: #ffd700; font-weight: bold; border-radius: 50px; transition: 0.2s;">SPILL IGJEN</button>
         </div>
     </div>
 
