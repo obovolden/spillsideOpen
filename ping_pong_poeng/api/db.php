@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$db   = 'pingpong_db';
-$user = 'root'; // Endre til din database-bruker
-$pass = '';     // Endre til ditt passord
+$db   = 'gzaemhva_highscore';
+$user = 'gzaemhva_spillbr'; // Endre til din database-bruker
+$pass = 'W0XG7txn2uy6';     // Endre til ditt passord
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
