@@ -19,14 +19,25 @@
             
             <form id="setup-form">
                 <div class="input-group">
-                    <label for="league-code">Ligakode <span class="opt">(valgfri)</span></label>
-                    <div class="input-with-icon">
-                        <i class="material-icons">vpn_key</i>
-                        <input type="text" id="league-code" placeholder="Eks: Kontoret">
+                    <label for="league-select">Ligakode <span class="opt">(valgfri)</span></label>
+                    
+                    <div id="league-select-wrapper" class="input-with-icon" style="display:none;">
+                        <i class="material-icons">history</i>
+                        <select id="league-select">
+                            </select>
+                        <button type="button" class="icon-btn" onclick="toggleLeagueMode('new')" aria-label="Ny liga">
+                            <i class="material-icons">add</i>
+                        </button>
                     </div>
-                </div>
-                
-                <div class="players-row">
+
+                    <div id="league-input-wrapper" class="input-with-icon">
+                        <i class="material-icons">vpn_key</i>
+                        <input type="text" id="league-code" placeholder="Skriv ny ligakode...">
+                        <button type="button" id="back-to-select-btn" class="icon-btn" onclick="toggleLeagueMode('history')" style="display:none;">
+                            <i class="material-icons">list</i>
+                        </button>
+                    </div>
+                </div> <div class="players-row">
                     <div class="input-group">
                         <label for="p1-name-input">Spiller 1 (Blå)</label>
                         <div class="input-with-icon">
@@ -51,7 +62,7 @@
                         <span>Vinnerscore</span>
                         <div class="stepper" role="group">
                             <button type="button" onclick="adjustSetting('score', -1)">remove</button>
-                            <input type="number" id="winning-score-display" value="11" min="1" max="99" readonly>
+                            <input type="number" id="winning-score-display" value="11" min="1" max="99">
                             <button type="button" onclick="adjustSetting('score', 1)">add</button>
                         </div>
                     </div>
