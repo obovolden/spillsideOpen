@@ -191,45 +191,52 @@ document.getElementById('reset-btn').addEventListener('click', () => {
     }
 });
 
-/* --- SECTION: LEADERBOARD & BACKEND --- */
-function saveGameData(winner) {
-    console.log("Simulerer lagring til backend for vinner:", winner);
-    document.getElementById('save-status').innerText = "Resultat lagret (Simulert)";
-}
+/* --- SECTION: LEADERBOARD & BACKEND (OPPDATERT) --- */
 
-function showLeaderboard() {
-     console.log("Simulerer henting av leaderboard");
-     alert("Leaderboard krever backend-tilkobling. Viser tomt skjermbilde.");
-     document.getElementById('setup-screen').classList.remove('active');
-     document.getElementById('leaderboard-screen').classList.add('active');
-}
+// Lagrer resultatet til databasen via save_score.php
+async function saveGameData(winnerName) {
+    const statusEl = document.getElementById('save-status');
+    
+    const payload = {
+        p1_name: config.p1Name,
+        p2_name: config.p2Name,
+        p1_score: gameState.p1Score,
+        p2_score: gameState.p2Score,
+        winner_name: winnerName,
+        league_code: config.leagueCode || 'private'
+    };
 
-function closeLeaderboard() {
-    document.getElementById('leaderboard-screen').classList.remove('active');
-    document.getElementById('setup-screen').classList.add('active');
-}
-
-function renderTable(data) {
-    const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = '';
-
-    if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">Ingen kamper funnet.</td></tr>';
-        return;
+    try {
+        const response = await fetch('save_score.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        statusEl.innerText = result.message;
+    } catch (error) {
+        console.error("Feil ved lagring:", error);
+        statusEl.innerText = "Kunne ikke lagre resultatet.";
     }
+}
 
-    data.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        const diffSign = row.diff > 0 ? '+' : '';
-        tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td class="align-left"><b>${row.player_name}</b></td>
-            <td>${row.kamper}</td>
-            <td>${row.seiere}</td>
-            <td>${row.tap}</td>
-            <td>${diffSign}${row.diff}</td>
-            <td><strong>${row.poeng}</strong></td>
-        `;
-        tbody.appendChild(tr);
-    });
+// Henter tabellen fra databasen via get_leaderboard.php
+async function showLeaderboard() {
+    // Vi henter koden som står i feltet, eller bruker "private" som standard
+    const league = document.getElementById('league-code').value || 'private';
+
+    try {
+        const response = await fetch(`get_leaderboard.php?league_code=${encodeURIComponent(league)}`);
+        const data = await response.json();
+
+        // Bruker den eksisterende renderTable-funksjonen din for å tegne opp tabellen
+        renderTable(data);
+
+        // Bytter skjerm
+        document.getElementById('setup-screen').classList.remove('active');
+        document.getElementById('leaderboard-screen').classList.add('active');
+    } catch (error) {
+        console.error("Feil ved henting av tabell:", error);
+        alert("Kunne ikke koble til databasen for å hente tabellen.");
+    }
 }
