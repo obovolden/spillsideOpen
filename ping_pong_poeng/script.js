@@ -13,98 +13,22 @@ let gameState = {
     isGameOver: false
 };
 
+// DOM Elements
 const p1ScoreEl = document.getElementById('p1-score');
 const p2ScoreEl = document.getElementById('p2-score');
 const p1ServeEl = document.getElementById('p1-serve');
 const p2ServeEl = document.getElementById('p2-serve');
 
-/* --- SECTION: LOCAL STORAGE & HISTORY --- */
-const STORAGE_KEY_NAMES = 'pong_saved_names';
-const STORAGE_KEY_LEAGUES = 'pong_league_history';
-
-// Kjøres når siden lastes
-function loadPreferences() {
-    // 1. Hent navn
-    const savedNames = JSON.parse(localStorage.getItem(STORAGE_KEY_NAMES));
-    if (savedNames) {
-        document.getElementById('p1-name-input').value = savedNames.p1;
-        document.getElementById('p2-name-input').value = savedNames.p2;
-    }
-
-    // 2. Hent ligahistorikk
-    const leagues = JSON.parse(localStorage.getItem(STORAGE_KEY_LEAGUES)) || [];
-    const select = document.getElementById('league-select');
-    
-    if (leagues.length > 0) {
-        // Vi har historikk -> Vis rullegardin
-        select.innerHTML = '';
-        leagues.forEach(code => {
-            const opt = document.createElement('option');
-            opt.value = code;
-            opt.innerText = code;
-            select.appendChild(opt);
-        });
-        
-        // Vis select, skjul input
-        toggleLeagueMode('history');
-    } else {
-        // Ingen historikk -> Vis tekstfelt
-        toggleLeagueMode('new');
-    }
-}
-
-function savePreferences(p1, p2, league) {
-    // 1. Lagre navn
-    localStorage.setItem(STORAGE_KEY_NAMES, JSON.stringify({ p1, p2 }));
-
-    // 2. Lagre liga til historikk hvis den ikke er tom
-    if (league && league !== 'private') {
-        let leagues = JSON.parse(localStorage.getItem(STORAGE_KEY_LEAGUES)) || [];
-        
-        // Fjern ligaen hvis den allerede finnes (for å legge den øverst/sist brukt)
-        leagues = leagues.filter(l => l !== league);
-        
-        // Legg til øverst
-        leagues.unshift(league);
-        
-        // Begrens til feks siste 5
-        if (leagues.length > 5) leagues.pop();
-        
-        localStorage.setItem(STORAGE_KEY_LEAGUES, JSON.stringify(leagues));
-    }
-}
-
-// Hjelpefunksjon for å bytte visning
-window.toggleLeagueMode = function(mode) {
-    const selectWrapper = document.getElementById('league-select-wrapper');
-    const inputWrapper = document.getElementById('league-input-wrapper');
-    const backBtn = document.getElementById('back-to-select-btn');
-    const hasHistory = document.getElementById('league-select').options.length > 0;
-
-    if (mode === 'history' && hasHistory) {
-        selectWrapper.style.display = 'flex';
-        inputWrapper.style.display = 'none';
-    } else {
-        selectWrapper.style.display = 'none';
-        inputWrapper.style.display = 'flex';
-        // Vis tilbake-knapp KUN hvis vi faktisk har historikk å gå tilbake til
-        backBtn.style.display = hasHistory ? 'block' : 'none';
-        
-        // Hvis vi trykker "Ny", tøm input-feltet og sett fokus
-        if(mode === 'new') {
-            const input = document.getElementById('league-code');
-            input.value = '';
-            input.focus();
-        }
-    }
-}
-
 /* --- SECTION: SETUP & INIT --- */
 function adjustSetting(type, val) {
     if (type === 'score') {
         const input = document.getElementById('winning-score-display');
+        
+        // Henter verdien fra input-feltet
         let current = parseInt(input.value) || 0; 
         let newVal = current + val;
+        
+        // Begrenser score mellom 1 og 99
         if (newVal >= 1 && newVal <= 99) {
             input.value = newVal;
         }
@@ -115,40 +39,32 @@ document.getElementById('setup-form').addEventListener('submit', (e) => {
     e.preventDefault();
     config.p1Name = document.getElementById('p1-name-input').value;
     config.p2Name = document.getElementById('p2-name-input').value;
+    
+    // Henter vinnerscore direkte fra input-value
     config.winningScore = parseInt(document.getElementById('winning-score-display').value);
+    
     if(!config.winningScore || config.winningScore < 1) config.winningScore = 11;
 
-    // Sjekk om vi bruker rullegardin eller input
-    const isSelectMode = document.getElementById('league-select-wrapper').style.display !== 'none';
-    if (isSelectMode) {
-        config.leagueCode = document.getElementById('league-select').value;
-        // Oppdater input-feltet (hidden) så Show Leaderboard også finner riktig kode
-        document.getElementById('league-code').value = config.leagueCode;
-    } else {
-        config.leagueCode = document.getElementById('league-code').value;
-    }
-
+    config.leagueCode = document.getElementById('league-code').value;
     config.startingServer = document.getElementById('first-server').value;
-
-    // LAGRE PREFERANSER
-    savePreferences(config.p1Name, config.p2Name, config.leagueCode);
 
     document.getElementById('p1-name').innerText = config.p1Name;
     document.getElementById('p2-name').innerText = config.p2Name;
+
     document.getElementById('setup-screen').classList.remove('active');
     document.getElementById('game-screen').classList.add('active');
+
     updateServeIndicator();
 });
 
-// Start lasting av data
-loadPreferences();
+/* --- SECTION: POINTER EVENTS (TOUCH & MOUSE) --- */
+let startY = 0;
+let endY = 0;
+const SWIPE_THRESHOLD = 50;
+const TAP_THRESHOLD = 10;
 
 function setupInputArea(elementId, playerKey) {
     const el = document.getElementById(elementId);
-    let startY = 0;
-    let endY = 0;
-    const TAP_THRESHOLD = 10;
-    const SWIPE_THRESHOLD = 50;
     
     el.addEventListener('pointerdown', (e) => {
         if(gameState.isGameOver) return;
@@ -160,23 +76,26 @@ function setupInputArea(elementId, playerKey) {
         if (gameState.isGameOver) return;
         endY = e.clientY;
         el.releasePointerCapture(e.pointerId);
-        
-        const diff = startY - endY; 
-        const absDiff = Math.abs(diff);
-
-        // 1. TAP / KLIKK (Legg til poeng)
-        if (absDiff < TAP_THRESHOLD) {
-            addPoint(playerKey);
-        } 
-        // 2. SVEIP OPP (Legg til poeng)
-        else if (diff > SWIPE_THRESHOLD) {
-            addPoint(playerKey);
-        } 
-        // 3. SVEIP NED (Trekk fra poeng)
-        else if (diff < -SWIPE_THRESHOLD) {
-            removePoint(playerKey);
-        }
+        handleGesture(playerKey);
     }, false);
+}
+
+function handleGesture(player) {
+    const diff = startY - endY; 
+    const absDiff = Math.abs(diff);
+
+    // 1. TAP / KLIKK (Legg til poeng)
+    if (absDiff < TAP_THRESHOLD) {
+        addPoint(player);
+    } 
+    // 2. SVEIP OPP (Legg til poeng)
+    else if (diff > SWIPE_THRESHOLD) {
+        addPoint(player);
+    } 
+    // 3. SVEIP NED (Trekk fra poeng)
+    else if (diff < -SWIPE_THRESHOLD) {
+        removePoint(player);
+    }
 }
 
 setupInputArea('p1-area', 'p1');
@@ -272,7 +191,9 @@ document.getElementById('reset-btn').addEventListener('click', () => {
     }
 });
 
-/* --- SECTION: LEADERBOARD & BACKEND --- */
+/* --- SECTION: LEADERBOARD & BACKEND (OPPDATERT) --- */
+
+// Lagrer resultatet til databasen via api/save_score.php
 async function saveGameData(winnerName) {
     const statusEl = document.getElementById('save-status');
     
@@ -286,7 +207,8 @@ async function saveGameData(winnerName) {
     };
 
     try {
-        const response = await fetch('save_score.php', {
+        // ENDRING HER: Lagt til 'api/' foran filnavnet
+        const response = await fetch('api/save_score.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -299,22 +221,43 @@ async function saveGameData(winnerName) {
     }
 }
 
-function closeLeaderboard() {
-    document.getElementById('leaderboard-screen').classList.remove('active');
-    document.getElementById('setup-screen').classList.add('active');
+// Henter tabellen fra databasen via api/get_leaderboard.php
+async function showLeaderboard() {
+    // Vi henter koden som står i feltet, eller bruker "private" som standard
+    const league = document.getElementById('league-code').value || 'private';
+
+    try {
+        // ENDRING HER: Lagt til 'api/' foran filnavnet
+        const response = await fetch(`api/get_leaderboard.php?league_code=${encodeURIComponent(league)}`);
+        const data = await response.json();
+
+        // Bruker renderTable for å tegne opp tabellen
+        renderTable(data);
+
+        // Bytter skjerm
+        document.getElementById('setup-screen').classList.remove('active');
+        document.getElementById('leaderboard-screen').classList.add('active');
+    } catch (error) {
+        console.error("Feil ved henting av tabell:", error);
+        alert("Kunne ikke koble til databasen for å hente tabellen.");
+    }
 }
 
+// ENDRING HER: Funksjon for å fylle tabellen med data
 function renderTable(data) {
     const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; // Tømmer tabellen for gamle data
 
-    if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">Ingen kamper spilt enda</td></tr>';
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">Ingen kamper funnet</td></tr>';
         return;
     }
 
     data.forEach((row, index) => {
         const tr = document.createElement('tr');
+        
+        // Matcher kolonnene i HTML-tabellen din:
+        // # | Navn | K | V | T | Diff | P
         tr.innerHTML = `
             <td>${index + 1}</td>
             <td class="align-left">${row.player_name}</td>
@@ -328,20 +271,7 @@ function renderTable(data) {
     });
 }
 
-async function showLeaderboard() {
-    // Vi henter koden som står i feltet, eller bruker "private" som standard
-    const league = document.getElementById('league-code').value || 'private';
-
-    try {
-        const response = await fetch(`get_leaderboard.php?league_code=${encodeURIComponent(league)}`);
-        const data = await response.json();
-
-        renderTable(data);
-
-        document.getElementById('setup-screen').classList.remove('active');
-        document.getElementById('leaderboard-screen').classList.add('active');
-    } catch (error) {
-        console.error("Feil ved henting av tabell:", error);
-        alert("Kunne ikke koble til databasen for å hente tabellen.");
-    }
+function closeLeaderboard() {
+    document.getElementById('leaderboard-screen').classList.remove('active');
+    document.getElementById('setup-screen').classList.add('active');
 }
