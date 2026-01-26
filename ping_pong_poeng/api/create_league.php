@@ -29,9 +29,10 @@ try {
                 // Hvis runde 2, bytt hjemme/borte (valgfritt)
                 if ($r % 2 != 0) { $temp = $p1; $p1 = $p2; $p2 = $temp; }
 
+                // ENDRING HER: Endret NULL til '' (tom streng) for winner_name
                 $stmt = $pdo->prepare("INSERT INTO ping_highscore 
                     (league_code, player1_name, player2_name, player1_score, player2_score, winner_name) 
-                    VALUES (?, ?, ?, 0, 0, NULL)");
+                    VALUES (?, ?, ?, 0, 0, '')");
                 
                 $stmt->execute([$league_code, $p1, $p2]);
             }

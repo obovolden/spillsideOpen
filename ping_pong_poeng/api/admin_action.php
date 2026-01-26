@@ -33,10 +33,10 @@ try {
         $name = $input['name'];
         $league = $input['league_code'];
 
-        // Slett fixtures hvor denne spilleren er med (winner_name IS NULL)
+        // ENDRING HER: Sjekker nå både IS NULL og = '' (tom streng)
         $stmt = $pdo->prepare("DELETE FROM ping_highscore 
             WHERE league_code = ? 
-            AND winner_name IS NULL 
+            AND (winner_name IS NULL OR winner_name = '') 
             AND (player1_name = ? OR player2_name = ?)");
         
         $stmt->execute([$league, $name, $name]);
