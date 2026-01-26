@@ -145,7 +145,6 @@ label {
 
 input, select {
     width: 100%;
-    /* Endret padding: 45px på begge sider for å gjøre plass til ikon og knapp */
     padding: 14px 45px 14px 45px; 
     font-size: 16px;
     border-radius: 50px;
@@ -166,7 +165,7 @@ input:focus + i, .input-with-icon:focus-within i {
     color: white;
 }
 
-/* Den lille knappen ved siden av input/select */
+/* Knappen ved siden av input/select */
 .icon-btn {
     position: absolute;
     right: 5px;
@@ -201,7 +200,6 @@ select#league-select {
     appearance: none;
     -webkit-appearance: none;
     cursor: pointer;
-    /* Pilen plasseres litt til venstre for knappen */
     background-image: linear-gradient(45deg, transparent 50%, white 50%), linear-gradient(135deg, white 50%, transparent 50%);
     background-position: calc(100% - 60px) 50%, calc(100% - 55px) 50%; 
     background-size: 5px 5px, 5px 5px;
@@ -447,13 +445,25 @@ th {
 tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
 tbody tr:first-child td { color: #FFD700; font-weight: bold; } 
 
-/* --- MODAL --- */
+/* --- MODAL (ALERT BOX) --- */
 dialog {
     background: transparent;
     border: none;
     padding: 0;
+    /* Sentrering for alle enheter */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    max-width: 90vw;
+    z-index: 1000;
 }
-dialog::backdrop { background: rgba(0,0,0,0.9); }
+
+dialog::backdrop {
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(5px);
+}
 
 .modal-content {
     background: white;
@@ -462,9 +472,19 @@ dialog::backdrop { background: rgba(0,0,0,0.9); }
     border-radius: 20px;
     text-align: center;
     min-width: 300px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,255,255,0.2);
 }
-.modal-content h2 { font-family: 'Teko', sans-serif; font-size: 48px; margin-bottom: 5px; color: #111; text-transform: uppercase; line-height: 1;}
+
+.modal-content h2 { 
+    font-family: 'Teko', sans-serif; 
+    font-size: 48px; 
+    margin-bottom: 5px; 
+    color: #111; 
+    text-transform: uppercase; 
+    line-height: 1;
+}
+
 .status-text { font-size: 14px; color: #666; margin-bottom: 20px; }
 
 .modal-content button {
@@ -478,7 +498,10 @@ dialog::backdrop { background: rgba(0,0,0,0.9); }
     font-size: 16px;
     font-weight: bold;
     text-transform: uppercase;
+    transition: transform 0.2s;
 }
+
+.modal-content button:active { transform: scale(0.95); }
 
 /* --- RESPONSIVE / LANDSCAPE --- */
 @media (orientation: landscape) {
