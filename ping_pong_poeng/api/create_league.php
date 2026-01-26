@@ -3,33 +3,36 @@ header('Content-Type: application/json');
 require 'db.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
-$league_code = $input['league_code'];
-$players = $input['players']; // Array av navn ["Per", "Pål", ...]
-$rounds = isset($input['rounds']) ? $input['rounds'] : 1; // 1 = enkel, 2 = dobbel
+$league_code = isset($input['league_code']) ? $input['league_code'] : '';
+$players = isset($input['players']) ? $input['players'] : [];
+$rounds = isset($input['rounds']) ? intval($input['rounds']) : 1; 
 
 if (!$league_code || count($players) < 2) {
-    echo json_encode(['status' => 'error', 'message' => 'Mangler liga eller nok spillere']);
+    echo json_encode(['status' => 'error', 'message' => 'Mangler ligakode eller nok spillere (min 2).']);
     exit;
 }
 
 try {
     $pdo->beginTransaction();
 
-    $fixtures = [];
     $count = count($players);
 
-    // Round Robin Algoritme
+    // ROUND ROBIN ALGORITME (Alle mot Alle)
     for ($r = 0; $r < $rounds; $r++) {
         for ($i = 0; $i < $count; $i++) {
             for ($j = $i + 1; $j < $count; $j++) {
-                // Legg til kamp (p1 vs p2)
+                
                 $p1 = $players[$i];
                 $p2 = $players[$j];
-                
-                // Hvis runde 2, bytt hjemme/borte (valgfritt)
-                if ($r % 2 != 0) { $temp = $p1; $p1 = $p2; $p2 = $temp; }
 
-                // ENDRING HER: Endret NULL til '' (tom streng) for winner_name
+                // Bytt hjemme/borte annenhver runde for variasjon
+                if ($r % 2 != 0) {
+                    $temp = $p1;
+                    $p1 = $p2;
+                    $p2 = $temp;
+                }
+
+                // HER ER FIXEN: Endret NULL til '' (to apostrofer)
                 $stmt = $pdo->prepare("INSERT INTO ping_highscore 
                     (league_code, player1_name, player2_name, player1_score, player2_score, winner_name) 
                     VALUES (?, ?, ?, 0, 0, '')");
@@ -40,10 +43,12 @@ try {
     }
 
     $pdo->commit();
-    echo json_encode(['status' => 'success', 'message' => 'Liga og terminliste opprettet!']);
+    echo json_encode(['status' => 'success', 'message' => 'Liga opprettet med terminliste!']);
 
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
