@@ -23,7 +23,17 @@ const p2ServeEl = document.getElementById('p2-serve');
 
 // Kjør når siden lastes
 window.addEventListener('DOMContentLoaded', () => {
+    // 1. Last inn historikk fra DB
     fetchHistory();
+
+    // 2. Sjekk LocalStorage for sist brukte navn og liga
+    const lastP1 = localStorage.getItem('lastP1');
+    const lastP2 = localStorage.getItem('lastP2');
+    const lastLeague = localStorage.getItem('lastLeague');
+
+    if (lastP1) document.getElementById('p1-name-input').value = lastP1;
+    if (lastP2) document.getElementById('p2-name-input').value = lastP2;
+    if (lastLeague) document.getElementById('league-code').value = lastLeague;
 });
 
 function adjustSetting(type, val) {
@@ -37,24 +47,29 @@ function adjustSetting(type, val) {
     }
 }
 
-// Håndtering av liga-valg (Ny vs Historikk)
-function toggleLeagueMode(mode) {
-    const selectWrapper = document.getElementById('league-select-wrapper');
-    const inputWrapper = document.getElementById('league-input-wrapper');
-    const backBtn = document.getElementById('back-to-select-btn');
-    const leagueInput = document.getElementById('league-code');
-    const leagueSelect = document.getElementById('league-select');
+/**
+ * Felles funksjon for å bytte mellom "Velg fra liste" og "Skriv nytt"
+ * @param {string} type - 'league', 'p1' eller 'p2'
+ * @param {string} mode - 'new' (input) eller 'history' (select)
+ */
+function toggleMode(type, mode) {
+    const selectWrapper = document.getElementById(`${type}-select-wrapper`);
+    const inputWrapper = document.getElementById(`${type}-input-wrapper`);
+    const backBtn = document.getElementById(`${type}-back-btn`);
+    const inputEl = type === 'league' ? document.getElementById('league-code') : document.getElementById(`${type}-name-input`);
+    const selectEl = document.getElementById(`${type}-select`);
 
     if (mode === 'new') {
         // Vis inputfelt, skjul dropdown
         selectWrapper.style.display = 'none';
         inputWrapper.style.display = 'flex';
-        // Vis knapp for å gå tilbake hvis det finnes historikk
-        if (leagueSelect.options.length > 1) {
+        
+        // Vis "tilbake til liste"-knapp HVIS det finnes historikk
+        if (selectEl.options.length > 1) {
             backBtn.style.display = 'flex';
         }
-        leagueInput.value = ''; 
-        leagueInput.focus();
+        
+        inputEl.focus();
     } else {
         // Vis dropdown, skjul inputfelt
         selectWrapper.style.display = 'flex';
@@ -62,10 +77,21 @@ function toggleLeagueMode(mode) {
     }
 }
 
-// Oppdater input-feltet når dropdown endres
-document.getElementById('league-select').addEventListener('change', function() {
-    document.getElementById('league-code').value = this.value;
-});
+// Koble select-valg til input-feltet automatisk
+function bindSelectToInput(type) {
+    const selectEl = document.getElementById(`${type}-select`);
+    const inputEl = type === 'league' ? document.getElementById('league-code') : document.getElementById(`${type}-name-input`);
+
+    selectEl.addEventListener('change', function() {
+        inputEl.value = this.value;
+    });
+}
+
+// Initialiser lyttere
+bindSelectToInput('league');
+bindSelectToInput('p1');
+bindSelectToInput('p2');
+
 
 document.getElementById('setup-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -79,6 +105,11 @@ document.getElementById('setup-form').addEventListener('submit', (e) => {
     // Henter ligakode
     config.leagueCode = document.getElementById('league-code').value;
     config.startingServer = document.getElementById('first-server').value;
+
+    // LAGRE TIL LOCALSTORAGE
+    localStorage.setItem('lastP1', config.p1Name);
+    localStorage.setItem('lastP2', config.p2Name);
+    if(config.leagueCode) localStorage.setItem('lastLeague', config.leagueCode);
 
     document.getElementById('p1-name').innerText = config.p1Name;
     document.getElementById('p2-name').innerText = config.p2Name;
@@ -208,7 +239,6 @@ function gameOver(winnerName) {
     const modal = document.getElementById('game-over-modal');
     document.getElementById('winner-text').innerHTML = `Vinneren er <b>${winnerName}</b>!`;
     
-    // Bruk showModal for native dialog støtte
     if (typeof modal.showModal === "function") {
         modal.showModal();
     } else {
@@ -235,41 +265,51 @@ async function fetchHistory() {
         const response = await fetch('api/get_history.php');
         const data = await response.json();
 
-        // 1. Fyll Liga Dropdown
+        // 1. Fyll Liga
         const leagueSelect = document.getElementById('league-select');
-        const selectWrapper = document.getElementById('league-select-wrapper');
-        const inputWrapper = document.getElementById('league-input-wrapper');
-        const backBtn = document.getElementById('back-to-select-btn');
+        fillSelect(leagueSelect, data.leagues);
 
+        // Bestem visningsmodus for Liga basert på om det finnes historikk
         if (data.leagues && data.leagues.length > 0) {
-            data.leagues.forEach(league => {
-                const opt = document.createElement('option');
-                opt.value = league;
-                opt.innerText = league;
-                leagueSelect.appendChild(opt);
-            });
-
-            // Hvis vi har historikk, vis select-boksen først
-            selectWrapper.style.display = 'flex';
-            inputWrapper.style.display = 'none';
-            backBtn.style.display = 'flex'; // Vis tilbake-knapp på input-mode
+            // Hvis det ikke er lagret en liga i localstorage, vis dropdown
+            if (!localStorage.getItem('lastLeague')) {
+                toggleMode('league', 'history');
+            } else {
+                // Hvis vi har en lagret liga, vis input-feltet (slik at man ser koden)
+                // men aktiver tilbake-knappen
+                document.getElementById('league-back-btn').style.display = 'flex';
+            }
         } else {
-            // Ingen historikk, vis bare input
-            toggleLeagueMode('new');
+            toggleMode('league', 'new');
         }
 
-        // 2. Fyll Spiller Datalist
-        const dataList = document.getElementById('player-history');
+        // 2. Fyll Spillere (P1 og P2 bruker samme liste)
+        const p1Select = document.getElementById('p1-select');
+        const p2Select = document.getElementById('p2-select');
+        fillSelect(p1Select, data.players);
+        fillSelect(p2Select, data.players);
+
+        // For spillere, la oss alltid vise input-feltet først (med "sist spilte" fylt ut),
+        // men aktiver "liste-knappen" hvis det finnes spillere i historikken.
         if (data.players && data.players.length > 0) {
-            data.players.forEach(player => {
-                const opt = document.createElement('option');
-                opt.value = player;
-                dataList.appendChild(opt);
-            });
+             document.getElementById('p1-back-btn').style.display = 'flex';
+             document.getElementById('p2-back-btn').style.display = 'flex';
         }
 
     } catch (error) {
         console.error("Kunne ikke hente historikk:", error);
+    }
+}
+
+// Hjelpefunksjon for å fylle <select>
+function fillSelect(selectElement, items) {
+    if (items && items.length > 0) {
+        items.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item;
+            opt.innerText = item;
+            selectElement.appendChild(opt);
+        });
     }
 }
 

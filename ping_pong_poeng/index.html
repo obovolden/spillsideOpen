@@ -10,9 +10,6 @@
 </head>
 <body>
 
-    <datalist id="player-history">
-        </datalist>
-
     <section id="setup-screen" class="screen active" aria-labelledby="setup-title">
         <div class="glass-panel">
             <header class="setup-header">
@@ -28,8 +25,8 @@
                         <i class="material-icons">history</i>
                         <select id="league-select">
                             <option value="" disabled selected>Velg liga...</option>
-                            </select>
-                        <button type="button" class="icon-btn" onclick="toggleLeagueMode('new')" aria-label="Ny liga">
+                        </select>
+                        <button type="button" class="icon-btn" onclick="toggleMode('league', 'new')" aria-label="Ny liga">
                             <i class="material-icons">add</i>
                         </button>
                     </div>
@@ -37,7 +34,7 @@
                     <div id="league-input-wrapper" class="input-with-icon">
                         <i class="material-icons">vpn_key</i>
                         <input type="text" id="league-code" placeholder="Skriv ny ligakode...">
-                        <button type="button" id="back-to-select-btn" class="icon-btn" onclick="toggleLeagueMode('history')" style="display:none;">
+                        <button type="button" id="league-back-btn" class="icon-btn" onclick="toggleMode('league', 'history')" style="display:none;">
                             <i class="material-icons">list</i>
                         </button>
                     </div>
@@ -45,18 +42,46 @@
                 
                 <div class="players-row">
                     <div class="input-group">
-                        <label for="p1-name-input">Spiller 1 (Blå)</label>
-                        <div class="input-with-icon">
+                        <label>Spiller 1 (Blå)</label>
+                        
+                        <div id="p1-select-wrapper" class="input-with-icon" style="display:none;">
+                            <i class="material-icons blue-text">history</i>
+                            <select id="p1-select">
+                                <option value="" disabled selected>Velg...</option>
+                            </select>
+                            <button type="button" class="icon-btn" onclick="toggleMode('p1', 'new')">
+                                <i class="material-icons">edit</i>
+                            </button>
+                        </div>
+
+                        <div id="p1-input-wrapper" class="input-with-icon">
                             <i class="material-icons blue-text">person</i>
-                            <input type="text" id="p1-name-input" value="Spiller 1" list="player-history" required autocomplete="off">
+                            <input type="text" id="p1-name-input" value="Spiller 1" required autocomplete="off">
+                            <button type="button" id="p1-back-btn" class="icon-btn" onclick="toggleMode('p1', 'history')" style="display:none;">
+                                <i class="material-icons">list</i>
+                            </button>
                         </div>
                     </div>
 
                     <div class="input-group">
-                        <label for="p2-name-input">Spiller 2 (Rød)</label>
-                        <div class="input-with-icon">
+                        <label>Spiller 2 (Rød)</label>
+                        
+                        <div id="p2-select-wrapper" class="input-with-icon" style="display:none;">
+                            <i class="material-icons red-text">history</i>
+                            <select id="p2-select">
+                                <option value="" disabled selected>Velg...</option>
+                            </select>
+                            <button type="button" class="icon-btn" onclick="toggleMode('p2', 'new')">
+                                <i class="material-icons">edit</i>
+                            </button>
+                        </div>
+
+                        <div id="p2-input-wrapper" class="input-with-icon">
                             <i class="material-icons red-text">person</i>
-                            <input type="text" id="p2-name-input" value="Spiller 2" list="player-history" required autocomplete="off">
+                            <input type="text" id="p2-name-input" value="Spiller 2" required autocomplete="off">
+                            <button type="button" id="p2-back-btn" class="icon-btn" onclick="toggleMode('p2', 'history')" style="display:none;">
+                                <i class="material-icons">list</i>
+                            </button>
                         </div>
                     </div>
                 </div>
