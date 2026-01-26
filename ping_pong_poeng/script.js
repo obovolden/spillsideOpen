@@ -1,385 +1,326 @@
-/* --- SECTION: STATE MANAGEMENT --- */
-let config = {
-    p1Name: "Spiller 1",
-    p2Name: "Spiller 2",
-    winningScore: 11,
-    leagueCode: "",
-    startingServer: 'p1'
-};
+/* --- STATE --- */
+let config = { p1Name: "Spiller 1", p2Name: "Spiller 2", winningScore: 11, leagueCode: "", startingServer: 'p1' };
+let gameState = { p1Score: 0, p2Score: 0, isGameOver: false };
+let currentMatchId = null; // ID på kamp hvis vi spiller fixture
+let wizardPlayers = []; // Liste for ny liga opprettelse
 
-let gameState = {
-    p1Score: 0,
-    p2Score: 0,
-    isGameOver: false
-};
-
-// DOM Elements
+// DOM Refs
 const p1ScoreEl = document.getElementById('p1-score');
 const p2ScoreEl = document.getElementById('p2-score');
 const p1ServeEl = document.getElementById('p1-serve');
 const p2ServeEl = document.getElementById('p2-serve');
 
-/* --- SECTION: SETUP & INIT --- */
-
-// Kjør når siden lastes
+/* --- INIT --- */
 window.addEventListener('DOMContentLoaded', () => {
-    // 1. Last inn historikk fra DB
     fetchHistory();
-
-    // 2. Sjekk LocalStorage for sist brukte navn og liga
-    const lastP1 = localStorage.getItem('lastP1');
-    const lastP2 = localStorage.getItem('lastP2');
-    const lastLeague = localStorage.getItem('lastLeague');
-
-    if (lastP1) document.getElementById('p1-name-input').value = lastP1;
-    if (lastP2) document.getElementById('p2-name-input').value = lastP2;
-    if (lastLeague) document.getElementById('league-code').value = lastLeague;
+    if(localStorage.getItem('lastP1')) document.getElementById('p1-name-input').value = localStorage.getItem('lastP1');
+    if(localStorage.getItem('lastP2')) document.getElementById('p2-name-input').value = localStorage.getItem('lastP2');
+    if(localStorage.getItem('lastLeague')) document.getElementById('league-code').value = localStorage.getItem('lastLeague');
 });
 
-function adjustSetting(type, val) {
-    if (type === 'score') {
-        const input = document.getElementById('winning-score-display');
-        let current = parseInt(input.value) || 0; 
-        let newVal = current + val;
-        if (newVal >= 1 && newVal <= 99) {
-            input.value = newVal;
-        }
-    }
+/* --- WIZARD LOGIC --- */
+function openLeagueWizard() {
+    wizardPlayers = [];
+    document.getElementById('wizard-player-list').innerHTML = '';
+    document.getElementById('wizard-league-name').value = '';
+    const modal = document.getElementById('league-wizard-modal');
+    if(modal.showModal) modal.showModal(); else modal.style.display = 'block';
 }
 
-/**
- * Felles funksjon for å bytte mellom "Velg fra liste" og "Skriv nytt"
- * @param {string} type - 'league', 'p1' eller 'p2'
- * @param {string} mode - 'new' (input) eller 'history' (select)
- */
+function addPlayerToWizard() {
+    const input = document.getElementById('wizard-player-input');
+    const name = input.value.trim();
+    if(name && !wizardPlayers.includes(name)) {
+        wizardPlayers.push(name);
+        renderWizardTags();
+        input.value = '';
+    }
+    input.focus();
+}
+
+function renderWizardTags() {
+    const container = document.getElementById('wizard-player-list');
+    container.innerHTML = wizardPlayers.map(p => `<span class="tag">${p}</span>`).join('');
+}
+
+async function generateLeague() {
+    const name = document.getElementById('wizard-league-name').value;
+    if(wizardPlayers.length < 2 || !name) return alert("Trenger navn og minst 2 spillere");
+
+    try {
+        const res = await fetch('api/create_league.php', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ league_code: name, players: wizardPlayers, rounds: 1 })
+        });
+        const json = await res.json();
+        
+        if(json.status === 'success') {
+            document.getElementById('league-wizard-modal').close();
+            document.getElementById('league-code').value = name;
+            showLeaderboard(); // Gå rett til tabellen
+        } else {
+            alert(json.message);
+        }
+    } catch(e) { alert("Feil ved opprettelse"); }
+}
+
+/* --- SETUP FORM --- */
 function toggleMode(type, mode) {
-    const selectWrapper = document.getElementById(`${type}-select-wrapper`);
-    const inputWrapper = document.getElementById(`${type}-input-wrapper`);
+    const wrapper = type === 'league' ? document.getElementById('league-select-wrapper') : document.getElementById(`${type}-select-wrapper`);
+    const inputWrap = type === 'league' ? document.getElementById('league-input-wrapper') : document.getElementById(`${type}-input-wrapper`);
     const backBtn = document.getElementById(`${type}-back-btn`);
-    const inputEl = type === 'league' ? document.getElementById('league-code') : document.getElementById(`${type}-name-input`);
-    const selectEl = document.getElementById(`${type}-select`);
-
+    
     if (mode === 'new') {
-        // Vis inputfelt, skjul dropdown
-        selectWrapper.style.display = 'none';
-        inputWrapper.style.display = 'flex';
-        
-        // Vis "tilbake til liste"-knapp HVIS det finnes historikk
-        if (selectEl.options.length > 1) {
-            backBtn.style.display = 'flex';
-        }
-        
-        inputEl.focus();
+        wrapper.style.display = 'none';
+        inputWrap.style.display = 'flex';
+        backBtn.style.display = 'flex';
     } else {
-        // Vis dropdown, skjul inputfelt
-        selectWrapper.style.display = 'flex';
-        inputWrapper.style.display = 'none';
+        wrapper.style.display = 'flex';
+        inputWrap.style.display = 'none';
     }
 }
-
-// Koble select-valg til input-feltet automatisk
-function bindSelectToInput(type) {
-    const selectEl = document.getElementById(`${type}-select`);
-    const inputEl = type === 'league' ? document.getElementById('league-code') : document.getElementById(`${type}-name-input`);
-
-    selectEl.addEventListener('change', function() {
-        inputEl.value = this.value;
+// Koble select til input
+['league', 'p1', 'p2'].forEach(t => {
+    document.getElementById(`${t}-select`).addEventListener('change', function() {
+        const inputId = t === 'league' ? 'league-code' : `${t}-name-input`;
+        document.getElementById(inputId).value = this.value;
     });
-}
-
-// Initialiser lyttere
-bindSelectToInput('league');
-bindSelectToInput('p1');
-bindSelectToInput('p2');
-
+});
 
 document.getElementById('setup-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    config.p1Name = document.getElementById('p1-name-input').value;
-    config.p2Name = document.getElementById('p2-name-input').value;
-    
-    // Henter vinnerscore
-    config.winningScore = parseInt(document.getElementById('winning-score-display').value);
-    if(!config.winningScore || config.winningScore < 1) config.winningScore = 11;
+    currentMatchId = null; // Reset fixture ID for quick matches
+    startGame(
+        document.getElementById('p1-name-input').value,
+        document.getElementById('p2-name-input').value
+    );
+});
 
-    // Henter ligakode
+function startGame(p1, p2) {
+    config.p1Name = p1; config.p2Name = p2;
+    config.winningScore = parseInt(document.getElementById('winning-score-display').value) || 11;
     config.leagueCode = document.getElementById('league-code').value;
     config.startingServer = document.getElementById('first-server').value;
 
-    // LAGRE TIL LOCALSTORAGE
-    localStorage.setItem('lastP1', config.p1Name);
-    localStorage.setItem('lastP2', config.p2Name);
+    localStorage.setItem('lastP1', p1); localStorage.setItem('lastP2', p2);
     if(config.leagueCode) localStorage.setItem('lastLeague', config.leagueCode);
 
-    document.getElementById('p1-name').innerText = config.p1Name;
-    document.getElementById('p2-name').innerText = config.p2Name;
-
+    document.getElementById('p1-name').innerText = p1;
+    document.getElementById('p2-name').innerText = p2;
     document.getElementById('setup-screen').classList.remove('active');
     document.getElementById('game-screen').classList.add('active');
-
-    updateServeIndicator();
-});
-
-/* --- SECTION: POINTER EVENTS (TOUCH & MOUSE) --- */
-let startY = 0;
-let endY = 0;
-const SWIPE_THRESHOLD = 50;
-const TAP_THRESHOLD = 10;
-
-function setupInputArea(elementId, playerKey) {
-    const el = document.getElementById(elementId);
     
-    el.addEventListener('pointerdown', (e) => {
+    gameState.p1Score = 0; gameState.p2Score = 0; gameState.isGameOver = false;
+    updateUI();
+}
+
+/* --- GAME LOGIC --- */
+function adjustSetting(type, val) {
+    const input = document.getElementById('winning-score-display');
+    let v = (parseInt(input.value) || 0) + val;
+    if (v >= 1 && v <= 99) input.value = v;
+}
+
+// Touch/Click
+let startY=0; const TAP_THRESH=10; const SWIPE_THRESH=50;
+function setupTouch(id, player) {
+    const el = document.getElementById(id);
+    el.addEventListener('pointerdown', e => { if(!gameState.isGameOver){ startY=e.clientY; el.setPointerCapture(e.pointerId); }});
+    el.addEventListener('pointerup', e => {
         if(gameState.isGameOver) return;
-        startY = e.clientY;
-        el.setPointerCapture(e.pointerId);
-    }, false);
-
-    el.addEventListener('pointerup', (e) => {
-        if (gameState.isGameOver) return;
-        endY = e.clientY;
         el.releasePointerCapture(e.pointerId);
-        handleGesture(playerKey);
-    }, false);
+        const diff = startY - e.clientY;
+        if(Math.abs(diff) < TAP_THRESH) addPt(player);
+        else if(diff > SWIPE_THRESH) addPt(player);
+        else if(diff < -SWIPE_THRESH) remPt(player);
+    });
 }
+setupTouch('p1-area', 'p1'); setupTouch('p2-area', 'p2');
 
-function handleGesture(player) {
-    const diff = startY - endY; 
-    const absDiff = Math.abs(diff);
-
-    // 1. TAP / KLIKK (Legg til poeng)
-    if (absDiff < TAP_THRESHOLD) {
-        addPoint(player);
-    } 
-    // 2. SVEIP OPP (Legg til poeng)
-    else if (diff > SWIPE_THRESHOLD) {
-        addPoint(player);
-    } 
-    // 3. SVEIP NED (Trekk fra poeng)
-    else if (diff < -SWIPE_THRESHOLD) {
-        removePoint(player);
-    }
+function addPt(p) {
+    if(p==='p1') { gameState.p1Score++; pop(p1ScoreEl); } else { gameState.p2Score++; pop(p2ScoreEl); }
+    updateUI(); checkWin();
 }
-
-setupInputArea('p1-area', 'p1');
-setupInputArea('p2-area', 'p2');
-
-/* --- SECTION: GAME LOGIC --- */
-function addPoint(player) {
-    if (player === 'p1') {
-        gameState.p1Score++;
-        triggerPop(p1ScoreEl);
-    } else {
-        gameState.p2Score++;
-        triggerPop(p2ScoreEl);
-    }
-    updateUI();
-    checkWinCondition();
-}
-
-function removePoint(player) {
-    if (player === 'p1' && gameState.p1Score > 0) {
-        gameState.p1Score--;
-        triggerPop(p1ScoreEl);
-    }
-    if (player === 'p2' && gameState.p2Score > 0) {
-        gameState.p2Score--;
-        triggerPop(p2ScoreEl);
-    }
+function remPt(p) {
+    if(p==='p1' && gameState.p1Score>0) { gameState.p1Score--; pop(p1ScoreEl); }
+    if(p==='p2' && gameState.p2Score>0) { gameState.p2Score--; pop(p2ScoreEl); }
     updateUI();
 }
-
-function triggerPop(element) {
-    element.classList.remove('score-pop');
-    void element.offsetWidth; // Trigger reflow
-    element.classList.add('score-pop');
-}
+function pop(el) { el.classList.remove('score-pop'); void el.offsetWidth; el.classList.add('score-pop'); }
 
 function updateUI() {
-    p1ScoreEl.innerText = gameState.p1Score;
-    p2ScoreEl.innerText = gameState.p2Score;
-    updateServeIndicator();
-}
-
-function updateServeIndicator() {
-    const totalPoints = gameState.p1Score + gameState.p2Score;
-    let server = '';
-
-    if (gameState.p1Score >= config.winningScore - 1 && gameState.p2Score >= config.winningScore - 1) {
-        const pointsSinceDeuce = totalPoints - ((config.winningScore - 1) * 2);
-        const startToggle = config.startingServer === 'p1' ? 0 : 1;
-        server = (pointsSinceDeuce + startToggle) % 2 === 0 ? 'p1' : 'p2';
-    } else {
-        const serveSeries = Math.floor(totalPoints / 2);
-        const startToggle = config.startingServer === 'p1' ? 0 : 1;
-        server = (serveSeries + startToggle) % 2 === 0 ? 'p1' : 'p2';
-    }
-
-    if (server === 'p1') {
-        p1ServeEl.classList.add('active');
-        p2ServeEl.classList.remove('active');
-    } else {
-        p1ServeEl.classList.remove('active');
-        p2ServeEl.classList.add('active');
-    }
-}
-
-function checkWinCondition() {
-    const s1 = gameState.p1Score;
-    const s2 = gameState.p2Score;
+    p1ScoreEl.innerText = gameState.p1Score; p2ScoreEl.innerText = gameState.p2Score;
+    const total = gameState.p1Score + gameState.p2Score;
+    let s = '';
     const target = config.winningScore;
+    
+    if (gameState.p1Score >= target-1 && gameState.p2Score >= target-1) {
+        // Deuce logic
+        const diff = total - ((target-1)*2);
+        const toggle = config.startingServer==='p1'?0:1;
+        s = (diff + toggle)%2 === 0 ? 'p1' : 'p2';
+    } else {
+        const toggle = config.startingServer==='p1'?0:1;
+        s = (Math.floor(total/2) + toggle)%2 === 0 ? 'p1' : 'p2';
+    }
+    
+    if(s==='p1'){ p1ServeEl.classList.add('active'); p2ServeEl.classList.remove('active'); }
+    else { p1ServeEl.classList.remove('active'); p2ServeEl.classList.add('active'); }
+}
 
-    if ((s1 >= target || s2 >= target) && Math.abs(s1 - s2) >= 2) {
-        gameOver(s1 > s2 ? config.p1Name : config.p2Name);
+function checkWin() {
+    const t = config.winningScore;
+    if((gameState.p1Score>=t || gameState.p2Score>=t) && Math.abs(gameState.p1Score-gameState.p2Score)>=2) {
+        gameOver(gameState.p1Score > gameState.p2Score ? config.p1Name : config.p2Name);
     }
 }
 
-function gameOver(winnerName) {
+function gameOver(winner) {
     gameState.isGameOver = true;
-    const modal = document.getElementById('game-over-modal');
-    document.getElementById('winner-text').innerHTML = `Vinneren er <b>${winnerName}</b>!`;
-    
-    if (typeof modal.showModal === "function") {
-        modal.showModal();
-    } else {
-        modal.style.display = 'block';
-    }
-    
-    saveGameData(winnerName);
+    const m = document.getElementById('game-over-modal');
+    document.getElementById('winner-text').innerHTML = `Vinneren er <b>${winner}</b>!`;
+    if(m.showModal) m.showModal(); else m.style.display='block';
+    saveGameData(winner);
 }
 
 document.getElementById('reset-btn').addEventListener('click', () => {
-    if(confirm("Nullstille kamp?")) {
-        gameState.p1Score = 0;
-        gameState.p2Score = 0;
-        gameState.isGameOver = false;
-        updateUI();
-    }
+    if(confirm("Nullstille?")) { gameState.p1Score=0; gameState.p2Score=0; gameState.isGameOver=false; updateUI(); }
 });
 
-/* --- SECTION: LEADERBOARD & API --- */
-
-// Henter historikk for ligaer og spillere
+/* --- API & DATA --- */
 async function fetchHistory() {
     try {
-        const response = await fetch('api/get_history.php');
-        const data = await response.json();
-
-        // 1. Fyll Liga
-        const leagueSelect = document.getElementById('league-select');
-        fillSelect(leagueSelect, data.leagues);
-
-        // Bestem visningsmodus for Liga basert på om det finnes historikk
-        if (data.leagues && data.leagues.length > 0) {
-            // Hvis det ikke er lagret en liga i localstorage, vis dropdown
-            if (!localStorage.getItem('lastLeague')) {
-                toggleMode('league', 'history');
-            } else {
-                // Hvis vi har en lagret liga, vis input-feltet (slik at man ser koden)
-                // men aktiver tilbake-knappen
-                document.getElementById('league-back-btn').style.display = 'flex';
-            }
-        } else {
-            toggleMode('league', 'new');
+        const res = await fetch('api/get_history.php');
+        const data = await res.json();
+        fillSelect(document.getElementById('league-select'), data.leagues);
+        fillSelect(document.getElementById('p1-select'), data.players);
+        fillSelect(document.getElementById('p2-select'), data.players);
+        
+        if(!data.leagues.length) toggleMode('league', 'new');
+        else if(!localStorage.getItem('lastLeague')) toggleMode('league', 'history');
+        else document.getElementById('league-back-btn').style.display = 'flex';
+        
+        if(data.players.length) {
+            document.getElementById('p1-back-btn').style.display='flex';
+            document.getElementById('p2-back-btn').style.display='flex';
         }
-
-        // 2. Fyll Spillere (P1 og P2 bruker samme liste)
-        const p1Select = document.getElementById('p1-select');
-        const p2Select = document.getElementById('p2-select');
-        fillSelect(p1Select, data.players);
-        fillSelect(p2Select, data.players);
-
-        // For spillere, la oss alltid vise input-feltet først (med "sist spilte" fylt ut),
-        // men aktiver "liste-knappen" hvis det finnes spillere i historikken.
-        if (data.players && data.players.length > 0) {
-             document.getElementById('p1-back-btn').style.display = 'flex';
-             document.getElementById('p2-back-btn').style.display = 'flex';
-        }
-
-    } catch (error) {
-        console.error("Kunne ikke hente historikk:", error);
-    }
+    } catch(e) { console.error(e); }
+}
+function fillSelect(el, items) {
+    if(items) items.forEach(i => { let o=document.createElement('option'); o.value=i; o.innerText=i; el.appendChild(o); });
 }
 
-// Hjelpefunksjon for å fylle <select>
-function fillSelect(selectElement, items) {
-    if (items && items.length > 0) {
-        items.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item;
-            opt.innerText = item;
-            selectElement.appendChild(opt);
-        });
-    }
-}
-
-async function saveGameData(winnerName) {
-    const statusEl = document.getElementById('save-status');
-    
-    const payload = {
-        p1_name: config.p1Name,
-        p2_name: config.p2Name,
-        p1_score: gameState.p1Score,
-        p2_score: gameState.p2Score,
-        winner_name: winnerName,
-        league_code: config.leagueCode || 'private'
-    };
-
+async function saveGameData(winner) {
     try {
-        const response = await fetch('api/save_score.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        await fetch('api/save_score.php', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                match_id: currentMatchId, // Sender ID hvis fixture
+                p1_name: config.p1Name, p2_name: config.p2Name,
+                p1_score: gameState.p1Score, p2_score: gameState.p2Score,
+                winner_name: winner, league_code: config.leagueCode
+            })
         });
-        const result = await response.json();
-        statusEl.innerText = result.message;
-    } catch (error) {
-        console.error("Feil ved lagring:", error);
-        statusEl.innerText = "Kunne ikke lagre resultatet.";
-    }
+        document.getElementById('save-status').innerText = "Lagret!";
+    } catch(e) { document.getElementById('save-status').innerText = "Feil ved lagring"; }
 }
 
 async function showLeaderboard() {
     const league = document.getElementById('league-code').value || 'private';
-
     try {
-        const response = await fetch(`api/get_leaderboard.php?league_code=${encodeURIComponent(league)}`);
-        const data = await response.json();
-        renderTable(data);
-
+        const res = await fetch(`api/get_leaderboard.php?league_code=${encodeURIComponent(league)}`);
+        const data = await res.json();
+        renderTable(data.leaderboard || []);
+        renderLists(data.upcoming || [], data.history || []);
+        
         document.getElementById('setup-screen').classList.remove('active');
         document.getElementById('leaderboard-screen').classList.add('active');
-    } catch (error) {
-        console.error("Feil ved henting av tabell:", error);
-        alert("Kunne ikke koble til databasen for å hente tabellen.");
-    }
+        document.getElementById('game-over-modal').close();
+    } catch(e) { alert("Fant ingen liga med det navnet."); }
 }
 
 function renderTable(data) {
-    const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = ''; 
+    const b = document.getElementById('leaderboard-body'); b.innerHTML = '';
+    if(!data.length) { b.innerHTML='<tr><td colspan="6">Ingen fullførte kamper</td></tr>'; return; }
+    data.forEach((r,i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML=`<td>${i+1}</td><td class="align-left">${r.player_name}</td><td>${r.kamper}</td><td>${r.seiere}</td><td>${r.tap}</td><td><strong>${r.poeng}</strong></td>`;
+        b.appendChild(tr);
+    });
+}
 
-    if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">Ingen kamper funnet</td></tr>';
-        return;
+function renderLists(upcoming, history) {
+    // Render Upcoming
+    const uList = document.getElementById('upcoming-matches-list'); uList.innerHTML = '';
+    if(!upcoming.length) uList.innerHTML = '<li class="no-data">Ingen kamper planlagt</li>';
+    else {
+        upcoming.forEach(m => {
+            const li = document.createElement('li'); li.className = 'match-item';
+            li.innerHTML = `
+                <div class="match-info"><span>${m.player1_name} <small>vs</small> ${m.player2_name}</span></div>
+                <button class="play-btn" onclick="playFixture(${m.id}, '${m.player1_name}', '${m.player2_name}')">SPILL</button>
+            `;
+            uList.appendChild(li);
+        });
     }
 
-    data.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td class="align-left">${row.player_name}</td>
-            <td>${row.kamper}</td>
-            <td>${row.seiere}</td>
-            <td>${row.tap}</td>
-            <td>${row.diff > 0 ? '+' + row.diff : row.diff}</td>
-            <td><strong>${row.poeng}</strong></td>
-        `;
-        tbody.appendChild(tr);
-    });
+    // Render History
+    const hList = document.getElementById('match-history-list'); hList.innerHTML = '';
+    if(!history.length) hList.innerHTML = '<li class="no-data">Ingen historikk</li>';
+    else {
+        history.forEach(m => {
+            const li = document.createElement('li'); li.className = 'match-item';
+            const w1 = parseInt(m.player1_score) > parseInt(m.player2_score) ? 'winner' : 'loser';
+            const w2 = parseInt(m.player2_score) > parseInt(m.player1_score) ? 'winner' : 'loser';
+            li.innerHTML = `
+                <div class="match-info">
+                    <span class="${w1}">${m.player1_name}</span> <span class="score">${m.player1_score}-${m.player2_score}</span> <span class="${w2}">${m.player2_name}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteMatch(${m.id})"><i class="material-icons">delete</i></button>
+            `;
+            hList.appendChild(li);
+        });
+    }
+}
+
+function playFixture(id, p1, p2) {
+    currentMatchId = id;
+    document.getElementById('leaderboard-screen').classList.remove('active');
+    startGame(p1, p2);
+}
+
+function backToLeaderboard() {
+    document.getElementById('game-over-modal').close();
+    showLeaderboard();
 }
 
 function closeLeaderboard() {
     document.getElementById('leaderboard-screen').classList.remove('active');
     document.getElementById('setup-screen').classList.add('active');
+}
+
+/* --- ADMIN --- */
+function openAdminModal() { document.getElementById('admin-modal').showModal(); }
+async function deleteMatch(id) {
+    if(confirm("Slette kamp?")) {
+        await fetch('api/admin_action.php', { method:'POST', body:JSON.stringify({action:'delete_match', id:id})});
+        showLeaderboard();
+    }
+}
+async function adminAction(act) {
+    const payload = { action: act, league_code: document.getElementById('league-code').value };
+    if(act === 'retire_player') payload.name = document.getElementById('admin-retire-player').value;
+    if(act === 'rename_player') {
+        payload.old_name = document.getElementById('admin-old-player').value;
+        payload.new_name = document.getElementById('admin-new-player').value;
+    }
+    
+    if(confirm("Er du sikker?")) {
+        try {
+            const r = await fetch('api/admin_action.php', { method:'POST', body:JSON.stringify(payload)});
+            const j = await r.json();
+            alert(j.message);
+            if(j.status==='success') location.reload();
+        } catch(e){alert("Feil");}
+    }
 }

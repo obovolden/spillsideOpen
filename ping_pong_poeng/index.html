@@ -10,7 +10,9 @@
 </head>
 <body>
 
-    <section id="setup-screen" class="screen active" aria-labelledby="setup-title">
+    <datalist id="player-history"></datalist>
+
+    <section id="setup-screen" class="screen active">
         <div class="glass-panel">
             <header class="setup-header">
                 <h1 id="setup-title">PING PONG</h1>
@@ -19,15 +21,13 @@
             
             <form id="setup-form">
                 <div class="input-group">
-                    <label for="league-select">Ligakode <span class="opt">(valgfri)</span></label>
+                    <label>Ligakode <span class="opt">(valgfri)</span></label>
                     
                     <div id="league-select-wrapper" class="input-with-icon" style="display:none;">
                         <i class="material-icons">history</i>
-                        <select id="league-select">
-                            <option value="" disabled selected>Velg liga...</option>
-                        </select>
-                        <button type="button" class="icon-btn" onclick="toggleMode('league', 'new')" aria-label="Ny liga">
-                            <i class="material-icons">add</i>
+                        <select id="league-select"><option value="" disabled selected>Velg liga...</option></select>
+                        <button type="button" class="icon-btn" onclick="openLeagueWizard()" aria-label="Ny Liga Wizard" style="background: #e67e22;">
+                            <i class="material-icons">auto_fix_high</i>
                         </button>
                     </div>
 
@@ -38,66 +38,51 @@
                             <i class="material-icons">list</i>
                         </button>
                     </div>
+                    <div style="text-align:right; margin-top:-10px;">
+                        <button type="button" class="text-btn" onclick="openLeagueWizard()">Opprett Liga m/Terminliste</button>
+                    </div>
                 </div> 
                 
                 <div class="players-row">
                     <div class="input-group">
                         <label>Spiller 1 (Blå)</label>
-                        
                         <div id="p1-select-wrapper" class="input-with-icon" style="display:none;">
                             <i class="material-icons blue-text">history</i>
-                            <select id="p1-select">
-                                <option value="" disabled selected>Velg...</option>
-                            </select>
-                            <button type="button" class="icon-btn" onclick="toggleMode('p1', 'new')">
-                                <i class="material-icons">edit</i>
-                            </button>
+                            <select id="p1-select"><option value="" disabled selected>Velg...</option></select>
+                            <button type="button" class="icon-btn" onclick="toggleMode('p1', 'new')"><i class="material-icons">edit</i></button>
                         </div>
-
                         <div id="p1-input-wrapper" class="input-with-icon">
                             <i class="material-icons blue-text">person</i>
                             <input type="text" id="p1-name-input" value="Spiller 1" required autocomplete="off">
-                            <button type="button" id="p1-back-btn" class="icon-btn" onclick="toggleMode('p1', 'history')" style="display:none;">
-                                <i class="material-icons">list</i>
-                            </button>
+                            <button type="button" id="p1-back-btn" class="icon-btn" onclick="toggleMode('p1', 'history')" style="display:none;"><i class="material-icons">list</i></button>
                         </div>
                     </div>
 
                     <div class="input-group">
                         <label>Spiller 2 (Rød)</label>
-                        
                         <div id="p2-select-wrapper" class="input-with-icon" style="display:none;">
                             <i class="material-icons red-text">history</i>
-                            <select id="p2-select">
-                                <option value="" disabled selected>Velg...</option>
-                            </select>
-                            <button type="button" class="icon-btn" onclick="toggleMode('p2', 'new')">
-                                <i class="material-icons">edit</i>
-                            </button>
+                            <select id="p2-select"><option value="" disabled selected>Velg...</option></select>
+                            <button type="button" class="icon-btn" onclick="toggleMode('p2', 'new')"><i class="material-icons">edit</i></button>
                         </div>
-
                         <div id="p2-input-wrapper" class="input-with-icon">
                             <i class="material-icons red-text">person</i>
                             <input type="text" id="p2-name-input" value="Spiller 2" required autocomplete="off">
-                            <button type="button" id="p2-back-btn" class="icon-btn" onclick="toggleMode('p2', 'history')" style="display:none;">
-                                <i class="material-icons">list</i>
-                            </button>
+                            <button type="button" id="p2-back-btn" class="icon-btn" onclick="toggleMode('p2', 'history')" style="display:none;"><i class="material-icons">list</i></button>
                         </div>
                     </div>
                 </div>
 
                 <fieldset class="settings-group">
                     <legend>Innstillinger</legend>
-                    
                     <div class="setting-item">
                         <span>Vinnerscore</span>
-                        <div class="stepper" role="group">
+                        <div class="stepper">
                             <button type="button" onclick="adjustSetting('score', -1)">remove</button>
                             <input type="number" id="winning-score-display" value="11" min="1" max="99">
                             <button type="button" onclick="adjustSetting('score', 1)">add</button>
                         </div>
                     </div>
-
                     <div class="setting-item">
                         <span>Første Serve</span>
                         <div class="select-wrapper">
@@ -111,70 +96,99 @@
                 </fieldset>
 
                 <div class="button-group">
-                    <button type="submit" class="start-btn">
-                        Start Kamp <i class="material-icons">play_arrow</i>
-                    </button>
-                    <button type="button" class="secondary-btn" onclick="showLeaderboard()">
-                        Se Tabell
-                    </button>
+                    <button type="submit" class="start-btn">Quick Match <i class="material-icons">play_arrow</i></button>
+                    <button type="button" class="secondary-btn" onclick="showLeaderboard()">Se Tabell</button>
                 </div>
             </form>
         </div>
     </section>
 
-    <section id="leaderboard-screen" class="screen" aria-labelledby="leaderboard-title">
+    <dialog id="league-wizard-modal">
+        <article class="modal-content glass-panel" style="max-width:400px; margin:auto;">
+            <h3>Opprett Liga</h3>
+            <p class="subtitle">Automatisk terminliste</p>
+
+            <div class="input-group">
+                <label>Navn på liga</label>
+                <div class="input-with-icon">
+                    <i class="material-icons">emoji_events</i>
+                    <input type="text" id="wizard-league-name" placeholder="F.eks. Fredagspils">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Legg til spillere</label>
+                <div class="input-with-icon">
+                    <i class="material-icons">person_add</i>
+                    <input type="text" id="wizard-player-input" placeholder="Navn..." onkeydown="if(event.key==='Enter'){event.preventDefault(); addPlayerToWizard();}">
+                    <button type="button" class="icon-btn" onclick="addPlayerToWizard()"><i class="material-icons">add</i></button>
+                </div>
+                <div id="wizard-player-list" class="tags-container">
+                    </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="generateLeague()" class="start-btn">Generer Terminliste</button>
+                <button onclick="document.getElementById('league-wizard-modal').close()" class="secondary-btn">Avbryt</button>
+            </div>
+        </article>
+    </dialog>
+
+    <section id="leaderboard-screen" class="screen">
         <div class="glass-panel full-height">
             <header class="leaderboard-header">
+                <button onclick="openAdminModal()" class="material-icons icon-btn-small">settings</button>
                 <h2 id="leaderboard-title">Tabell</h2>
                 <button onclick="closeLeaderboard()" class="material-icons close-btn">close</button>
             </header>
             
-            <div class="table-container">
-                <table id="league-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th class="align-left">Navn</th>
-                            <th>K</th>
-                            <th>V</th>
-                            <th>T</th>
-                            <th>Diff</th>
-                            <th>P</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-body">
-                        </tbody>
-                </table>
+            <div class="scroll-container">
+                <div class="table-container">
+                    <table id="league-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th class="align-left">Navn</th>
+                                <th>K</th>
+                                <th>V</th>
+                                <th>T</th>
+                                <th>P</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="history-section">
+                    <h3>Kommende Kamper</h3>
+                    <ul id="upcoming-matches-list" class="match-list"></ul>
+                </div>
+
+                <div class="history-section">
+                    <h3>Siste Resultater</h3>
+                    <ul id="match-history-list" class="match-list"></ul>
+                </div>
             </div>
         </div>
     </section>
 
     <main id="game-screen" class="screen">
-        
-        <section id="p1-area" class="player-area blue" aria-label="Område for Spiller 1">
+        <section id="p1-area" class="player-area blue">
             <header class="player-info">
                 <h2 id="p1-name">Spiller 1</h2>
                 <span class="material-icons serve-icon" id="p1-serve">sports_tennis</span>
             </header>
-            
             <output class="score" id="p1-score">0</output>
-            
-            <footer class="help-text"></footer>
         </section>
-
         <aside class="divider">
-            <button id="reset-btn" class="material-icons" aria-label="Nullstill kamp">refresh</button>
+            <button id="reset-btn" class="material-icons">refresh</button>
         </aside>
-
-        <section id="p2-area" class="player-area red" aria-label="Område for Spiller 2">
+        <section id="p2-area" class="player-area red">
             <header class="player-info">
                 <h2 id="p2-name">Spiller 2</h2>
                 <span class="material-icons serve-icon" id="p2-serve">sports_tennis</span>
             </header>
-            
             <output class="score" id="p2-score">0</output>
-            
-            <footer class="help-text"></footer>
         </section>
 
         <dialog id="game-over-modal">
@@ -183,9 +197,38 @@
                 <p id="winner-text"></p>
                 <p id="save-status" class="status-text">Lagrer resultat...</p>
                 <button onclick="location.reload()">Ny Kamp</button>
+                <button onclick="backToLeaderboard()" class="secondary-btn" style="margin-top:10px;">Til Tabell</button>
             </article>
         </dialog>
     </main>
+
+    <dialog id="admin-modal">
+        <article class="modal-content">
+            <h3>Admin</h3>
+            <p class="subtitle">Endre navn eller slett spillere</p>
+            
+            <div class="input-group">
+                <label>Slett Spiller fra Liga</label>
+                <div class="input-with-icon">
+                    <i class="material-icons">person_off</i>
+                    <input type="text" id="admin-retire-player" placeholder="Navn på spiller">
+                </div>
+                <button onclick="adminAction('retire_player')" class="secondary-btn" style="color:#e74c3c; border-color:#e74c3c; margin-top:5px;">Fjern fra terminliste</button>
+                <p style="font-size:10px; color:#aaa; margin-top:5px;">(Sletter kommende kamper, beholder historikk)</p>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+
+            <div class="input-group">
+                <label>Rename Spiller</label>
+                <input type="text" id="admin-old-player" placeholder="Gammelt navn" style="margin-bottom:5px;">
+                <input type="text" id="admin-new-player" placeholder="Nytt navn">
+                <button onclick="adminAction('rename_player')" class="secondary-btn" style="margin-top:5px;">Lagre Navn</button>
+            </div>
+
+            <button onclick="document.getElementById('admin-modal').close()" style="margin-top:20px; background:#333;">Lukk</button>
+        </article>
+    </dialog>
 
     <script src="script.js"></script>
 </body>
