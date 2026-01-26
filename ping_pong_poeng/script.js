@@ -193,7 +193,7 @@ document.getElementById('reset-btn').addEventListener('click', () => {
 
 /* --- SECTION: LEADERBOARD & BACKEND (OPPDATERT) --- */
 
-// Lagrer resultatet til databasen via save_score.php
+// Lagrer resultatet til databasen via api/save_score.php
 async function saveGameData(winnerName) {
     const statusEl = document.getElementById('save-status');
     
@@ -207,7 +207,8 @@ async function saveGameData(winnerName) {
     };
 
     try {
-        const response = await fetch('save_score.php', {
+        // ENDRING HER: Lagt til 'api/' foran filnavnet
+        const response = await fetch('api/save_score.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -220,16 +221,17 @@ async function saveGameData(winnerName) {
     }
 }
 
-// Henter tabellen fra databasen via get_leaderboard.php
+// Henter tabellen fra databasen via api/get_leaderboard.php
 async function showLeaderboard() {
     // Vi henter koden som står i feltet, eller bruker "private" som standard
     const league = document.getElementById('league-code').value || 'private';
 
     try {
-        const response = await fetch(`get_leaderboard.php?league_code=${encodeURIComponent(league)}`);
+        // ENDRING HER: Lagt til 'api/' foran filnavnet
+        const response = await fetch(`api/get_leaderboard.php?league_code=${encodeURIComponent(league)}`);
         const data = await response.json();
 
-        // Bruker den eksisterende renderTable-funksjonen din for å tegne opp tabellen
+        // Bruker renderTable for å tegne opp tabellen
         renderTable(data);
 
         // Bytter skjerm
@@ -239,4 +241,37 @@ async function showLeaderboard() {
         console.error("Feil ved henting av tabell:", error);
         alert("Kunne ikke koble til databasen for å hente tabellen.");
     }
+}
+
+// ENDRING HER: Funksjon for å fylle tabellen med data
+function renderTable(data) {
+    const tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = ''; // Tømmer tabellen for gamle data
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">Ingen kamper funnet</td></tr>';
+        return;
+    }
+
+    data.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        
+        // Matcher kolonnene i HTML-tabellen din:
+        // # | Navn | K | V | T | Diff | P
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td class="align-left">${row.player_name}</td>
+            <td>${row.kamper}</td>
+            <td>${row.seiere}</td>
+            <td>${row.tap}</td>
+            <td>${row.diff > 0 ? '+' + row.diff : row.diff}</td>
+            <td><strong>${row.poeng}</strong></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function closeLeaderboard() {
+    document.getElementById('leaderboard-screen').classList.remove('active');
+    document.getElementById('setup-screen').classList.add('active');
 }
