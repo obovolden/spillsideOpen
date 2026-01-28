@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maxi-Yatzy - Spillkapsel</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f4f4;
+            --dice-bg: #fff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 { margin-bottom: 10px; color: var(--primary-color); }
+
+        /* Spillområde */
+        .game-container {
+            display: flex;
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Terning-seksjon */
+        .dice-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .dice-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .die {
+            width: 60px;
+            height: 60px;
+            background-color: var(--dice-bg);
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .die.held {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+        }
+
+        button#roll-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button#roll-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Poengtavle */
+        .scorecard {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-width: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        td.score-cell {
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #fafafa;
+            width: 60px;
+        }
+
+        td.score-cell:hover {
+            background-color: #e0e0e0;
+        }
+
+        td.filled {
+            color: #333;
+            cursor: default;
+            background-color: #fff !important;
+        }
+
+        td.potential {
+            color: var(--accent-color);
+            font-style: italic;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #eee;
+        }
+        
+        #game-over-msg {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        /* Ny stil for "Hånden/Begeret" som følger musa */
+#hand-cursor {
+    position: fixed;
+    pointer-events: none; /* Lar musa klikke "gjennom" elementet */
+    font-size: 40px;
+    user-select: none;
+    display: none; /* Skjult til vi klikker */
+    z-index: 1000;
+    transform: translate(-50%, -50%); /* Sentrer på musa */
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+}
+
+/* Riste-animasjon */
+@keyframes shake {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotate(-10deg); }
+    75% { transform: translate(-50%, -50%) rotate(10deg); }
+    100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+.shaking {
+    animation: shake 0.2s infinite;
+}
+
+/* Gjør kaste-området tydeligere */
+.dice-section {
+    cursor: grab; /* Viser en hånd-cursor */
+    position: relative;
+    min-height: 250px; /* Litt mer plass til å riste */
+    border: 2px dashed #ddd; /* Visuell ramme */
+}
+
+.dice-section:active {
+    cursor: grabbing; /* Lukket hånd når man trykker */
+    border-color: var(--accent-color);
+}
+
+/* Skjul den gamle knappen, men behold funksjonen i koden */
+#roll-btn {
+    display: none;
+}
+
+#instruction-text {
+    color: #7f8c8d;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+    </style>
+</head>
+<body>
+    <div id="hand-cursor">✋🎲</div>
+    <h1>Maxi-Yatzy</h1>
+    <p>Velkommen til Spillkapsel Maxi-Yatzy (6 terninger)</p>
+
+    <div class="game-container">
+        <div class="dice-section">
+            <div class="dice-container" id="dice-container">
+                </div>
+            <p>Kast igjen: <span id="rolls-left">3</span></p>
+            <p id="instruction-text">Klikk, hold og rist musa for å kaste!</p>
+            <button id="reset-btn" onclick="initGame()" style="display:none; background-color: #27ae60; margin-top:10px;">Nytt Spill</button>
+            <div id="game-over-msg">Spillet er ferdig!</div>
+        </div>
+
+        <div class="scorecard">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Poeng</th>
+                    </tr>
+                </thead>
+                <tbody id="score-body">
+                    </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td>Sum over streken</td>
+                        <td id="sum-upper">0</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Bonus (hvis sum ≥ 75)</td>
+                        <td id="bonus">0</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Totalsum</td>
+                        <td id="total-score">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+<script>
+    // --- KONFIGURASJON ---
+    const NUM_DICE = 6;
+    const MAX_ROLLS = 3;
+    
+    // Kategorier for Maxi-Yatzy
+    const CATEGORIES = [
+        { id: 'ones', name: 'Enere', simple: 1 },
+        { id: 'twos', name: 'Toere', simple: 2 },
+        { id: 'threes', name: 'Treere', simple: 3 },
+        { id: 'fours', name: 'Firere', simple: 4 },
+        { id: 'fives', name: 'Femmere', simple: 5 },
+        { id: 'sixes', name: 'Seksere', simple: 6 },
+        // --- Strek ---
+        { id: 'onePair', name: 'Ett par' },
+        { id: 'twoPairs', name: 'To par' },
+        { id: 'threePairs', name: 'Tre par' },
+        { id: 'threeKind', name: 'Tre like' },
+        { id: 'fourKind', name: 'Fire like' },
+        { id: 'fiveKind', name: 'Fem like' },
+        { id: 'smallStraight', name: 'Liten Straight (1-5)' },
+        { id: 'largeStraight', name: 'Stor Straight (2-6)' },
+        { id: 'fullStraight', name: 'Full Straight (1-6)' },
+        { id: 'house', name: 'Hus (3 + 2)' },
+        { id: 'villa', name: 'Villa (3 + 3)' },
+        { id: 'tower', name: 'Tårn (2 + 4)' },
+        { id: 'chance', name: 'Sjanse' },
+        { id: 'maxiyatzy', name: 'Maxi-Yatzy (6 like)' }
+    ];
+
+    // --- TILSTAND ---
+    let dice = Array(NUM_DICE).fill(0);
+    let held = Array(NUM_DICE).fill(false);
+    let rollsLeft = MAX_ROLLS;
+    let scores = {}; // Lagrer låste poeng
+    let roundActive = false;
+
+    // --- INITIALISERING ---
+    function initGame() {
+        scores = {};
+        rollsLeft = MAX_ROLLS;
+        held.fill(false);
+        dice.fill(0);
+        roundActive = false;
+        
+        document.getElementById('reset-btn').style.display = 'none';
+        document.getElementById('roll-btn').disabled = false;
+        document.getElementById('game-over-msg').style.display = 'none';
+        
+        renderScoreboard();
+        renderDice();
+        updateUI();
+    }
+
+    function renderScoreboard() {
+        const tbody = document.getElementById('score-body');
+        tbody.innerHTML = '';
+
+        CATEGORIES.forEach(cat => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${cat.name}</td>
+                <td id="score-${cat.id}" class="score-cell" onclick="selectCategory('${cat.id}')"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        updateTotals();
+    }
+
+    // --- SPILL LOGIKK ---
+
+    function rollDice() {
+        if (rollsLeft <= 0) return;
+
+        for (let i = 0; i < NUM_DICE; i++) {
+            if (!held[i]) {
+                dice[i] = Math.floor(Math.random() * 6) + 1;
+            }
+        }
+        
+        rollsLeft--;
+        roundActive = true;
+        renderDice();
+        showPotentialScores();
+        updateUI();
+    }
+
+    function toggleHold(index) {
+        if (rollsLeft === MAX_ROLLS && !roundActive) return; // Kan ikke holde før første kast
+        if (!roundActive) return; 
+
+        held[index] = !held[index];
+        renderDice();
+    }
+
+    function selectCategory(catId) {
+        if (!roundActive) return;
+        if (scores[catId] !== undefined) return; // Allerede tatt
+
+        const points = calculateScore(catId, dice);
+        scores[catId] = points;
+
+        // Reset for neste runde
+        dice.fill(0);
+        held.fill(false);
+        rollsLeft = MAX_ROLLS;
+        roundActive = false; // Må kaste for å starte på nytt
+
+        renderScoreboard();
+        
+        // Fyll inn allerede satte poeng
+        Object.keys(scores).forEach(key => {
+            const cell = document.getElementById(`score-${key}`);
+            cell.textContent = scores[key];
+            cell.classList.add('filled');
+            cell.classList.remove('potential');
+        });
+
+        updateTotals();
+        renderDice();
+        updateUI();
+        
+        checkGameOver();
+    }
+
+    // --- POENG BEREGNING ---
+    function calculateScore(catId, currentDice) {
+        // Hjelpefunksjon: tell antall av hver terningverdi (indeks 1-6)
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        let sum = 0;
+        currentDice.forEach(d => {
+            counts[d]++;
+            sum += d;
+        });
+
+        // Enkle tall (Enere, Toere...)
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (cat.simple) {
+            return counts[cat.simple] * cat.simple;
+        }
+
+        switch (catId) {
+            case 'onePair':
+                for (let i = 6; i >= 1; i--) if (counts[i] >= 2) return i * 2;
+                return 0;
+            case 'twoPairs':
+                let pairs = 0;
+                let score2p = 0;
+                for (let i = 6; i >= 1; i--) {
+                    if (counts[i] >= 2) {
+                        pairs++;
+                        score2p += i * 2;
+                    }
+                }
+                return pairs >= 2 ? score2p : 0;
+            case 'threePairs':
+                let pairs3 = 0;
+                let score3p = 0;
+                for (let i = 6; i >= 1; i--) {
+                    if (counts[i] >= 2) {
+                        pairs3++;
+                        score3p += i * 2;
+                    }
+                }
+                return pairs3 === 3 ? score3p : 0;
+            case 'threeKind':
+                for (let i = 6; i >= 1; i--) if (counts[i] >= 3) return i * 3;
+                return 0;
+            case 'fourKind':
+                for (let i = 6; i >= 1; i--) if (counts[i] >= 4) return i * 4;
+                return 0;
+            case 'fiveKind':
+                for (let i = 6; i >= 1; i--) if (counts[i] >= 5) return i * 5;
+                return 0;
+            case 'smallStraight': // 1-2-3-4-5
+                return (counts[1] && counts[2] && counts[3] && counts[4] && counts[5]) ? 15 : 0;
+            case 'largeStraight': // 2-3-4-5-6
+                return (counts[2] && counts[3] && counts[4] && counts[5] && counts[6]) ? 20 : 0;
+            case 'fullStraight': // 1-2-3-4-5-6
+                return (counts[1] && counts[2] && counts[3] && counts[4] && counts[5] && counts[6]) ? 21 : 0;
+            case 'house': // 3 + 2 (Men i Maxi må det være 3 like + 2 like, trenger ikke bruke alle 6 terninger for hus, men vanligvis er det spesifikt. La oss anta standard: 3 av en, 2 av en annen).
+                // Sjekk for 3 like
+                let threeVal = 0;
+                let twoVal = 0;
+                for (let i = 6; i >= 1; i--) {
+                    if (counts[i] >= 3) {
+                        threeVal = i;
+                        break;
+                    }
+                }
+                // Sjekk for 2 like (som ikke er de tre like)
+                for (let i = 6; i >= 1; i--) {
+                    if (counts[i] >= 2 && i !== threeVal) {
+                        twoVal = i;
+                        break;
+                    }
+                }
+                return (threeVal > 0 && twoVal > 0) ? (threeVal * 3 + twoVal * 2) : 0;
+            case 'villa': // 3 + 3
+                let first3 = 0;
+                let second3 = 0;
+                for (let i = 6; i >= 1; i--) {
+                    if (counts[i] >= 3) {
+                        if (first3 === 0) first3 = i;
+                        else { second3 = i; break; }
+                    }
+                }
+                return (first3 > 0 && second3 > 0) ? (first3 * 3 + second3 * 3) : 0;
+            case 'tower': // 4 + 2
+                 let fourVal = 0;
+                 let twoValT = 0;
+                 for (let i = 6; i >= 1; i--) { if(counts[i]>=4) { fourVal=i; break; } }
+                 for (let i = 6; i >= 1; i--) { if(counts[i]>=2 && i !== fourVal) { twoValT=i; break; } }
+                 return (fourVal > 0 && twoValT > 0) ? (fourVal * 4 + twoValT * 2) : 0;
+            case 'chance':
+                return sum;
+            case 'maxiyatzy': // 6 like
+                for (let i = 6; i >= 1; i--) if (counts[i] === 6) return 100;
+                return 0;
+            default: return 0;
+        }
+    }
+
+    // --- UI OPPDATERINGER ---
+
+    function renderDice() {
+        const container = document.getElementById('dice-container');
+        container.innerHTML = '';
+        dice.forEach((val, index) => {
+            const el = document.createElement('div');
+            el.className = `die ${held[index] ? 'held' : ''}`;
+            el.textContent = val === 0 ? '?' : val; // Eller bruk unicode terninger: ['','⚀','⚁','⚂','⚃','⚄','⚅'][val]
+            el.onclick = () => toggleHold(index);
+            container.appendChild(el);
+        });
+    }
+
+    function showPotentialScores() {
+        CATEGORIES.forEach(cat => {
+            if (scores[cat.id] === undefined) {
+                const points = calculateScore(cat.id, dice);
+                const cell = document.getElementById(`score-${cat.id}`);
+                cell.textContent = points;
+                cell.classList.add('potential');
+            }
+        });
+    }
+
+    function updateTotals() {
+        // Enere til Seksere
+        let upperSum = 0;
+        ['ones','twos','threes','fours','fives','sixes'].forEach(id => {
+            upperSum += (scores[id] || 0);
+        });
+        document.getElementById('sum-upper').textContent = upperSum;
+
+        // Bonus (I Maxi-Yatzy er grensen ofte 75 poeng for 50 bonuspoeng, noen bruker 100 poeng for 100 bonus)
+        // Vi bruker standard Maxi: Grense 75, Bonus 50.
+        const bonus = upperSum >= 75 ? 50 : 0;
+        document.getElementById('bonus').textContent = bonus;
+
+        // Totalsum
+        let total = upperSum + bonus;
+        CATEGORIES.forEach(cat => {
+            if (!cat.simple) {
+                total += (scores[cat.id] || 0);
+            }
+        });
+        document.getElementById('total-score').textContent = total;
+    }
+
+    function updateUI() {
+        document.getElementById('rolls-left').textContent = rollsLeft;
+        const rollBtn = document.getElementById('roll-btn');
+        if (rollsLeft === 0) {
+            rollBtn.disabled = true;
+            rollBtn.textContent = "Velg poeng";
+        } else {
+            rollBtn.disabled = false;
+            rollBtn.textContent = roundActive ? "Kast igjen" : "Kast terningene";
+        }
+    }
+    
+    function checkGameOver() {
+        if (Object.keys(scores).length === CATEGORIES.length) {
+            document.getElementById('roll-btn').disabled = true;
+            document.getElementById('game-over-msg').style.display = 'block';
+            document.getElementById('reset-btn').style.display = 'block';
+        }
+    }
+
+    // --- NY "MUSE-HÅND" LOGIKK ---
+
+    const handCursor = document.getElementById('hand-cursor');
+    const diceSection = document.querySelector('.dice-section');
+    let isDragging = false;
+    let shakeAmount = 0;
+    let lastX = 0;
+    let lastY = 0;
+
+    // Når musa trykkes ned i terning-området
+    diceSection.addEventListener('mousedown', (e) => {
+        if (rollsLeft <= 0 || !canInteract()) return; // Sjekk om vi har lov til å kaste
+
+        isDragging = true;
+        shakeAmount = 0;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        // Vis hånden
+        handCursor.style.display = 'block';
+        handCursor.style.left = e.clientX + 'px';
+        handCursor.style.top = e.clientY + 'px';
+        
+        // Gjem de terningene som IKKE er holdt (de plukkes opp)
+        // Vi jukser litt visuelt ved å gjøre teksten usynlig eller opacity lav
+        const diceElements = document.querySelectorAll('.die');
+        diceElements.forEach((el, index) => {
+            if (!held[index]) el.style.opacity = '0.2'; 
+        });
+    });
+
+    // Når musa flyttes
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        // Flytt hånd-ikonet
+        handCursor.style.left = e.clientX + 'px';
+        handCursor.style.top = e.clientY + 'px';
+
+        // Beregn "risting" (hvor langt musa har flyttet seg)
+        const dist = Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY);
+        shakeAmount += dist;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        // Legg til riste-effekt i CSS hvis man beveger musa raskt
+        if (dist > 5) {
+            handCursor.classList.add('shaking');
+        } else {
+            handCursor.classList.remove('shaking');
+        }
+    });
+
+    // Når musa slippes
+    window.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        handCursor.style.display = 'none';
+        handCursor.classList.remove('shaking');
+
+        // Tilbakestill synlighet på terninger
+        const diceElements = document.querySelectorAll('.die');
+        diceElements.forEach(el => el.style.opacity = '1');
+
+        // Kast bare hvis man faktisk har "ristet" litt (beveget musa), 
+        // eller bare klikket. La oss si man må riste litt for gøy, 
+        // eller vi godtar et enkelt klikk også. Her godtar vi alt.
+        rollDice();
+    });
+
+    // Hjelpefunksjon for å stoppe interaksjon hvis spillet er ferdig
+    function canInteract() {
+        return document.getElementById('game-over-msg').style.display === 'none';
+    }
+
+    // --- SLUTT PÅ NY LOGIKK ---
+
+    // Start spillet
+    initGame();
+
+</script>
+
+</body>
+</html>
